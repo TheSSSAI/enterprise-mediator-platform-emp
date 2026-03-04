@@ -1,0 +1,12 @@
+erDiagram
+    AuditLog {
+        Guid auditLogId PK
+        Guid actorUserId
+        VARCHAR ipAddress
+        TEXT userAgent
+        VARCHAR actionType "Constraint: CHECK (actionType IN ('CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'OVERRIDE'))"
+        VARCHAR entityName
+        VARCHAR entityId
+        JSON changes
+        DateTimeOffset createdAt "Constraint: DEFAULT CURRENT_TIMESTAMP"
+    }

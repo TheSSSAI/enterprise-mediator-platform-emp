@@ -1,0 +1,54 @@
+erDiagram
+
+    Role { Guid roleId PK }
+    User { Guid userId PK }
+    Client { Guid clientId PK }
+    Vendor { Guid vendorId PK }
+    Project { Guid projectId PK }
+    SowDocument { Guid sowDocumentId PK }
+    ProjectBrief { Guid projectBriefId PK }
+    Skill { Guid skillId PK }
+    VendorSkill { Guid vendorId PK, FK
+        Guid skillId PK, FK }
+    ProjectBriefSkill { Guid projectBriefId PK, FK
+        Guid skillId PK, FK }
+    Proposal { Guid proposalId PK }
+    ProposalQuestion { Guid proposalQuestionId PK }
+    Invoice { Guid invoiceId PK }
+    Payout { Guid payoutId PK }
+    Transaction { Guid transactionId PK }
+    Notification { Guid notificationId PK }
+
+    %% --- Relationships ---
+    Role ||--o{ User : defines
+    Client }o--o{ User : has
+    Vendor }o--o{ User : has
+
+    Client ||--o{ Project : initiates
+    
+    Vendor }o--o{ Project : is_awarded_to
+    Vendor ||--o{ Proposal : submits
+    Vendor ||--o{ ProposalQuestion : asks
+    Vendor ||--o{ Payout : receives
+    Vendor }o--o{ VendorSkill : has
+    Skill }o--o{ VendorSkill : defines
+
+    User ||--o{ SowDocument : uploads
+    User }o--o{ ProjectBrief : reviews
+    User }o--o{ ProposalQuestion : answers
+    User ||--o{ Notification : receives
+
+    Project ||--|| SowDocument : is_detailed_by
+    Project ||--|| ProjectBrief : is_summarized_by
+    Project ||--o{ Proposal : receives
+    Project }o--|| Proposal : awards
+    Project ||--o{ ProposalQuestion : has
+    Project ||--o{ Invoice : generates
+    Project ||--o{ Payout : initiates
+    Project ||--o{ Transaction : logs
+
+    ProjectBrief }o--o{ ProjectBriefSkill : requires
+    Skill }o--o{ ProjectBriefSkill : defines
+    
+    Invoice }o--o{ Transaction : is_recorded_in
+    Payout }o--o{ Transaction : is_recorded_in

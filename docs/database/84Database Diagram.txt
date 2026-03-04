@@ -1,0 +1,1 @@
+This diagram illustrates the core entities of the application, focusing on how Users, Clients, Vendors, and Projects are interconnected. It covers the entire lifecycle from SOW ingestion and vendor matching to proposal management, invoicing, and payouts. The relationships show the flow of data and dependencies between the central components of the system.

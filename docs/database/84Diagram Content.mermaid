@@ -1,0 +1,84 @@
+erDiagram
+    User {
+        Guid userId PK
+    }
+    Role {
+        Guid roleId PK
+    }
+    Client {
+        Guid clientId PK
+    }
+    Vendor {
+        Guid vendorId PK
+    }
+    Project {
+        Guid projectId PK
+    }
+    SowDocument {
+        Guid sowDocumentId PK
+    }
+    ProjectBrief {
+        Guid projectBriefId PK
+    }
+    Skill {
+        Guid skillId PK
+    }
+    VendorSkill {
+        Guid vendorId PK_FK
+        Guid skillId PK_FK
+    }
+    ProjectBriefSkill {
+        Guid projectBriefId PK_FK
+        Guid skillId PK_FK
+    }
+    Proposal {
+        Guid proposalId PK
+    }
+    ProposalQuestion {
+        Guid proposalQuestionId PK
+    }
+    Invoice {
+        Guid invoiceId PK
+    }
+    Payout {
+        Guid payoutId PK
+    }
+    ProjectPayoutRule {
+        Guid projectPayoutRuleId PK
+    }
+    Notification {
+        Guid notificationId PK
+    }
+    AuditLog {
+        Guid auditLogId PK
+    }
+
+    Role ||--o{ User : "defines"
+    Client ||--o{ User : "employs"
+    Vendor ||--o{ User : "employs"
+
+    User ||--|{ Notification : "receives"
+    User ||--o{ AuditLog : "performs"
+    User ||--o{ SowDocument : "uploads"
+    User ||--o{ ProjectBrief : "reviews"
+    User ||--o{ ProposalQuestion : "answers"
+
+    Client ||--o{ Project : "owns"
+
+    Project ||--|| SowDocument : "described_by"
+    Project ||--|| ProjectBrief : "defined_by"
+    Project ||--|{ Proposal : "receives"
+    Project ||--|{ ProposalQuestion : "has"
+    Project ||--|{ Invoice : "billed_via"
+    Project ||--|{ Payout : "paid_via"
+    Project ||--|{ ProjectPayoutRule : "governed_by"
+
+    Vendor ||--o{ Proposal : "submits"
+    Vendor ||--o{ ProposalQuestion : "asks"
+    Vendor ||--o{ Payout : "receives"
+    Vendor ||--o{ VendorSkill : "possesses"
+
+    Skill ||--o{ VendorSkill : "categorizes"
+    Skill ||--o{ ProjectBriefSkill : "specified_in"
+
+    ProjectBrief ||--o{ ProjectBriefSkill : "requires"

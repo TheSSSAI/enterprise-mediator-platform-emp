@@ -1,0 +1,1 @@
+This diagram illustrates the core transactional entities of the Enterprise Mediator Platform. It shows how Clients, Vendors, and Projects are interconnected through proposals, financials (Invoices, Payouts), and skill matching. The User and Role entities govern access, while Notifications provide user alerts. It represents the primary operational data flow of the system.
