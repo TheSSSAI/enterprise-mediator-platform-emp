@@ -1,0 +1,1159 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-RF-001
+
+## 1.2 Name
+
+Database Backup and Point-in-Time Recovery
+
+## 1.3 Description
+
+The system's primary AWS RDS PostgreSQL database is automatically backed up daily via snapshots. In case of a disaster or data corruption event, an operator can restore the database to a specific point in time from these backups to a new instance.
+
+## 1.4 Type
+
+🔹 RecoveryFlow
+
+## 1.5 Purpose
+
+To ensure business continuity and data durability by meeting the Recovery Time Objective (RTO) of 4 hours and Recovery Point Objective (RPO) of 15 minutes, as defined in REQ-NFR-002.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+Daily
+
+## 1.9 Participants
+
+- REPO-INFRA-AWS
+- REPO-DB-POSTGRES
+
+## 1.10 Key Interactions
+
+- (Backup) AWS RDS automatically creates a daily snapshot of the database and retains it for 35 days.
+- (Backup) Transaction logs are continuously backed up to S3, enabling point-in-time recovery (PITR) for the last 14 days.
+- (Recovery) An operator declares a disaster and initiates the recovery process via the AWS console or CLI.
+- Operator selects the target snapshot and the specific point in time (e.g., timestamp just before the incident).
+- AWS RDS provisions a new database instance and restores the data from the chosen snapshot and relevant transaction logs.
+- Once the new DB is available, infrastructure configuration (e.g., Terraform variables) is updated to point all application services to the new database endpoint.
+- The application is redeployed or restarted to use the new connection string.
+
+## 1.11 Triggers
+
+- A scheduled backup policy (for backups).
+- A declared disaster or critical data loss event (for recovery).
+
+## 1.12 Outcomes
+
+- System data is restored to a consistent state from a point before the incident, meeting the RPO.
+- The application is brought back online and functional, meeting the RTO.
+
+## 1.13 Business Rules
+
+- Daily snapshots must be retained for 35 days (REQ-NFR-002).
+- Point-in-time recovery must be enabled for a retention period of at least 14 days (REQ-NFR-002).
+- The disaster recovery plan must be documented and tested quarterly to verify the RTO and RPO.
+
+## 1.14 Error Scenarios
+
+- The backup process fails silently, which must be monitored and alerted on.
+- The restored data is discovered to be inconsistent or incomplete after recovery, requiring a root cause analysis.
+
+## 1.15 Integration Points
+
+- AWS RDS Backup and Recovery services.
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-US-095
+
+## 2.2 Name
+
+Client Milestone Approval via Secure Link
+
+## 2.3 Description
+
+This sequence diagram details the end-to-end technical flow for a Client Contact approving a project milestone using a secure, single-use, time-limited link delivered via email. The process is designed to be low-friction, operating without requiring the client to log in. The sequence covers token validation, atomic state transition of the milestone, token invalidation, audit logging, and final user notification.
+
+## 2.4 Participants
+
+### 2.4.1 External Actor
+
+#### 2.4.1.1 Repository Id
+
+REPO-USER-CLIENT
+
+#### 2.4.1.2 Display Name
+
+Client Contact
+
+#### 2.4.1.3 Type
+
+🔹 External Actor
+
+#### 2.4.1.4 Technology
+
+Human/Email Client/Browser
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #E6E6E6 |
+| Stereotype | User |
+
+### 2.4.2.0 UI Application
+
+#### 2.4.2.1 Repository Id
+
+frontend-spa-001
+
+#### 2.4.2.2 Display Name
+
+Presentation.Frontend.SPA
+
+#### 2.4.2.3 Type
+
+🔹 UI Application
+
+#### 2.4.2.4 Technology
+
+Next.js 14, React 18, TypeScript
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #D1F2EB |
+| Stereotype | Next.js |
+
+### 2.4.3.0 API Gateway
+
+#### 2.4.3.1 Repository Id
+
+web-api-001
+
+#### 2.4.3.2 Display Name
+
+Application.API.Host
+
+#### 2.4.3.3 Type
+
+🔹 API Gateway
+
+#### 2.4.3.4 Technology
+
+ASP.NET Core 8
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | control |
+| Color | #A9CCE3 |
+| Stereotype | API Host |
+
+### 2.4.4.0 Application Service
+
+#### 2.4.4.1 Repository Id
+
+REPO-SVC-PROJECT-MGMT
+
+#### 2.4.4.2 Display Name
+
+Project Management Service
+
+#### 2.4.4.3 Type
+
+🔹 Application Service
+
+#### 2.4.4.4 Technology
+
+.NET 8 (Internal Logic)
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | control |
+| Color | #A9DFBF |
+| Stereotype | Service Logic |
+
+### 2.4.5.0 Infrastructure Service
+
+#### 2.4.5.1 Repository Id
+
+REPO-INFRA-SECURITY
+
+#### 2.4.5.2 Display Name
+
+Security Infrastructure
+
+#### 2.4.5.3 Type
+
+🔹 Infrastructure Service
+
+#### 2.4.5.4 Technology
+
+.NET 8 (Token Validation)
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | entity |
+| Color | #FADBD8 |
+| Stereotype | Security |
+
+### 2.4.6.0 Data Access Layer
+
+#### 2.4.6.1 Repository Id
+
+infrastructure-persistence-001
+
+#### 2.4.6.2 Display Name
+
+Persistence Infrastructure
+
+#### 2.4.6.3 Type
+
+🔹 Data Access Layer
+
+#### 2.4.6.4 Technology
+
+Entity Framework Core 8
+
+#### 2.4.6.5 Order
+
+6
+
+#### 2.4.6.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #F5CBA7 |
+| Stereotype | EF Core |
+
+### 2.4.7.0 Application Service
+
+#### 2.4.7.1 Repository Id
+
+REPO-SVC-AUDIT
+
+#### 2.4.7.2 Display Name
+
+Audit Service
+
+#### 2.4.7.3 Type
+
+🔹 Application Service
+
+#### 2.4.7.4 Technology
+
+.NET 8 (Logging)
+
+#### 2.4.7.5 Order
+
+7
+
+#### 2.4.7.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | control |
+| Color | #D2B4DE |
+| Stereotype | Auditing |
+
+### 2.4.8.0 Application Service
+
+#### 2.4.8.1 Repository Id
+
+notification-service-001
+
+#### 2.4.8.2 Display Name
+
+Notification Service
+
+#### 2.4.8.3 Type
+
+🔹 Application Service
+
+#### 2.4.8.4 Technology
+
+.NET 8, AWS SES
+
+#### 2.4.8.5 Order
+
+8
+
+#### 2.4.8.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | control |
+| Color | #A3E4D7 |
+| Stereotype | Notifications |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 User Interaction
+
+#### 2.5.1.1 Source Id
+
+REPO-USER-CLIENT
+
+#### 2.5.1.2 Target Id
+
+frontend-spa-001
+
+#### 2.5.1.3 Message
+
+1. Clicks secure link in email (e.g., https://app.emp.com/approve/milestone/{token})
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 User Interaction
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+Page load request
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+❌ No
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | GET |
+| Parameters | URL Path: /approve/milestone/{token} |
+| Authentication | N/A (Unauthenticated) |
+| Error Handling | Browser handles DNS/network errors. |
+| Performance | N/A |
+
+### 2.5.2.0 API Call
+
+#### 2.5.2.1 Source Id
+
+frontend-spa-001
+
+#### 2.5.2.2 Target Id
+
+web-api-001
+
+#### 2.5.2.3 Message
+
+2. Requests milestone details for review
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 API Call
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+200 OK with MilestoneReviewDto | 4xx Error
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/REST |
+| Method | GET /api/v1/public/milestones/review/{token} |
+| Parameters | Path Parameter: string token |
+| Authentication | None (Public Endpoint) |
+| Error Handling | Handles 403 (Invalid Token), 404 (Not Found), 410 ... |
+| Performance | p95 < 200ms |
+
+### 2.5.3.0 Internal Call
+
+#### 2.5.3.1 Source Id
+
+web-api-001
+
+#### 2.5.3.2 Target Id
+
+REPO-INFRA-SECURITY
+
+#### 2.5.3.3 Message
+
+3. ValidateApprovalToken(token)
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 Internal Call
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+TokenValidationResult (Success/FailureReason)
+
+#### 2.5.3.8 Has Return
+
+✅ Yes
+
+#### 2.5.3.9 Is Activation
+
+❌ No
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-process |
+| Method | ITokenService.Validate() |
+| Parameters | string token |
+| Authentication | N/A |
+| Error Handling | Throws TokenInvalidException, TokenExpiredExceptio... |
+| Performance | p99 < 10ms |
+
+### 2.5.4.0 Service Call
+
+#### 2.5.4.1 Source Id
+
+web-api-001
+
+#### 2.5.4.2 Target Id
+
+REPO-SVC-PROJECT-MGMT
+
+#### 2.5.4.3 Message
+
+4. GetMilestoneForReview(tokenPayload)
+
+#### 2.5.4.4 Sequence Number
+
+4
+
+#### 2.5.4.5 Type
+
+🔹 Service Call
+
+#### 2.5.4.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7 Return Message
+
+MilestoneReviewDto
+
+#### 2.5.4.8 Has Return
+
+✅ Yes
+
+#### 2.5.4.9 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-process |
+| Method | IProjectService.GetMilestoneForReview() |
+| Parameters | JwtPayload validatedPayload |
+| Authentication | N/A |
+| Error Handling | Throws MilestoneNotFoundException if milestone ID ... |
+| Performance | p95 < 150ms |
+
+#### 2.5.4.11 Nested Interactions
+
+- {'sourceId': 'REPO-SVC-PROJECT-MGMT', 'targetId': 'infrastructure-persistence-001', 'message': '4.1. FindAsync(milestoneId)', 'sequenceNumber': 4.1, 'type': 'Data Access', 'isSynchronous': True, 'returnMessage': 'Milestone entity with Project navigation property', 'hasReturn': True, 'isActivation': False, 'technicalDetails': {'protocol': 'TCP/IP (Npgsql)', 'method': 'IMilestoneRepository.GetByIdWithProjectAsync()', 'parameters': 'Guid milestoneId', 'authentication': 'DB Connection String', 'errorHandling': 'Database exceptions (e.g., connection failure)', 'performance': 'p99 < 50ms'}}
+
+### 2.5.5.0 User Interaction
+
+#### 2.5.5.1 Source Id
+
+REPO-USER-CLIENT
+
+#### 2.5.5.2 Target Id
+
+frontend-spa-001
+
+#### 2.5.5.3 Message
+
+5. Reviews details and clicks 'Approve'
+
+#### 2.5.5.4 Sequence Number
+
+5
+
+#### 2.5.5.5 Type
+
+🔹 User Interaction
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+POST request submission
+
+#### 2.5.5.8 Has Return
+
+✅ Yes
+
+#### 2.5.5.9 Is Activation
+
+❌ No
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | N/A |
+| Method | onClick event handler |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | UI prevents double-submission by disabling button ... |
+| Performance | N/A |
+
+### 2.5.6.0 API Call
+
+#### 2.5.6.1 Source Id
+
+frontend-spa-001
+
+#### 2.5.6.2 Target Id
+
+web-api-001
+
+#### 2.5.6.3 Message
+
+6. Submits milestone approval
+
+#### 2.5.6.4 Sequence Number
+
+6
+
+#### 2.5.6.5 Type
+
+🔹 API Call
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Return Message
+
+200 OK | 4xx Error
+
+#### 2.5.6.8 Has Return
+
+✅ Yes
+
+#### 2.5.6.9 Is Activation
+
+✅ Yes
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/REST |
+| Method | POST /api/v1/public/milestones/approve |
+| Parameters | Request Body: { "token": "..." } |
+| Authentication | None (Public Endpoint with single-use token) |
+| Error Handling | Handles 409 Conflict if token has been used since ... |
+| Performance | p95 < 200ms |
+
+### 2.5.7.0 Service Call
+
+#### 2.5.7.1 Source Id
+
+web-api-001
+
+#### 2.5.7.2 Target Id
+
+REPO-SVC-PROJECT-MGMT
+
+#### 2.5.7.3 Message
+
+7. ApproveMilestone(command)
+
+#### 2.5.7.4 Sequence Number
+
+7
+
+#### 2.5.7.5 Type
+
+🔹 Service Call
+
+#### 2.5.7.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7 Return Message
+
+void
+
+#### 2.5.7.8 Has Return
+
+❌ No
+
+#### 2.5.7.9 Is Activation
+
+✅ Yes
+
+#### 2.5.7.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-process |
+| Method | IProjectService.ApproveMilestoneAsync() |
+| Parameters | ApproveMilestoneCommand command |
+| Authentication | N/A |
+| Error Handling | Transaction rollback on any internal failure. Prop... |
+| Performance | p95 < 180ms |
+
+#### 2.5.7.11 Nested Interactions
+
+##### 2.5.7.11.1 Internal Call
+
+###### 2.5.7.11.1.1 Source Id
+
+REPO-SVC-PROJECT-MGMT
+
+###### 2.5.7.11.1.2 Target Id
+
+REPO-INFRA-SECURITY
+
+###### 2.5.7.11.1.3 Message
+
+7.1. ValidateApprovalToken(token)
+
+###### 2.5.7.11.1.4 Sequence Number
+
+7.1
+
+###### 2.5.7.11.1.5 Type
+
+🔹 Internal Call
+
+###### 2.5.7.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.1.7 Return Message
+
+TokenValidationResult
+
+###### 2.5.7.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.7.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.7.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-process |
+| Method | ITokenService.Validate() |
+| Parameters | string token |
+| Authentication | N/A |
+| Error Handling | Throws TokenUsedException if a race condition occu... |
+| Performance | p99 < 10ms |
+
+##### 2.5.7.11.2.0 Data Access
+
+###### 2.5.7.11.2.1 Source Id
+
+REPO-SVC-PROJECT-MGMT
+
+###### 2.5.7.11.2.2 Target Id
+
+infrastructure-persistence-001
+
+###### 2.5.7.11.2.3 Message
+
+7.2. BeginTransaction()
+
+###### 2.5.7.11.2.4 Sequence Number
+
+7.2
+
+###### 2.5.7.11.2.5 Type
+
+🔹 Data Access
+
+###### 2.5.7.11.2.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.2.7 Return Message
+
+Transaction object
+
+###### 2.5.7.11.2.8 Has Return
+
+✅ Yes
+
+###### 2.5.7.11.2.9 Is Activation
+
+❌ No
+
+###### 2.5.7.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-process |
+| Method | IUnitOfWork.BeginTransactionAsync() |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | p99 < 5ms |
+
+##### 2.5.7.11.3.0 Data Access
+
+###### 2.5.7.11.3.1 Source Id
+
+REPO-SVC-PROJECT-MGMT
+
+###### 2.5.7.11.3.2 Target Id
+
+infrastructure-persistence-001
+
+###### 2.5.7.11.3.3 Message
+
+7.3. Update milestone status to 'Approved' and invalidate token
+
+###### 2.5.7.11.3.4 Sequence Number
+
+7.3
+
+###### 2.5.7.11.3.5 Type
+
+🔹 Data Access
+
+###### 2.5.7.11.3.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.3.7 Return Message
+
+void
+
+###### 2.5.7.11.3.8 Has Return
+
+❌ No
+
+###### 2.5.7.11.3.9 Is Activation
+
+❌ No
+
+###### 2.5.7.11.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | milestone.Approve(); tokenRecord.Invalidate(); |
+| Parameters | Changes tracked by EF Core DbContext |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | p99 < 20ms |
+
+##### 2.5.7.11.4.0 Service Call
+
+###### 2.5.7.11.4.1 Source Id
+
+REPO-SVC-PROJECT-MGMT
+
+###### 2.5.7.11.4.2 Target Id
+
+REPO-SVC-AUDIT
+
+###### 2.5.7.11.4.3 Message
+
+7.4. LogEvent(auditEntry)
+
+###### 2.5.7.11.4.4 Sequence Number
+
+7.4
+
+###### 2.5.7.11.4.5 Type
+
+🔹 Service Call
+
+###### 2.5.7.11.4.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.4.7 Return Message
+
+void
+
+###### 2.5.7.11.4.8 Has Return
+
+❌ No
+
+###### 2.5.7.11.4.9 Is Activation
+
+❌ No
+
+###### 2.5.7.11.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-process |
+| Method | IAuditService.LogAsync() |
+| Parameters | AuditLogEntry object with Before/After state |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | p99 < 5ms (Adds to DbContext) |
+
+##### 2.5.7.11.5.0 Data Access
+
+###### 2.5.7.11.5.1 Source Id
+
+REPO-SVC-PROJECT-MGMT
+
+###### 2.5.7.11.5.2 Target Id
+
+infrastructure-persistence-001
+
+###### 2.5.7.11.5.3 Message
+
+7.5. CommitTransaction()
+
+###### 2.5.7.11.5.4 Sequence Number
+
+7.5
+
+###### 2.5.7.11.5.5 Type
+
+🔹 Data Access
+
+###### 2.5.7.11.5.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.5.7 Return Message
+
+void
+
+###### 2.5.7.11.5.8 Has Return
+
+❌ No
+
+###### 2.5.7.11.5.9 Is Activation
+
+❌ No
+
+###### 2.5.7.11.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-process |
+| Method | IUnitOfWork.SaveChangesAsync() |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | Throws DbUpdateConcurrencyException or other DB er... |
+| Performance | p99 < 100ms |
+
+### 2.5.8.0.0.0 Event Publication
+
+#### 2.5.8.1.0.0 Source Id
+
+REPO-SVC-PROJECT-MGMT
+
+#### 2.5.8.2.0.0 Target Id
+
+notification-service-001
+
+#### 2.5.8.3.0.0 Message
+
+8. (Post-Commit) Raise Domain Event: MilestoneApprovedEvent
+
+#### 2.5.8.4.0.0 Sequence Number
+
+8
+
+#### 2.5.8.5.0.0 Type
+
+🔹 Event Publication
+
+#### 2.5.8.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.8.7.0.0 Return Message
+
+void
+
+#### 2.5.8.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.8.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.8.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-process (MediatR) |
+| Method | IPublisher.Publish() |
+| Parameters | MilestoneApprovedEvent notification |
+| Authentication | N/A |
+| Error Handling | Event handler failures are logged but do not roll ... |
+| Performance | N/A |
+
+#### 2.5.8.11.0.0 Nested Interactions
+
+- {'sourceId': 'notification-service-001', 'targetId': 'notification-service-001', 'message': '8.1. Send milestone approval notification to System Admin', 'sequenceNumber': 8.1, 'type': 'Internal Call', 'isSynchronous': False, 'returnMessage': 'void', 'hasReturn': False, 'isActivation': False, 'technicalDetails': {'protocol': 'HTTPS (AWS SES API)', 'method': 'ISesClient.SendEmailAsync()', 'parameters': 'Templated email payload', 'authentication': 'AWS IAM Role', 'errorHandling': 'Retries on transient SES API failures.', 'performance': 'p95 < 500ms'}}
+
+### 2.5.9.0.0.0 API Response
+
+#### 2.5.9.1.0.0 Source Id
+
+web-api-001
+
+#### 2.5.9.2.0.0 Target Id
+
+frontend-spa-001
+
+#### 2.5.9.3.0.0 Message
+
+9. Returns 200 OK success response
+
+#### 2.5.9.4.0.0 Sequence Number
+
+9
+
+#### 2.5.9.5.0.0 Type
+
+🔹 API Response
+
+#### 2.5.9.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7.0.0 Return Message
+
+HTTP/1.1 200 OK
+
+#### 2.5.9.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.9.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.9.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/REST |
+| Method | N/A |
+| Parameters | Empty Body |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | N/A |
+
+### 2.5.10.0.0.0 UI Update
+
+#### 2.5.10.1.0.0 Source Id
+
+frontend-spa-001
+
+#### 2.5.10.2.0.0 Target Id
+
+REPO-USER-CLIENT
+
+#### 2.5.10.3.0.0 Message
+
+10. Displays success confirmation message: 'Thank you! The milestone has been approved.'
+
+#### 2.5.10.4.0.0 Sequence Number
+
+10
+
+#### 2.5.10.5.0.0 Type
+
+🔹 UI Update
+
+#### 2.5.10.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.10.7.0.0 Return Message
+
+void
+
+#### 2.5.10.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.10.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.10.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | N/A |
+| Method | React state update |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | N/A |
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+
+
+```
+**Alternative Flow: Rejection**
+If the client clicks 'Reject', the frontend displays a modal requiring a text reason. The subsequent POST is to `/api/v1/public/milestones/reject` with `{ "token": "...", "reason": "..." }`. The backend updates the milestone status to 'Rejected', saves the reason, and the notification to the admin includes this reason. (AC-002, BR-003)
+```
+
+#### 2.6.1.2.0.0 Position
+
+bottom
+
+#### 2.6.1.3.0.0 Participant Id
+
+*Not specified*
+
+#### 2.6.1.4.0.0 Sequence Number
+
+5
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+
+
+```
+**Error Handling: Expired/Used Token**
+During step 3, if the Security Infrastructure determines the token is invalid (expired, used, tampered), it throws a specific exception. The API Host (web-api-001) catches this and returns an appropriate HTTP status (e.g., 410 Gone). The Frontend (frontend-spa-001) then renders a specific error page indicating the link is no longer valid. (AC-003, AC-004, BR-001, BR-002)
+```
+
+#### 2.6.2.2.0.0 Position
+
+top
+
+#### 2.6.2.3.0.0 Participant Id
+
+REPO-INFRA-SECURITY
+
+#### 2.6.2.4.0.0 Sequence Number
+
+3
+
+### 2.6.3.0.0.0 Content
+
+#### 2.6.3.1.0.0 Content
+
+
+
+```
+**Idempotency**
+The API endpoint for approval (Step 6) must be idempotent. The second token validation within the service logic (Step 7.1) and the atomic transaction ensure that if two identical requests arrive simultaneously, only the first one will succeed, and the second will fail with a token-used error (e.g., 409 Conflict), preventing duplicate state changes.
+```
+
+#### 2.6.3.2.0.0 Position
+
+bottom
+
+#### 2.6.3.3.0.0 Participant Id
+
+web-api-001
+
+#### 2.6.3.4.0.0 Sequence Number
+
+6
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Tokens MUST be short-lived (e.g., 72 hours) JWTs c... |
+| Performance Targets | The client-facing approval page must achieve LCP <... |
+| Error Handling Strategy | A global exception handler in the API Host maps sp... |
+| Testing Considerations | E2E tests (Playwright) are critical and must use a... |
+| Monitoring Requirements | Monitor the success and failure rates of the publi... |
+| Deployment Considerations | This feature requires a new public route (`/approv... |
+

@@ -1,0 +1,706 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-OF-001
+
+## 1.2 Name
+
+System Monitoring and Critical Alert Firing
+
+## 1.3 Description
+
+A monitoring tool (e.g., Prometheus, CloudWatch) continuously scrapes system metrics. When a metric breaches a predefined threshold (e.g., API p99 latency > 1 second), an alert is fired and routed to the on-call team via a configured notification channel.
+
+## 1.4 Type
+
+🔹 OperationalFlow
+
+## 1.5 Purpose
+
+To ensure proactive issue detection and response, fulfilling the monitoring and alerting requirements of REQ-REP-002 and supporting the uptime NFR (REQ-NFR-004).
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+Continuously
+
+## 1.9 Participants
+
+- REPO-API-MONOLITH
+- REPO-INFRA-PROMETHEUS
+- REPO-INFRA-ALERTMANAGER
+
+## 1.10 Key Interactions
+
+- The API exposes a '/metrics' endpoint scraped by Prometheus.
+- System load increases, causing API latency to rise.
+- Prometheus records the high latency metric values.
+- An alert rule in Prometheus (e.g., 'p99 latency > 1s for 5m') evaluates to true.
+- Prometheus sends an alert to Alertmanager.
+- Alertmanager groups, deduplicates, and routes the alert to a configured receiver, such as PagerDuty or Slack.
+- The on-call engineer is notified.
+
+## 1.11 Triggers
+
+- A configured alert rule's condition is met.
+
+## 1.12 Outcomes
+
+- Operations team is notified of a potential or active system issue.
+- Mean Time To Detection (MTTD) is minimized.
+
+## 1.13 Business Rules
+
+- Alert thresholds must align with the NFRs defined in the SRS (e.g., REQ-NFR-001).
+
+## 1.14 Error Scenarios
+
+- A 'flapping' alert fires and resolves repeatedly, causing noise.
+- A misconfigured alert rule fails to fire during a real incident.
+
+## 1.15 Integration Points
+
+- Prometheus for metrics collection.
+- Alertmanager for alert routing.
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-OF-001
+
+## 2.2 Name
+
+Operational Flow: Critical API Latency Alert Firing
+
+## 2.3 Description
+
+This sequence details the end-to-end operational flow for detecting and alerting on critical performance degradation of the backend API, in alignment with SRE principles. The process begins with increased system load causing a violation of the API latency SLO (Service Level Objective). Prometheus, via its OpenTelemetry metric scraper, detects this breach, evaluates a pre-configured alerting rule, and fires an alert to Alertmanager. Alertmanager then processes, groups, and routes the alert to the designated external notification channel, ensuring the on-call team is immediately notified. This flow is a direct implementation of requirements REQ-REP-002 and REQ-NFR-004.
+
+## 2.4 Participants
+
+### 2.4.1 External Actor
+
+#### 2.4.1.1 Repository Id
+
+EXTERNAL-SYSTEM-LOAD
+
+#### 2.4.1.2 Display Name
+
+User / System Load
+
+#### 2.4.1.3 Type
+
+🔹 External Actor
+
+#### 2.4.1.4 Technology
+
+N/A
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Actor |
+| Color | #9A9A9A |
+| Stereotype | External |
+
+### 2.4.2.0 Application Service
+
+#### 2.4.2.1 Repository Id
+
+REPO-API-MONOLITH
+
+#### 2.4.2.2 Display Name
+
+EMP Backend API
+
+#### 2.4.2.3 Type
+
+🔹 Application Service
+
+#### 2.4.2.4 Technology
+
+ASP.NET Core 8 on EKS
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Component |
+| Color | #23A2D9 |
+| Stereotype | Service |
+
+### 2.4.3.0 Monitoring Service
+
+#### 2.4.3.1 Repository Id
+
+REPO-INFRA-PROMETHEUS
+
+#### 2.4.3.2 Display Name
+
+Prometheus
+
+#### 2.4.3.3 Type
+
+🔹 Monitoring Service
+
+#### 2.4.3.4 Technology
+
+Prometheus v2.x
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Database |
+| Color | #E6522C |
+| Stereotype | Observability |
+
+### 2.4.4.0 Alerting Service
+
+#### 2.4.4.1 Repository Id
+
+REPO-INFRA-ALERTMANAGER
+
+#### 2.4.4.2 Display Name
+
+Alertmanager
+
+#### 2.4.4.3 Type
+
+🔹 Alerting Service
+
+#### 2.4.4.4 Technology
+
+Alertmanager v0.2x
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Component |
+| Color | #F4A300 |
+| Stereotype | Observability |
+
+### 2.4.5.0 External System
+
+#### 2.4.5.1 Repository Id
+
+EXTERNAL-NOTIFICATION-CHANNEL
+
+#### 2.4.5.2 Display Name
+
+Notification Channel
+
+#### 2.4.5.3 Type
+
+🔹 External System
+
+#### 2.4.5.4 Technology
+
+PagerDuty / Slack
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Component |
+| Color | #43B02A |
+| Stereotype | External |
+
+### 2.4.6.0 Human Actor
+
+#### 2.4.6.1 Repository Id
+
+ON-CALL-ENGINEER
+
+#### 2.4.6.2 Display Name
+
+On-Call Engineer
+
+#### 2.4.6.3 Type
+
+🔹 Human Actor
+
+#### 2.4.6.4 Technology
+
+N/A
+
+#### 2.4.6.5 Order
+
+6
+
+#### 2.4.6.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Actor |
+| Color | #B4009E |
+| Stereotype | User |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Request
+
+#### 2.5.1.1 Source Id
+
+EXTERNAL-SYSTEM-LOAD
+
+#### 2.5.1.2 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.1.3 Message
+
+1. [Cause] Increased traffic/load is applied to the API
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Request
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+HTTP 2xx (with high latency)
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTP/S |
+| Method | POST, GET, etc. |
+| Parameters | Various API endpoint payloads. |
+| Authentication | JWT Bearer Token |
+| Error Handling | Standard HTTP error codes. |
+| Performance | This interaction is the source of the performance ... |
+
+### 2.5.2.0 Internal Processing
+
+#### 2.5.2.1 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.2.2 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.2.3 Message
+
+2. [Internal] Record high request duration via OpenTelemetry instrumentation
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 Internal Processing
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Has Return
+
+❌ No
+
+#### 2.5.2.8 Is Activation
+
+❌ No
+
+#### 2.5.2.9 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | OpenTelemetry.RecordMetric |
+| Parameters | Records latency into the 'http.server.request.dura... |
+| Authentication | N/A |
+| Error Handling | Instrumentation errors are logged internally. |
+| Performance | Low overhead; essential for observability. |
+
+### 2.5.3.0 Data Retrieval
+
+#### 2.5.3.1 Source Id
+
+REPO-INFRA-PROMETHEUS
+
+#### 2.5.3.2 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.3.3 Message
+
+3. [Scrape] Periodically pull metrics
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 Data Retrieval
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+200 OK with Prometheus exposition format text
+
+#### 2.5.3.8 Has Return
+
+✅ Yes
+
+#### 2.5.3.9 Is Activation
+
+❌ No
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTP |
+| Method | GET /metrics |
+| Parameters | None |
+| Authentication | None. Access is restricted via Kubernetes NetworkP... |
+| Error Handling | Prometheus marks target as 'down' after configured... |
+| Performance | Scrape interval configured in prometheus.yml (e.g.... |
+
+### 2.5.4.0 Internal Processing
+
+#### 2.5.4.1 Source Id
+
+REPO-INFRA-PROMETHEUS
+
+#### 2.5.4.2 Target Id
+
+REPO-INFRA-PROMETHEUS
+
+#### 2.5.4.3 Message
+
+4. [Evaluate] Continuously evaluate configured alert rule against time-series data
+
+#### 2.5.4.4 Sequence Number
+
+4
+
+#### 2.5.4.5 Type
+
+🔹 Internal Processing
+
+#### 2.5.4.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7 Has Return
+
+❌ No
+
+#### 2.5.4.8 Is Activation
+
+✅ Yes
+
+#### 2.5.4.9 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal |
+| Method | Rule Evaluation Engine |
+| Parameters | PromQL query from a rule file (e.g., `rules.yml`).... |
+| Authentication | N/A |
+| Error Handling | Invalid rules are caught at startup by `promtool c... |
+| Performance | Rule evaluation interval is configured globally (e... |
+
+### 2.5.5.0 Alert Notification
+
+#### 2.5.5.1 Source Id
+
+REPO-INFRA-PROMETHEUS
+
+#### 2.5.5.2 Target Id
+
+REPO-INFRA-ALERTMANAGER
+
+#### 2.5.5.3 Message
+
+5. [Fire] Send alert when rule condition is met for its 'FOR' duration
+
+#### 2.5.5.4 Sequence Number
+
+5
+
+#### 2.5.5.5 Type
+
+🔹 Alert Notification
+
+#### 2.5.5.6 Is Synchronous
+
+❌ No
+
+#### 2.5.5.7 Has Return
+
+❌ No
+
+#### 2.5.5.8 Is Activation
+
+✅ Yes
+
+#### 2.5.5.9 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTP |
+| Method | POST /api/v2/alerts |
+| Parameters | JSON payload containing alert labels (e.g., alertn... |
+| Authentication | None. Relies on internal network security. |
+| Error Handling | Prometheus will retry sending to Alertmanager if t... |
+| Performance | Near-instantaneous once alert state transitions to... |
+
+### 2.5.6.0 Internal Processing
+
+#### 2.5.6.1 Source Id
+
+REPO-INFRA-ALERTMANAGER
+
+#### 2.5.6.2 Target Id
+
+REPO-INFRA-ALERTMANAGER
+
+#### 2.5.6.3 Message
+
+6. [Process] Deduplicate, group, and route alert based on configured policies
+
+#### 2.5.6.4 Sequence Number
+
+6
+
+#### 2.5.6.5 Type
+
+🔹 Internal Processing
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Has Return
+
+❌ No
+
+#### 2.5.6.8 Is Activation
+
+❌ No
+
+#### 2.5.6.9 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal |
+| Method | Routing Tree Evaluation |
+| Parameters | Uses `alertmanager.yml` configuration. Groups aler... |
+| Authentication | N/A |
+| Error Handling | Configuration is validated by `amtool check-config... |
+| Performance | High-throughput processing. |
+
+### 2.5.7.0 API Call
+
+#### 2.5.7.1 Source Id
+
+REPO-INFRA-ALERTMANAGER
+
+#### 2.5.7.2 Target Id
+
+EXTERNAL-NOTIFICATION-CHANNEL
+
+#### 2.5.7.3 Message
+
+7. [Notify] Send formatted notification to configured receiver
+
+#### 2.5.7.4 Sequence Number
+
+7
+
+#### 2.5.7.5 Type
+
+🔹 API Call
+
+#### 2.5.7.6 Is Synchronous
+
+❌ No
+
+#### 2.5.7.7 Has Return
+
+❌ No
+
+#### 2.5.7.8 Is Activation
+
+✅ Yes
+
+#### 2.5.7.9 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTP/S |
+| Method | POST to Webhook URL |
+| Parameters | JSON payload formatted according to the receiver's... |
+| Authentication | Bearer Token / Secret Key in webhook URL. |
+| Error Handling | Alertmanager implements retry with exponential bac... |
+| Performance | Dependent on the external notification service's A... |
+
+### 2.5.8.0 Notification
+
+#### 2.5.8.1 Source Id
+
+EXTERNAL-NOTIFICATION-CHANNEL
+
+#### 2.5.8.2 Target Id
+
+ON-CALL-ENGINEER
+
+#### 2.5.8.3 Message
+
+8. [Outcome] On-call engineer receives an alert notification
+
+#### 2.5.8.4 Sequence Number
+
+8
+
+#### 2.5.8.5 Type
+
+🔹 Notification
+
+#### 2.5.8.6 Is Synchronous
+
+❌ No
+
+#### 2.5.8.7 Has Return
+
+❌ No
+
+#### 2.5.8.8 Is Activation
+
+❌ No
+
+#### 2.5.8.9 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Push Notification, SMS, Email |
+| Method | N/A |
+| Parameters | Alert details: summary, service, severity, runbook... |
+| Authentication | N/A |
+| Error Handling | Managed by the notification service (e.g., PagerDu... |
+| Performance | Time-to-notify is a critical metric for the notifi... |
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+The 'FOR: 5m' clause in the Prometheus alert rule is critical to prevent 'flapping' alerts from transient spikes. The alert only fires if the condition is continuously met for the entire duration.
+
+#### 2.6.1.2 Position
+
+Right
+
+#### 2.6.1.3 Participant Id
+
+REPO-INFRA-PROMETHEUS
+
+#### 2.6.1.4 Sequence Number
+
+4
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+Alertmanager's grouping logic is key to reducing alert fatigue. For instance, if 10 API pods are slow, it sends one grouped notification, not 10 individual ones.
+
+#### 2.6.2.2 Position
+
+Right
+
+#### 2.6.2.3 Participant Id
+
+REPO-INFRA-ALERTMANAGER
+
+#### 2.6.2.4 Sequence Number
+
+6
+
+### 2.6.3.0 Content
+
+#### 2.6.3.1 Content
+
+The `/metrics` endpoint is a pull-based model. It must be designed to be highly performant and lightweight to not impact application performance during scrapes.
+
+#### 2.6.3.2 Position
+
+Top
+
+#### 2.6.3.3 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.3.4 Sequence Number
+
+3
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The `/metrics` endpoint on the API must not expose... |
+| Performance Targets | The alert threshold (e.g., p99 > 1s) must be deriv... |
+| Error Handling Strategy | Flapping alerts are mitigated by the `FOR` clause ... |
+| Testing Considerations | Prometheus alerting rules must be unit-tested usin... |
+| Monitoring Requirements | The monitoring system itself requires monitoring (... |
+| Deployment Considerations | All monitoring and alerting configurations (promet... |
+

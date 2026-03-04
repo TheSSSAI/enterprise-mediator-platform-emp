@@ -1,0 +1,1241 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-UJ-002
+
+## 1.2 Name
+
+Client Approves Milestone via Secure Link
+
+## 1.3 Description
+
+A Client Contact receives an email to approve a project milestone. They click a unique, time-limited, single-use link and are taken to a simple, unauthenticated page where they can approve or reject the milestone. This action is securely recorded and triggers internal notifications.
+
+## 1.4 Type
+
+🔹 UserJourney
+
+## 1.5 Purpose
+
+To provide a low-friction, secure method for clients to provide critical project approvals without needing to log in, accelerating the project lifecycle as specified in US-095 and REQ-SCP-002.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-API-MONOLITH
+- REPO-EXT-SES
+- REPO-FRONTEND-SPA
+- REPO-DB-POSTGRES
+
+## 1.10 Key Interactions
+
+- Admin requests client approval for a milestone within the platform.
+- API generates a secure, single-use, time-limited JWT token associated with the milestone and client contact.
+- API sends a templated approval email via SES containing the link with the token.
+- Client clicks the link; the Frontend displays a dedicated, unauthenticated approval page.
+- Frontend validates the token with the API to display milestone details.
+- Client clicks 'Approve'.
+- Frontend submits the approval request with the token.
+- API validates the token's signature, expiry, and single-use status, then updates the milestone status to 'Approved' and invalidates the token.
+- API logs the approval event in the audit trail with the client's identity.
+- API sends an internal notification to the System Administrator.
+
+## 1.11 Triggers
+
+- A Client Contact clicks a milestone approval link in an email.
+
+## 1.12 Outcomes
+
+- The project milestone is marked as 'Approved' in the database.
+- An immutable audit record of the approval is created.
+- The internal team is notified to proceed with subsequent project steps.
+
+## 1.13 Business Rules
+
+- The approval token must be single-use and have a finite lifespan (e.g., 72 hours) (BR-001, BR-002).
+- A reason is mandatory if the milestone is rejected (BR-003).
+- Only milestones in a 'Pending Approval' state can be actioned.
+
+## 1.14 Error Scenarios
+
+- The link has expired or has already been used (AC-003, AC-004).
+- The user provides a tampered or invalid token, resulting in a forbidden error (AC-005).
+
+## 1.15 Integration Points
+
+- AWS SES for notifications.
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-UJ-002
+
+## 2.2 Name
+
+Implementation: Client Approves Milestone via Secure Link
+
+## 2.3 Description
+
+Provides a detailed technical sequence for the user journey of a Client Contact approving a project milestone via a secure, one-time link. The sequence covers token validation, state changes, and audit logging as defined in US-095. The interaction begins after the client has received an email and clicks the approval link.
+
+## 2.4 Participants
+
+### 2.4.1 UserAgent
+
+#### 2.4.1.1 Repository Id
+
+USER_BROWSER
+
+#### 2.4.1.2 Display Name
+
+Client Contact's Browser
+
+#### 2.4.1.3 Type
+
+🔹 UserAgent
+
+#### 2.4.1.4 Technology
+
+Chrome, Firefox, Safari, Edge
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #E0E0E0 |
+| Stereotype | User |
+
+### 2.4.2.0 PresentationLayer
+
+#### 2.4.2.1 Repository Id
+
+REPO-FRONTEND-SPA
+
+#### 2.4.2.2 Display Name
+
+Frontend SPA
+
+#### 2.4.2.3 Type
+
+🔹 PresentationLayer
+
+#### 2.4.2.4 Technology
+
+Next.js 14, React 18, TypeScript
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #D1E8FF |
+| Stereotype | Next.js App |
+
+### 2.4.3.0 ApplicationService
+
+#### 2.4.3.1 Repository Id
+
+REPO-API-MONOLITH
+
+#### 2.4.3.2 Display Name
+
+Backend API
+
+#### 2.4.3.3 Type
+
+🔹 ApplicationService
+
+#### 2.4.3.4 Technology
+
+.NET 8, ASP.NET Core 8
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | control |
+| Color | #C2F0C2 |
+| Stereotype | ASP.NET Core API |
+
+### 2.4.4.0 Database
+
+#### 2.4.4.1 Repository Id
+
+REPO-DB-POSTGRES
+
+#### 2.4.4.2 Display Name
+
+PostgreSQL Database
+
+#### 2.4.4.3 Type
+
+🔹 Database
+
+#### 2.4.4.4 Technology
+
+PostgreSQL 16, pgvector
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #FFDDC1 |
+| Stereotype | RDS |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Request
+
+#### 2.5.1.1 Source Id
+
+USER_BROWSER
+
+#### 2.5.1.2 Target Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.1.3 Message
+
+
+
+```
+1. GET /approve-milestone/{token}
+User clicks the secure link in the email.
+```
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Request
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+HTML/JS/CSS for the approval page.
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+HTTPS
+
+##### 2.5.1.10.2 Method
+
+GET
+
+##### 2.5.1.10.3 Parameters
+
+- {'name': 'token', 'type': 'string (JWT)', 'in': 'path'}
+
+##### 2.5.1.10.4 Authentication
+
+None (Unauthenticated route)
+
+##### 2.5.1.10.5 Error Handling
+
+Standard browser error pages (404).
+
+##### 2.5.1.10.6 Performance
+
+###### 2.5.1.10.6.1 Latency
+
+LCP < 2.0s as per NFR
+
+### 2.5.2.0.0.0 APICall
+
+#### 2.5.2.1.0.0 Source Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.2.2.0.0 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.2.3.0.0 Message
+
+
+
+```
+2. GET /api/v1/milestone-approvals/{token}
+On page load (useEffect), validate token and fetch milestone details.
+```
+
+#### 2.5.2.4.0.0 Sequence Number
+
+2
+
+#### 2.5.2.5.0.0 Type
+
+🔹 APICall
+
+#### 2.5.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0.0 Return Message
+
+200 OK with MilestoneDetailsDTO or 4xx/5xx error.
+
+#### 2.5.2.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.2.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10.0.0 Technical Details
+
+##### 2.5.2.10.1.0 Protocol
+
+HTTPS/REST
+
+##### 2.5.2.10.2.0 Method
+
+GET
+
+##### 2.5.2.10.3.0 Parameters
+
+- {'name': 'token', 'type': 'string (JWT)', 'in': 'path'}
+
+##### 2.5.2.10.4.0 Authentication
+
+None (Token serves as authorization for this specific action)
+
+##### 2.5.2.10.5.0 Error Handling
+
+Handles 403 (Invalid), 410 (Expired/Used), 404 (Not Found).
+
+##### 2.5.2.10.6.0 Performance
+
+###### 2.5.2.10.6.1 Latency
+
+< 200ms (p95)
+
+#### 2.5.2.11.0.0 Nested Interactions
+
+##### 2.5.2.11.1.0 Query
+
+###### 2.5.2.11.1.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.2.11.1.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.2.11.1.3 Message
+
+2a. SELECT * FROM ActionTokens WHERE token_hash = HASH(token) AND expires_at > NOW() AND used_at IS NULL
+
+###### 2.5.2.11.1.4 Sequence Number
+
+3
+
+###### 2.5.2.11.1.5 Type
+
+🔹 Query
+
+###### 2.5.2.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.1.7 Return Message
+
+Token record or NULL.
+
+###### 2.5.2.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.2.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.2.11.1.10 Technical Details
+
+####### 2.5.2.11.1.10.1 Protocol
+
+TCP/IP
+
+####### 2.5.2.11.1.10.2 Method
+
+```sql
+SELECT
+```
+
+####### 2.5.2.11.1.10.3 Parameters
+
+*No items available*
+
+####### 2.5.2.11.1.10.4 Authentication
+
+Database credentials
+
+####### 2.5.2.11.1.10.5 Error Handling
+
+Throws DbException on failure.
+
+####### 2.5.2.11.1.10.6 Performance
+
+######## 2.5.2.11.1.10.6.1 Latency
+
+< 10ms
+
+##### 2.5.2.11.2.0.0.0 Query
+
+###### 2.5.2.11.2.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.2.11.2.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.2.11.2.3.0.0 Message
+
+2b. SELECT p.Name, m.Description FROM Milestones m JOIN Projects p ON m.ProjectId = p.Id WHERE m.Id = {milestoneId_from_token}
+
+###### 2.5.2.11.2.4.0.0 Sequence Number
+
+4
+
+###### 2.5.2.11.2.5.0.0 Type
+
+🔹 Query
+
+###### 2.5.2.11.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.2.7.0.0 Return Message
+
+Milestone details.
+
+###### 2.5.2.11.2.8.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.2.11.2.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.2.11.2.10.0.0 Technical Details
+
+####### 2.5.2.11.2.10.1.0 Protocol
+
+TCP/IP
+
+####### 2.5.2.11.2.10.2.0 Method
+
+```sql
+SELECT
+```
+
+####### 2.5.2.11.2.10.3.0 Parameters
+
+*No items available*
+
+####### 2.5.2.11.2.10.4.0 Authentication
+
+Database credentials
+
+####### 2.5.2.11.2.10.5.0 Error Handling
+
+Throws DbException on failure.
+
+####### 2.5.2.11.2.10.6.0 Performance
+
+######## 2.5.2.11.2.10.6.1 Latency
+
+< 10ms
+
+### 2.5.3.0.0.0.0.0 UIRender
+
+#### 2.5.3.1.0.0.0.0 Source Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.3.2.0.0.0.0 Target Id
+
+USER_BROWSER
+
+#### 2.5.3.3.0.0.0.0 Message
+
+
+
+```
+3. Render Milestone Details & Action Buttons
+Displays project name, milestone description, and 'Approve'/'Reject' buttons.
+```
+
+#### 2.5.3.4.0.0.0.0 Sequence Number
+
+5
+
+#### 2.5.3.5.0.0.0.0 Type
+
+🔹 UIRender
+
+#### 2.5.3.6.0.0.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.3.7.0.0.0.0 Return Message
+
+
+
+#### 2.5.3.8.0.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.3.9.0.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.3.10.0.0.0.0 Technical Details
+
+##### 2.5.3.10.1.0.0.0 Protocol
+
+N/A
+
+##### 2.5.3.10.2.0.0.0 Method
+
+React Component Render
+
+##### 2.5.3.10.3.0.0.0 Parameters
+
+*No items available*
+
+##### 2.5.3.10.4.0.0.0 Authentication
+
+N/A
+
+##### 2.5.3.10.5.0.0.0 Error Handling
+
+If API call failed, renders an appropriate error state (e.g., 'Link Expired').
+
+##### 2.5.3.10.6.0.0.0 Performance
+
+*No data available*
+
+### 2.5.4.0.0.0.0.0 UserInteraction
+
+#### 2.5.4.1.0.0.0.0 Source Id
+
+USER_BROWSER
+
+#### 2.5.4.2.0.0.0.0 Target Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.4.3.0.0.0.0 Message
+
+4. Click 'Approve' Button
+
+#### 2.5.4.4.0.0.0.0 Sequence Number
+
+6
+
+#### 2.5.4.5.0.0.0.0 Type
+
+🔹 UserInteraction
+
+#### 2.5.4.6.0.0.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.4.7.0.0.0.0 Return Message
+
+
+
+#### 2.5.4.8.0.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.4.9.0.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.4.10.0.0.0.0 Technical Details
+
+##### 2.5.4.10.1.0.0.0 Protocol
+
+DOM Event
+
+##### 2.5.4.10.2.0.0.0 Method
+
+onClick
+
+##### 2.5.4.10.3.0.0.0 Parameters
+
+*No items available*
+
+##### 2.5.4.10.4.0.0.0 Authentication
+
+N/A
+
+##### 2.5.4.10.5.0.0.0 Error Handling
+
+UI disables the button to prevent double-clicks.
+
+##### 2.5.4.10.6.0.0.0 Performance
+
+*No data available*
+
+### 2.5.5.0.0.0.0.0 APICall
+
+#### 2.5.5.1.0.0.0.0 Source Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.5.2.0.0.0.0 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.5.3.0.0.0.0 Message
+
+
+
+```
+5. POST /api/v1/milestone-approvals/{token}/approve
+Submit the approval action.
+```
+
+#### 2.5.5.4.0.0.0.0 Sequence Number
+
+7
+
+#### 2.5.5.5.0.0.0.0 Type
+
+🔹 APICall
+
+#### 2.5.5.6.0.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0.0.0.0 Return Message
+
+200 OK or 4xx/5xx error.
+
+#### 2.5.5.8.0.0.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.5.9.0.0.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.5.10.0.0.0.0 Technical Details
+
+##### 2.5.5.10.1.0.0.0 Protocol
+
+HTTPS/REST
+
+##### 2.5.5.10.2.0.0.0 Method
+
+POST
+
+##### 2.5.5.10.3.0.0.0 Parameters
+
+*No items available*
+
+##### 2.5.5.10.4.0.0.0 Authentication
+
+None (Token authorizes the action)
+
+##### 2.5.5.10.5.0.0.0 Error Handling
+
+Handles race conditions if the token was just used.
+
+##### 2.5.5.10.6.0.0.0 Performance
+
+###### 2.5.5.10.6.1.0.0 Latency
+
+< 200ms (p95)
+
+#### 2.5.5.11.0.0.0.0 Nested Interactions
+
+##### 2.5.5.11.1.0.0.0 DBTransaction
+
+###### 2.5.5.11.1.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.5.11.1.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.5.11.1.3.0.0 Message
+
+5a. BEGIN TRANSACTION
+
+###### 2.5.5.11.1.4.0.0 Sequence Number
+
+8
+
+###### 2.5.5.11.1.5.0.0 Type
+
+🔹 DBTransaction
+
+###### 2.5.5.11.1.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.5.11.1.7.0.0 Return Message
+
+OK
+
+###### 2.5.5.11.1.8.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.5.11.1.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.5.11.1.10.0.0 Technical Details
+
+####### 2.5.5.11.1.10.1.0 Protocol
+
+TCP/IP
+
+####### 2.5.5.11.1.10.2.0 Method
+
+BEGIN
+
+####### 2.5.5.11.1.10.3.0 Parameters
+
+*No items available*
+
+####### 2.5.5.11.1.10.4.0 Authentication
+
+Database credentials
+
+####### 2.5.5.11.1.10.5.0 Error Handling
+
+Rolls back on any subsequent failure.
+
+####### 2.5.5.11.1.10.6.0 Performance
+
+*No data available*
+
+##### 2.5.5.11.2.0.0.0 Query
+
+###### 2.5.5.11.2.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.5.11.2.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.5.11.2.3.0.0 Message
+
+
+
+```
+5b. SELECT ... FOR UPDATE
+Re-validate token and milestone status with pessimistic lock.
+```
+
+###### 2.5.5.11.2.4.0.0 Sequence Number
+
+9
+
+###### 2.5.5.11.2.5.0.0 Type
+
+🔹 Query
+
+###### 2.5.5.11.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.5.11.2.7.0.0 Return Message
+
+Locked token record.
+
+###### 2.5.5.11.2.8.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.5.11.2.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.5.11.2.10.0.0 Technical Details
+
+####### 2.5.5.11.2.10.1.0 Protocol
+
+TCP/IP
+
+####### 2.5.5.11.2.10.2.0 Method
+
+```sql
+SELECT...FOR UPDATE
+```
+
+####### 2.5.5.11.2.10.3.0 Parameters
+
+*No items available*
+
+####### 2.5.5.11.2.10.4.0 Authentication
+
+Database credentials
+
+####### 2.5.5.11.2.10.5.0 Error Handling
+
+If no row is returned (token used), transaction is rolled back and a 410 is sent to client.
+
+####### 2.5.5.11.2.10.6.0 Performance
+
+*No data available*
+
+##### 2.5.5.11.3.0.0.0 Command
+
+###### 2.5.5.11.3.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.5.11.3.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.5.11.3.3.0.0 Message
+
+5c. UPDATE Milestones SET status = 'Approved' WHERE id = {milestoneId}
+
+###### 2.5.5.11.3.4.0.0 Sequence Number
+
+10
+
+###### 2.5.5.11.3.5.0.0 Type
+
+🔹 Command
+
+###### 2.5.5.11.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.5.11.3.7.0.0 Return Message
+
+OK
+
+###### 2.5.5.11.3.8.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.5.11.3.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.5.11.3.10.0.0 Technical Details
+
+####### 2.5.5.11.3.10.1.0 Protocol
+
+TCP/IP
+
+####### 2.5.5.11.3.10.2.0 Method
+
+```sql
+UPDATE
+```
+
+####### 2.5.5.11.3.10.3.0 Parameters
+
+*No items available*
+
+####### 2.5.5.11.3.10.4.0 Authentication
+
+Database credentials
+
+####### 2.5.5.11.3.10.5.0 Error Handling
+
+N/A
+
+####### 2.5.5.11.3.10.6.0 Performance
+
+*No data available*
+
+##### 2.5.5.11.4.0.0.0 Command
+
+###### 2.5.5.11.4.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.5.11.4.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.5.11.4.3.0.0 Message
+
+5d. UPDATE ActionTokens SET used_at = NOW() WHERE id = {tokenId}
+
+###### 2.5.5.11.4.4.0.0 Sequence Number
+
+11
+
+###### 2.5.5.11.4.5.0.0 Type
+
+🔹 Command
+
+###### 2.5.5.11.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.5.11.4.7.0.0 Return Message
+
+OK
+
+###### 2.5.5.11.4.8.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.5.11.4.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.5.11.4.10.0.0 Technical Details
+
+####### 2.5.5.11.4.10.1.0 Protocol
+
+TCP/IP
+
+####### 2.5.5.11.4.10.2.0 Method
+
+```sql
+UPDATE
+```
+
+####### 2.5.5.11.4.10.3.0 Parameters
+
+*No items available*
+
+####### 2.5.5.11.4.10.4.0 Authentication
+
+Database credentials
+
+####### 2.5.5.11.4.10.5.0 Error Handling
+
+Invalidates the token.
+
+####### 2.5.5.11.4.10.6.0 Performance
+
+*No data available*
+
+##### 2.5.5.11.5.0.0.0 Command
+
+###### 2.5.5.11.5.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.5.11.5.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.5.11.5.3.0.0 Message
+
+
+
+```
+5e. INSERT INTO AuditLogs (UserId, Action, ...)
+Log the approval event.
+```
+
+###### 2.5.5.11.5.4.0.0 Sequence Number
+
+12
+
+###### 2.5.5.11.5.5.0.0 Type
+
+🔹 Command
+
+###### 2.5.5.11.5.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.5.11.5.7.0.0 Return Message
+
+OK
+
+###### 2.5.5.11.5.8.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.5.11.5.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.5.11.5.10.0.0 Technical Details
+
+####### 2.5.5.11.5.10.1.0 Protocol
+
+TCP/IP
+
+####### 2.5.5.11.5.10.2.0 Method
+
+```sql
+INSERT
+```
+
+####### 2.5.5.11.5.10.3.0 Parameters
+
+*No items available*
+
+####### 2.5.5.11.5.10.4.0 Authentication
+
+Database credentials
+
+####### 2.5.5.11.5.10.5.0 Error Handling
+
+N/A
+
+####### 2.5.5.11.5.10.6.0 Performance
+
+*No data available*
+
+##### 2.5.5.11.6.0.0.0 DBTransaction
+
+###### 2.5.5.11.6.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.5.11.6.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.5.11.6.3.0.0 Message
+
+5f. COMMIT TRANSACTION
+
+###### 2.5.5.11.6.4.0.0 Sequence Number
+
+13
+
+###### 2.5.5.11.6.5.0.0 Type
+
+🔹 DBTransaction
+
+###### 2.5.5.11.6.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.5.11.6.7.0.0 Return Message
+
+OK
+
+###### 2.5.5.11.6.8.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.5.11.6.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.5.11.6.10.0.0 Technical Details
+
+####### 2.5.5.11.6.10.1.0 Protocol
+
+TCP/IP
+
+####### 2.5.5.11.6.10.2.0 Method
+
+COMMIT
+
+####### 2.5.5.11.6.10.3.0 Parameters
+
+*No items available*
+
+####### 2.5.5.11.6.10.4.0 Authentication
+
+Database credentials
+
+####### 2.5.5.11.6.10.5.0 Error Handling
+
+N/A
+
+####### 2.5.5.11.6.10.6.0 Performance
+
+*No data available*
+
+### 2.5.6.0.0.0.0.0 UIRender
+
+#### 2.5.6.1.0.0.0.0 Source Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.6.2.0.0.0.0 Target Id
+
+USER_BROWSER
+
+#### 2.5.6.3.0.0.0.0 Message
+
+
+
+```
+6. Render Success Confirmation
+Displays a message like 'Thank you! The milestone has been approved.'
+```
+
+#### 2.5.6.4.0.0.0.0 Sequence Number
+
+14
+
+#### 2.5.6.5.0.0.0.0 Type
+
+🔹 UIRender
+
+#### 2.5.6.6.0.0.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.6.7.0.0.0.0 Return Message
+
+
+
+#### 2.5.6.8.0.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.6.9.0.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.6.10.0.0.0.0 Technical Details
+
+##### 2.5.6.10.1.0.0.0 Protocol
+
+N/A
+
+##### 2.5.6.10.2.0.0.0 Method
+
+React Component Render
+
+##### 2.5.6.10.3.0.0.0 Parameters
+
+*No items available*
+
+##### 2.5.6.10.4.0.0.0 Authentication
+
+N/A
+
+##### 2.5.6.10.5.0.0.0 Error Handling
+
+N/A
+
+##### 2.5.6.10.6.0.0.0 Performance
+
+*No data available*
+
+## 2.6.0.0.0.0.0.0 Notes
+
+### 2.6.1.0.0.0.0.0 Content
+
+#### 2.6.1.1.0.0.0.0 Content
+
+Token Security: The token is a short-lived JWT containing milestoneId, clientContactId, and an expiry claim (exp). The API validates the signature and claims on every use.
+
+#### 2.6.1.2.0.0.0.0 Position
+
+top-right
+
+#### 2.6.1.3.0.0.0.0 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.1.4.0.0.0.0 Sequence Number
+
+2
+
+### 2.6.2.0.0.0.0.0 Content
+
+#### 2.6.2.1.0.0.0.0 Content
+
+Idempotency & Race Conditions: The API must use a database transaction with `SELECT ... FOR UPDATE` to ensure that an approval action can only be processed once, even with rapid, repeated requests.
+
+#### 2.6.2.2.0.0.0.0 Position
+
+bottom-right
+
+#### 2.6.2.3.0.0.0.0 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.2.4.0.0.0.0 Sequence Number
+
+7
+
+### 2.6.3.0.0.0.0.0 Content
+
+#### 2.6.3.1.0.0.0.0 Content
+
+A separate flow for 'Reject' would be similar but would include a 'reason' in the POST body and update the status to 'Rejected'. This is omitted for clarity.
+
+#### 2.6.3.2.0.0.0.0 Position
+
+bottom-left
+
+#### 2.6.3.3.0.0.0.0 Participant Id
+
+REPO-FRONTEND-SPA
+
+#### 2.6.3.4.0.0.0.0 Sequence Number
+
+14
+
+## 2.7.0.0.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Tokens MUST be generated using a cryptographically... |
+| Performance Targets | The unauthenticated approval page must have an LCP... |
+| Error Handling Strategy | The Frontend must handle specific API error codes ... |
+| Testing Considerations | E2E tests must use an email-catching tool like Mai... |
+| Monitoring Requirements | The API endpoints (`GET /milestone-approvals/{toke... |
+| Deployment Considerations | The unauthenticated route (`/approve-milestone/*`)... |
+

@@ -1,0 +1,1185 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-BP-003
+
+## 1.2 Name
+
+Admin Reviews and Approves Project Brief (HITL)
+
+## 1.3 Description
+
+An Admin reviews the AI-extracted data from an SOW in a 'human-in-the-loop' (HITL) interface. The Admin can edit, confirm, or reject the data, creating the final, approved 'Project Brief' ready for vendor distribution.
+
+## 1.4 Type
+
+🔹 BusinessProcess
+
+## 1.5 Purpose
+
+To ensure data accuracy and provide human oversight for the AI-driven SOW analysis, as mandated by REQ-FUN-002.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FRONTEND-SPA
+- REPO-API-MONOLITH
+- REPO-DB-POSTGRES
+
+## 1.10 Key Interactions
+
+- Admin is notified that an SOW is ready for review.
+- Admin opens the HITL interface, which displays the editable, AI-extracted fields (skills, scope, etc.).
+- Admin corrects any inaccuracies and adds missing information.
+- Admin clicks 'Approve Project Brief'.
+- API validates and saves the final Project Brief data.
+- API updates the project status to 'Pending Proposal' or a similar state, indicating it's ready for vendor matching.
+
+## 1.11 Triggers
+
+- SOW processing completes, and the project status moves to 'ReviewPending'.
+
+## 1.12 Outcomes
+
+- A clean, admin-verified Project Brief is stored in the database.
+- The project is now ready for the vendor matching and proposal phase.
+
+## 1.13 Business Rules
+
+- A Project Brief cannot be distributed to vendors until it has been approved by an Admin.
+
+## 1.14 Error Scenarios
+
+- Admin tries to save a brief with invalid data (e.g., missing required fields).
+
+## 1.15 Integration Points
+
+*No items available*
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-BP-003
+
+## 2.2 Name
+
+Admin Reviews and Approves AI-Extracted Project Brief (HITL)
+
+## 2.3 Description
+
+A comprehensive technical sequence detailing the Human-in-the-Loop (HITL) business process where a System Administrator reviews, edits, and approves the AI-extracted data from a Statement of Work (SOW). This process creates the canonical, validated 'Project Brief' and transitions the project state, enabling the subsequent vendor matching and proposal workflow. This sequence is a critical control point for ensuring data quality as specified in REQ-FUN-002.
+
+## 2.4 Participants
+
+### 2.4.1 Actor
+
+#### 2.4.1.1 Repository Id
+
+ACTOR-ADMIN
+
+#### 2.4.1.2 Display Name
+
+Admin User
+
+#### 2.4.1.3 Type
+
+🔹 Actor
+
+#### 2.4.1.4 Technology
+
+Human-in-the-Loop
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #9A7BFF |
+| Stereotype | <<Human>> |
+
+### 2.4.2.0 WebApp
+
+#### 2.4.2.1 Repository Id
+
+REPO-FRONTEND-SPA
+
+#### 2.4.2.2 Display Name
+
+Frontend SPA
+
+#### 2.4.2.3 Type
+
+🔹 WebApp
+
+#### 2.4.2.4 Technology
+
+Next.js 14, React 18
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | boundary |
+| Color | #34A853 |
+| Stereotype | <<Next.js>> |
+
+### 2.4.3.0 ApplicationService
+
+#### 2.4.3.1 Repository Id
+
+REPO-API-MONOLITH
+
+#### 2.4.3.2 Display Name
+
+Backend API
+
+#### 2.4.3.3 Type
+
+🔹 ApplicationService
+
+#### 2.4.3.4 Technology
+
+.NET 8, ASP.NET Core 8
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | control |
+| Color | #4285F4 |
+| Stereotype | <<ASP.NET Core>> |
+
+### 2.4.4.0 Database
+
+#### 2.4.4.1 Repository Id
+
+REPO-DB-POSTGRES
+
+#### 2.4.4.2 Display Name
+
+PostgreSQL Database
+
+#### 2.4.4.3 Type
+
+🔹 Database
+
+#### 2.4.4.4 Technology
+
+PostgreSQL 16
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #FBBC05 |
+| Stereotype | <<RDS>> |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 User Interaction
+
+#### 2.5.1.1 Source Id
+
+ACTOR-ADMIN
+
+#### 2.5.1.2 Target Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.1.3 Message
+
+1. Navigates to Project Brief Review page for a project with status 'ReviewPending'.
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 User Interaction
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+HTTPS
+
+##### 2.5.1.10.2 Method
+
+UI Navigation
+
+##### 2.5.1.10.3 Parameters
+
+- URL: /projects/{projectId}/review-brief
+
+##### 2.5.1.10.4 Authentication
+
+Requires active, authenticated session cookie.
+
+##### 2.5.1.10.5 Error Handling
+
+Standard SPA routing handles invalid project IDs.
+
+##### 2.5.1.10.6 Performance
+
+Page load initiated.
+
+### 2.5.2.0.0 API Call
+
+#### 2.5.2.1.0 Source Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.2.2.0 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.2.3.0 Message
+
+2. Requests AI-extracted brief data for review.
+
+#### 2.5.2.4.0 Sequence Number
+
+2
+
+#### 2.5.2.5.0 Type
+
+🔹 API Call
+
+#### 2.5.2.6.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0 Return Message
+
+2.4. Returns `200 OK` with `ProjectBriefReviewDto` containing editable fields.
+
+#### 2.5.2.8.0 Has Return
+
+✅ Yes
+
+#### 2.5.2.9.0 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10.0 Technical Details
+
+##### 2.5.2.10.1 Protocol
+
+HTTPS/REST
+
+##### 2.5.2.10.2 Method
+
+GET /api/v1/projects/{projectId}/briefs/review
+
+##### 2.5.2.10.3 Parameters
+
+- projectId (path)
+
+##### 2.5.2.10.4 Authentication
+
+Valid JWT Bearer token required. Authorization policy: 'SystemAdministrator'.
+
+##### 2.5.2.10.5 Error Handling
+
+Returns `404 Not Found` if project or brief doesn't exist or is not in 'ReviewPending' state. Returns `403 Forbidden` for invalid roles.
+
+##### 2.5.2.10.6 Performance
+
+p95 latency < 250ms.
+
+#### 2.5.2.11.0 Nested Interactions
+
+##### 2.5.2.11.1 Database Query
+
+###### 2.5.2.11.1.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.2.11.1.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.2.11.1.3 Message
+
+2.1. Fetches Project and associated ProjectBrief data.
+
+###### 2.5.2.11.1.4 Sequence Number
+
+2.1
+
+###### 2.5.2.11.1.5 Type
+
+🔹 Database Query
+
+###### 2.5.2.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.1.7 Return Message
+
+2.2. Returns project and brief records.
+
+###### 2.5.2.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.2.11.1.9 Is Activation
+
+✅ Yes
+
+###### 2.5.2.11.1.10 Technical Details
+
+####### 2.5.2.11.1.10.1 Protocol
+
+TCP/IP
+
+####### 2.5.2.11.1.10.2 Method
+
+```sql
+SELECT
+```
+
+####### 2.5.2.11.1.10.3 Parameters
+
+- SQL: SELECT ... FROM "Projects" p JOIN "ProjectBriefs" pb ON p.id = pb.project_id WHERE p.id = @projectId AND p.status = 'ReviewPending'
+
+####### 2.5.2.11.1.10.4 Authentication
+
+Database user credentials from connection pool.
+
+####### 2.5.2.11.1.10.5 Error Handling
+
+Handled by EF Core exception strategy.
+
+####### 2.5.2.11.1.10.6 Performance
+
+p99 latency < 100ms.
+
+##### 2.5.2.11.2.0.0 Internal Process
+
+###### 2.5.2.11.2.1.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.2.11.2.2.0 Target Id
+
+REPO-API-MONOLITH
+
+###### 2.5.2.11.2.3.0 Message
+
+2.3. Maps domain entities to `ProjectBriefReviewDto`.
+
+###### 2.5.2.11.2.4.0 Sequence Number
+
+2.3
+
+###### 2.5.2.11.2.5.0 Type
+
+🔹 Internal Process
+
+###### 2.5.2.11.2.6.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.2.7.0 Return Message
+
+
+
+###### 2.5.2.11.2.8.0 Has Return
+
+❌ No
+
+###### 2.5.2.11.2.9.0 Is Activation
+
+❌ No
+
+###### 2.5.2.11.2.10.0 Technical Details
+
+####### 2.5.2.11.2.10.1 Protocol
+
+In-Memory
+
+####### 2.5.2.11.2.10.2 Method
+
+AutoMapper.ProjectTo
+
+####### 2.5.2.11.2.10.3 Parameters
+
+*No items available*
+
+####### 2.5.2.11.2.10.4 Authentication
+
+N/A
+
+####### 2.5.2.11.2.10.5 Error Handling
+
+N/A
+
+####### 2.5.2.11.2.10.6 Performance
+
+Negligible.
+
+### 2.5.3.0.0.0.0 User Interaction
+
+#### 2.5.3.1.0.0.0 Source Id
+
+ACTOR-ADMIN
+
+#### 2.5.3.2.0.0.0 Target Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.3.3.0.0.0 Message
+
+3. Edits/corrects brief data and clicks 'Approve Project Brief'.
+
+#### 2.5.3.4.0.0.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0.0.0 Type
+
+🔹 User Interaction
+
+#### 2.5.3.6.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0.0 Return Message
+
+
+
+#### 2.5.3.8.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.3.9.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.3.10.0.0.0 Technical Details
+
+##### 2.5.3.10.1.0.0 Protocol
+
+HTTPS
+
+##### 2.5.3.10.2.0.0 Method
+
+Form Submission
+
+##### 2.5.3.10.3.0.0 Parameters
+
+- User modifies form fields (scope, deliverables, skills).
+
+##### 2.5.3.10.4.0.0 Authentication
+
+N/A
+
+##### 2.5.3.10.5.0.0 Error Handling
+
+Client-side validation (e.g., using React Hook Form) prevents submission of empty required fields.
+
+##### 2.5.3.10.6.0.0 Performance
+
+UI state updates.
+
+### 2.5.4.0.0.0.0 API Call
+
+#### 2.5.4.1.0.0.0 Source Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.4.2.0.0.0 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.4.3.0.0.0 Message
+
+4. Submits final, approved Project Brief.
+
+#### 2.5.4.4.0.0.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0.0.0 Type
+
+🔹 API Call
+
+#### 2.5.4.6.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0.0.0 Return Message
+
+4.8. Returns `200 OK` on successful approval and state transition.
+
+#### 2.5.4.8.0.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.4.9.0.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10.0.0.0 Technical Details
+
+##### 2.5.4.10.1.0.0 Protocol
+
+HTTPS/REST
+
+##### 2.5.4.10.2.0.0 Method
+
+PUT /api/v1/projects/{projectId}/briefs/approve
+
+##### 2.5.4.10.3.0.0 Parameters
+
+- projectId (path)
+- UpdateProjectBriefDto (body)
+
+##### 2.5.4.10.4.0.0 Authentication
+
+Valid JWT Bearer token required. Authorization policy: 'SystemAdministrator'.
+
+##### 2.5.4.10.5.0.0 Error Handling
+
+Returns `400 Bad Request` on validation failure. Returns `409 Conflict` if project is not in 'ReviewPending' state. All database operations are in a transaction; failure results in a rollback and a `500 Internal Server Error`.
+
+##### 2.5.4.10.6.0.0 Performance
+
+p95 latency < 250ms.
+
+#### 2.5.4.11.0.0.0 Nested Interactions
+
+##### 2.5.4.11.1.0.0 Internal Process
+
+###### 2.5.4.11.1.1.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.1.2.0 Target Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.1.3.0 Message
+
+4.1. Validates `UpdateProjectBriefDto` against business rules.
+
+###### 2.5.4.11.1.4.0 Sequence Number
+
+4.1
+
+###### 2.5.4.11.1.5.0 Type
+
+🔹 Internal Process
+
+###### 2.5.4.11.1.6.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.1.7.0 Return Message
+
+
+
+###### 2.5.4.11.1.8.0 Has Return
+
+❌ No
+
+###### 2.5.4.11.1.9.0 Is Activation
+
+❌ No
+
+###### 2.5.4.11.1.10.0 Technical Details
+
+####### 2.5.4.11.1.10.1 Protocol
+
+In-Memory
+
+####### 2.5.4.11.1.10.2 Method
+
+FluentValidation
+
+####### 2.5.4.11.1.10.3 Parameters
+
+- Checks for required fields, data types.
+
+####### 2.5.4.11.1.10.4 Authentication
+
+N/A
+
+####### 2.5.4.11.1.10.5 Error Handling
+
+Throws ValidationException, caught by global middleware to return 400.
+
+####### 2.5.4.11.1.10.6 Performance
+
+Negligible.
+
+##### 2.5.4.11.2.0.0 Database Command
+
+###### 2.5.4.11.2.1.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.2.2.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.4.11.2.3.0 Message
+
+4.2. Begins database transaction.
+
+###### 2.5.4.11.2.4.0 Sequence Number
+
+4.2
+
+###### 2.5.4.11.2.5.0 Type
+
+🔹 Database Command
+
+###### 2.5.4.11.2.6.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.2.7.0 Return Message
+
+
+
+###### 2.5.4.11.2.8.0 Has Return
+
+❌ No
+
+###### 2.5.4.11.2.9.0 Is Activation
+
+✅ Yes
+
+###### 2.5.4.11.2.10.0 Technical Details
+
+####### 2.5.4.11.2.10.1 Protocol
+
+TCP/IP
+
+####### 2.5.4.11.2.10.2 Method
+
+BEGIN TRANSACTION
+
+####### 2.5.4.11.2.10.3 Parameters
+
+*No items available*
+
+####### 2.5.4.11.2.10.4 Authentication
+
+N/A
+
+####### 2.5.4.11.2.10.5 Error Handling
+
+N/A
+
+####### 2.5.4.11.2.10.6 Performance
+
+Low.
+
+##### 2.5.4.11.3.0.0 Database Command
+
+###### 2.5.4.11.3.1.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.3.2.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.4.11.3.3.0 Message
+
+4.3. Updates ProjectBrief with corrected data and sets status to 'Approved'.
+
+###### 2.5.4.11.3.4.0 Sequence Number
+
+4.3
+
+###### 2.5.4.11.3.5.0 Type
+
+🔹 Database Command
+
+###### 2.5.4.11.3.6.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.3.7.0 Return Message
+
+
+
+###### 2.5.4.11.3.8.0 Has Return
+
+❌ No
+
+###### 2.5.4.11.3.9.0 Is Activation
+
+❌ No
+
+###### 2.5.4.11.3.10.0 Technical Details
+
+####### 2.5.4.11.3.10.1 Protocol
+
+TCP/IP
+
+####### 2.5.4.11.3.10.2 Method
+
+```sql
+UPDATE
+```
+
+####### 2.5.4.11.3.10.3 Parameters
+
+- SQL: UPDATE "ProjectBriefs" SET ... WHERE project_id = @projectId
+
+####### 2.5.4.11.3.10.4 Authentication
+
+N/A
+
+####### 2.5.4.11.3.10.5 Error Handling
+
+Transaction will be rolled back on failure.
+
+####### 2.5.4.11.3.10.6 Performance
+
+Low.
+
+##### 2.5.4.11.4.0.0 Database Command
+
+###### 2.5.4.11.4.1.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.4.2.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.4.11.4.3.0 Message
+
+4.4. Updates parent Project status to 'PendingProposal'.
+
+###### 2.5.4.11.4.4.0 Sequence Number
+
+4.4
+
+###### 2.5.4.11.4.5.0 Type
+
+🔹 Database Command
+
+###### 2.5.4.11.4.6.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.4.7.0 Return Message
+
+
+
+###### 2.5.4.11.4.8.0 Has Return
+
+❌ No
+
+###### 2.5.4.11.4.9.0 Is Activation
+
+❌ No
+
+###### 2.5.4.11.4.10.0 Technical Details
+
+####### 2.5.4.11.4.10.1 Protocol
+
+TCP/IP
+
+####### 2.5.4.11.4.10.2 Method
+
+```sql
+UPDATE
+```
+
+####### 2.5.4.11.4.10.3 Parameters
+
+- SQL: UPDATE "Projects" SET status = 'PendingProposal' WHERE id = @projectId
+
+####### 2.5.4.11.4.10.4 Authentication
+
+N/A
+
+####### 2.5.4.11.4.10.5 Error Handling
+
+Transaction will be rolled back on failure.
+
+####### 2.5.4.11.4.10.6 Performance
+
+Low.
+
+##### 2.5.4.11.5.0.0 Database Command
+
+###### 2.5.4.11.5.1.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.5.2.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.4.11.5.3.0 Message
+
+4.5. Inserts a record into the immutable Audit Log.
+
+###### 2.5.4.11.5.4.0 Sequence Number
+
+4.5
+
+###### 2.5.4.11.5.5.0 Type
+
+🔹 Database Command
+
+###### 2.5.4.11.5.6.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.5.7.0 Return Message
+
+
+
+###### 2.5.4.11.5.8.0 Has Return
+
+❌ No
+
+###### 2.5.4.11.5.9.0 Is Activation
+
+❌ No
+
+###### 2.5.4.11.5.10.0 Technical Details
+
+####### 2.5.4.11.5.10.1 Protocol
+
+TCP/IP
+
+####### 2.5.4.11.5.10.2 Method
+
+```sql
+INSERT
+```
+
+####### 2.5.4.11.5.10.3 Parameters
+
+- SQL: INSERT INTO "AuditLogs" (UserId, Action, TargetEntity, ...) VALUES (@userId, 'PROJECT_BRIEF_APPROVED', 'Project', ...)
+
+####### 2.5.4.11.5.10.4 Authentication
+
+N/A
+
+####### 2.5.4.11.5.10.5 Error Handling
+
+Transaction will be rolled back on failure.
+
+####### 2.5.4.11.5.10.6 Performance
+
+Low.
+
+##### 2.5.4.11.6.0.0 Database Command
+
+###### 2.5.4.11.6.1.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.6.2.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.4.11.6.3.0 Message
+
+4.6. Commits database transaction.
+
+###### 2.5.4.11.6.4.0 Sequence Number
+
+4.6
+
+###### 2.5.4.11.6.5.0 Type
+
+🔹 Database Command
+
+###### 2.5.4.11.6.6.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.6.7.0 Return Message
+
+
+
+###### 2.5.4.11.6.8.0 Has Return
+
+❌ No
+
+###### 2.5.4.11.6.9.0 Is Activation
+
+❌ No
+
+###### 2.5.4.11.6.10.0 Technical Details
+
+####### 2.5.4.11.6.10.1 Protocol
+
+TCP/IP
+
+####### 2.5.4.11.6.10.2 Method
+
+COMMIT
+
+####### 2.5.4.11.6.10.3 Parameters
+
+*No items available*
+
+####### 2.5.4.11.6.10.4 Authentication
+
+N/A
+
+####### 2.5.4.11.6.10.5 Error Handling
+
+N/A
+
+####### 2.5.4.11.6.10.6 Performance
+
+Low.
+
+##### 2.5.4.11.7.0.0 Internal Process
+
+###### 2.5.4.11.7.1.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.7.2.0 Target Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.7.3.0 Message
+
+4.7. [Async] Dispatches `ProjectBriefApprovedEvent` for other listeners (e.g., notifications).
+
+###### 2.5.4.11.7.4.0 Sequence Number
+
+4.7
+
+###### 2.5.4.11.7.5.0 Type
+
+🔹 Internal Process
+
+###### 2.5.4.11.7.6.0 Is Synchronous
+
+❌ No
+
+###### 2.5.4.11.7.7.0 Return Message
+
+
+
+###### 2.5.4.11.7.8.0 Has Return
+
+❌ No
+
+###### 2.5.4.11.7.9.0 Is Activation
+
+❌ No
+
+###### 2.5.4.11.7.10.0 Technical Details
+
+####### 2.5.4.11.7.10.1 Protocol
+
+In-Memory
+
+####### 2.5.4.11.7.10.2 Method
+
+MediatR.Publish
+
+####### 2.5.4.11.7.10.3 Parameters
+
+- ProjectBriefApprovedEvent
+
+####### 2.5.4.11.7.10.4 Authentication
+
+N/A
+
+####### 2.5.4.11.7.10.5 Error Handling
+
+Event handlers are fire-and-forget; failures are logged independently.
+
+####### 2.5.4.11.7.10.6 Performance
+
+Low.
+
+### 2.5.5.0.0.0.0 UI Feedback
+
+#### 2.5.5.1.0.0.0 Source Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.5.2.0.0.0 Target Id
+
+ACTOR-ADMIN
+
+#### 2.5.5.3.0.0.0 Message
+
+5. Displays success notification and redirects to the project dashboard.
+
+#### 2.5.5.4.0.0.0 Sequence Number
+
+5
+
+#### 2.5.5.5.0.0.0 Type
+
+🔹 UI Feedback
+
+#### 2.5.5.6.0.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0.0.0 Return Message
+
+
+
+#### 2.5.5.8.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.5.9.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0.0.0 Technical Details
+
+##### 2.5.5.10.1.0.0 Protocol
+
+HTTPS
+
+##### 2.5.5.10.2.0.0 Method
+
+UI Update
+
+##### 2.5.5.10.3.0.0 Parameters
+
+- Display toast message: 'Project Brief approved successfully.'
+- Router.push('/projects/{projectId}')
+
+##### 2.5.5.10.4.0.0 Authentication
+
+N/A
+
+##### 2.5.5.10.5.0.0 Error Handling
+
+N/A
+
+##### 2.5.5.10.6.0.0 Performance
+
+Negligible.
+
+## 2.6.0.0.0.0.0 Notes
+
+### 2.6.1.0.0.0.0 Content
+
+#### 2.6.1.1.0.0.0 Content
+
+State Management: The entire business process is orchestrated by changing the 'status' field on the Project and ProjectBrief entities. This acts as a simple state machine.
+
+#### 2.6.1.2.0.0.0 Position
+
+bottom
+
+#### 2.6.1.3.0.0.0 Participant Id
+
+*Not specified*
+
+#### 2.6.1.4.0.0.0 Sequence Number
+
+4.4
+
+### 2.6.2.0.0.0.0 Content
+
+#### 2.6.2.1.0.0.0 Content
+
+Data Consistency: The use of a database transaction for all write operations (Steps 4.2 to 4.6) is critical to ensure atomicity. If any step fails, the entire operation is rolled back, leaving the system in a consistent state.
+
+#### 2.6.2.2.0.0.0 Position
+
+right
+
+#### 2.6.2.3.0.0.0 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.2.4.0.0.0 Sequence Number
+
+4.2
+
+### 2.6.3.0.0.0.0 Content
+
+#### 2.6.3.1.0.0.0 Content
+
+Business Rule Enforcement: The API validates that the Project status is 'ReviewPending' before allowing any modifications. This prevents editing an already-approved or otherwise active brief, enforcing the defined workflow.
+
+#### 2.6.3.2.0.0.0 Position
+
+left
+
+#### 2.6.3.3.0.0.0 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.3.4.0.0.0 Sequence Number
+
+2.1
+
+## 2.7.0.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | All API endpoints (`/api/v1/projects/{projectId}/b... |
+| Performance Targets | The API endpoint for saving the brief (PUT) must a... |
+| Error Handling Strategy | Server-side validation failures on the PUT request... |
+| Testing Considerations | Integration tests are critical to verify the trans... |
+| Monitoring Requirements | A business metric should be created to track the a... |
+| Deployment Considerations | This is a core workflow feature. Any changes to th... |
+
