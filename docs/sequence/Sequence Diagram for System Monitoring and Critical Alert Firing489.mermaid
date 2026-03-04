@@ -1,0 +1,31 @@
+sequenceDiagram
+    actor "User / System Load" as UserSystemLoad
+    participant "EMP Backend API" as EMPBackendAPI
+    participant "Prometheus" as Prometheus
+    participant "Alertmanager" as Alertmanager
+    participant "Notification Channel" as NotificationChannel
+    participant "On-Call Engineer" as OnCallEngineer
+
+    activate EMPBackendAPI
+    UserSystemLoad->>EMPBackendAPI: 1. 1. [Cause] Increased traffic/load is applied to the API
+    EMPBackendAPI-->>UserSystemLoad: HTTP 2xx (with high latency)
+    EMPBackendAPI->>EMPBackendAPI: 2. 2. [Internal] Record high request duration via OpenTelemetry instrumentation
+    Prometheus->>EMPBackendAPI: 3. 3. [Scrape] Periodically pull metrics
+    EMPBackendAPI-->>Prometheus: 200 OK with Prometheus exposition format text
+    activate Prometheus
+    Prometheus->>Prometheus: 4. 4. [Evaluate] Continuously evaluate configured alert rule against time-series data
+    activate Alertmanager
+    Prometheus->>Alertmanager: 5. 5. [Fire] Send alert when rule condition is met for its 'FOR' duration
+    Alertmanager->>Alertmanager: 6. 6. [Process] Deduplicate, group, and route alert based on configured policies
+    activate NotificationChannel
+    Alertmanager->>NotificationChannel: 7. 7. [Notify] Send formatted notification to configured receiver
+    NotificationChannel->>OnCallEngineer: 8. 8. [Outcome] On-call engineer receives an alert notification
+
+    note over Prometheus: The 'FOR: 5m' clause in the Prometheus alert rule is critical to prevent 'flapping' alerts from t...
+    note over Alertmanager: Alertmanager's grouping logic is key to reducing alert fatigue. For instance, if 10 API pods are ...
+    note over EMPBackendAPI: The /metrics endpoint is a pull-based model. It must be designed to be highly performant and ligh...
+
+    deactivate NotificationChannel
+    deactivate Alertmanager
+    deactivate Prometheus
+    deactivate EMPBackendAPI

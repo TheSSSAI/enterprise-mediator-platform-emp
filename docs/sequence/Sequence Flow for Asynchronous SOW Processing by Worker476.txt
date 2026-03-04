@@ -1,0 +1,986 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-EP-001
+
+## 1.2 Name
+
+Asynchronous SOW Processing by Worker
+
+## 1.3 Description
+
+A dedicated background worker service consumes the 'SowUploaded' event. It retrieves the SOW document and orchestrates the complete AI pipeline: PII sanitization via AWS Comprehend, structured data extraction via OpenAI, and vector embedding generation. The results are then persisted to the database.
+
+## 1.4 Type
+
+🔹 EventProcessing
+
+## 1.5 Purpose
+
+To perform the long-running, resource-intensive AI analysis of the SOW (REQ-FUN-002) without blocking the user-facing API, ensuring system responsiveness and scalability.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-MQ-RABBITMQ
+- REPO-SVC-AIWORKER
+- REPO-INFRA-AWS
+- REPO-EXT-COMPREHEND
+- REPO-EXT-OPENAI
+- REPO-DB-POSTGRES
+
+## 1.10 Key Interactions
+
+- Worker consumes a 'SowUploaded' message from the queue.
+- Worker downloads the original SOW from S3 using the ID from the message.
+- Worker calls AWS Comprehend to identify and sanitize PII, creating a sanitized text version.
+- Worker stores the new sanitized SOW version in S3.
+- Worker sends the sanitized text to an OpenAI model (e.g., GPT-4) to extract structured data (skills, deliverables, scope).
+- Worker uses an OpenAI embedding model to generate vector embeddings for the extracted skills.
+- Worker updates the SOW and Project Brief records in the database with the extracted data, embeddings, and sets the status to 'ReviewPending'.
+
+## 1.11 Triggers
+
+- A 'SowUploaded' event is available in the message processing queue.
+
+## 1.12 Outcomes
+
+- The SOW record is updated with extracted structured data and a 'ReviewPending' status, ready for HITL.
+- Vector embeddings for required project skills are stored in the database.
+- A sanitized version of the SOW is securely stored in S3.
+- The Admin receives a notification that SOW processing is complete and ready for review.
+
+## 1.13 Business Rules
+
+- Sanitization must consistently replace PII with placeholders like [PERSON_NAME] as per the defined policy (REQ-FUN-002).
+- Both original and sanitized SOWs must be stored securely with different access policies.
+- The operation must be idempotent to handle potential message redelivery.
+
+## 1.14 Error Scenarios
+
+- External AI APIs are unavailable or return errors, triggering a retry policy.
+- The document format is unparsable, causing a permanent failure.
+- After all retries fail, the message is moved to a Dead-Letter Queue (DLQ) for manual intervention.
+
+## 1.15 Integration Points
+
+- AWS S3
+- AWS Comprehend API
+- OpenAI API
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-EP-001
+
+## 2.2 Name
+
+Implementation: Asynchronous SOW Processing Pipeline
+
+## 2.3 Description
+
+Detailed sequence for the event-driven AI worker service (REPO-SVC-AIWORKER) consuming a 'SowUploaded' event. The worker orchestrates a multi-step pipeline involving idempotent checks, document retrieval from AWS S3, PII sanitization via AWS Comprehend, structured data extraction and vector embedding generation via OpenAI, and finally, persisting the results to the PostgreSQL database in a single transaction before acknowledging the message.
+
+## 2.4 Participants
+
+### 2.4.1 Message Broker
+
+#### 2.4.1.1 Repository Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.4.1.2 Display Name
+
+RabbitMQ Broker
+
+#### 2.4.1.3 Type
+
+🔹 Message Broker
+
+#### 2.4.1.4 Technology
+
+RabbitMQ 3.13
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | queue |
+| Color | #FF6600 |
+| Stereotype | <<AMQP>> |
+
+### 2.4.2.0 Background Service
+
+#### 2.4.2.1 Repository Id
+
+REPO-SVC-AIWORKER
+
+#### 2.4.2.2 Display Name
+
+AI Processing Worker
+
+#### 2.4.2.3 Type
+
+🔹 Background Service
+
+#### 2.4.2.4 Technology
+
+.NET 8 Worker Service
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #00529B |
+| Stereotype | <<Consumer>> |
+
+### 2.4.3.0 Database
+
+#### 2.4.3.1 Repository Id
+
+REPO-DB-POSTGRES
+
+#### 2.4.3.2 Display Name
+
+PostgreSQL Database
+
+#### 2.4.3.3 Type
+
+🔹 Database
+
+#### 2.4.3.4 Technology
+
+PostgreSQL 15+ with pgvector
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #336791 |
+| Stereotype | <<RDS>> |
+
+### 2.4.4.0 Object Storage
+
+#### 2.4.4.1 Repository Id
+
+REPO-INFRA-AWS
+
+#### 2.4.4.2 Display Name
+
+AWS S3
+
+#### 2.4.4.3 Type
+
+🔹 Object Storage
+
+#### 2.4.4.4 Technology
+
+AWS S3
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | cloud |
+| Color | #232F3E |
+| Stereotype | <<S3>> |
+
+### 2.4.5.0 External Service
+
+#### 2.4.5.1 Repository Id
+
+REPO-EXT-COMPREHEND
+
+#### 2.4.5.2 Display Name
+
+AWS Comprehend API
+
+#### 2.4.5.3 Type
+
+🔹 External Service
+
+#### 2.4.5.4 Technology
+
+AWS Comprehend API
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #5A6B86 |
+| Stereotype | <<External API>> |
+
+### 2.4.6.0 External Service
+
+#### 2.4.6.1 Repository Id
+
+REPO-EXT-OPENAI
+
+#### 2.4.6.2 Display Name
+
+OpenAI API
+
+#### 2.4.6.3 Type
+
+🔹 External Service
+
+#### 2.4.6.4 Technology
+
+Azure OpenAI Service
+
+#### 2.4.6.5 Order
+
+6
+
+#### 2.4.6.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #4285F4 |
+| Stereotype | <<External API>> |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Asynchronous Message
+
+#### 2.5.1.1 Source Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.5.1.2 Target Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.1.3 Message
+
+Deliver 'SowUploaded' message
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Asynchronous Message
+
+#### 2.5.1.6 Is Synchronous
+
+❌ No
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AMQP 0-9-1 |
+| Method | Basic.Deliver |
+| Parameters | SowUploadedEvent { sowDocumentId: Guid, projectId:... |
+| Authentication | AMQP credentials |
+| Error Handling | N/A |
+| Performance | Dependent on network and broker load. |
+
+### 2.5.2.0 Database Query
+
+#### 2.5.2.1 Source Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.2.2 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.2.3 Message
+
+Check SOW processing status for idempotency
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 Database Query
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+Return SOW status ('Pending', 'Processing', etc.)
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+❌ No
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Npgsql |
+| Method | SELECT status FROM "SowDocuments" WHERE id = :sowD... |
+| Parameters | sowDocumentId: from message |
+| Authentication | DB connection string credentials |
+| Error Handling | Handled by EF Core Execution Strategy (DatabaseTra... |
+| Performance | < 20ms |
+
+### 2.5.3.0 Database Command
+
+#### 2.5.3.1 Source Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.3.2 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.3.3 Message
+
+Update SOW status to 'Processing'
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 Database Command
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+Return rows affected
+
+#### 2.5.3.8 Has Return
+
+✅ Yes
+
+#### 2.5.3.9 Is Activation
+
+❌ No
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Npgsql |
+| Method | UPDATE "SowDocuments" SET status = 'Processing', "... |
+| Parameters | sowDocumentId |
+| Authentication | DB connection string credentials |
+| Error Handling | Retry on transient DB errors. |
+| Performance | < 30ms |
+
+### 2.5.4.0 API Call
+
+#### 2.5.4.1 Source Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.4.2 Target Id
+
+REPO-INFRA-AWS
+
+#### 2.5.4.3 Message
+
+Download original SOW document
+
+#### 2.5.4.4 Sequence Number
+
+4
+
+#### 2.5.4.5 Type
+
+🔹 API Call
+
+#### 2.5.4.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7 Return Message
+
+Return SOW document stream (e.g., .docx, .pdf)
+
+#### 2.5.4.8 Has Return
+
+✅ Yes
+
+#### 2.5.4.9 Is Activation
+
+❌ No
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS (AWS SDK) |
+| Method | S3Client.GetObjectAsync |
+| Parameters | Bucket: 'emp-sows-private', Key: 'original/{projec... |
+| Authentication | IAM Role credentials |
+| Error Handling | Wrapped in Polly retry policy (ExternalApiTransien... |
+| Performance | Dependent on file size and network. |
+
+### 2.5.5.0 API Call
+
+#### 2.5.5.1 Source Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.5.2 Target Id
+
+REPO-EXT-COMPREHEND
+
+#### 2.5.5.3 Message
+
+Request PII entity detection
+
+#### 2.5.5.4 Sequence Number
+
+5
+
+#### 2.5.5.5 Type
+
+🔹 API Call
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+Return collection of detected PII entities and their locations
+
+#### 2.5.5.8 Has Return
+
+✅ Yes
+
+#### 2.5.5.9 Is Activation
+
+❌ No
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS (AWS SDK) |
+| Method | ComprehendClient.DetectPiiEntitiesAsync |
+| Parameters | Text: <extracted_text_from_sow>, LanguageCode: 'en... |
+| Authentication | IAM Role credentials |
+| Error Handling | Wrapped in Polly retry policy. |
+| Performance | 1-5s depending on document length. |
+
+### 2.5.6.0 API Call
+
+#### 2.5.6.1 Source Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.6.2 Target Id
+
+REPO-INFRA-AWS
+
+#### 2.5.6.3 Message
+
+Upload sanitized SOW text
+
+#### 2.5.6.4 Sequence Number
+
+6
+
+#### 2.5.6.5 Type
+
+🔹 API Call
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Return Message
+
+Return ETag of uploaded object
+
+#### 2.5.6.8 Has Return
+
+✅ Yes
+
+#### 2.5.6.9 Is Activation
+
+❌ No
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS (AWS SDK) |
+| Method | S3Client.PutObjectAsync |
+| Parameters | Bucket: 'emp-sows-private', Key: 'sanitized/{proje... |
+| Authentication | IAM Role credentials |
+| Error Handling | Wrapped in Polly retry policy. |
+| Performance | Dependent on file size and network. |
+
+### 2.5.7.0 API Call
+
+#### 2.5.7.1 Source Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.7.2 Target Id
+
+REPO-EXT-OPENAI
+
+#### 2.5.7.3 Message
+
+Request structured data extraction from sanitized text
+
+#### 2.5.7.4 Sequence Number
+
+7
+
+#### 2.5.7.5 Type
+
+🔹 API Call
+
+#### 2.5.7.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7 Return Message
+
+Return structured JSON object
+
+#### 2.5.7.8 Has Return
+
+✅ Yes
+
+#### 2.5.7.9 Is Activation
+
+❌ No
+
+#### 2.5.7.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS (OpenAI SDK) |
+| Method | OpenAIClient.GetChatCompletionsAsync |
+| Parameters | Model: 'gpt-4-turbo', Prompt instructing extractio... |
+| Authentication | Bearer <API_KEY_from_SecretsManager> |
+| Error Handling | Wrapped in Polly retry and circuit breaker policie... |
+| Performance | 5-30s depending on text length and model load. |
+
+#### 2.5.7.11 Nested Interactions
+
+##### 2.5.7.11.1 API Call
+
+###### 2.5.7.11.1.1 Source Id
+
+REPO-SVC-AIWORKER
+
+###### 2.5.7.11.1.2 Target Id
+
+REPO-EXT-OPENAI
+
+###### 2.5.7.11.1.3 Message
+
+Attempt 1: POST /v1/chat/completions
+
+###### 2.5.7.11.1.4 Sequence Number
+
+7.1
+
+###### 2.5.7.11.1.5 Type
+
+🔹 API Call
+
+###### 2.5.7.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.1.7 Return Message
+
+503 Service Unavailable
+
+###### 2.5.7.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.7.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.7.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | POST |
+| Parameters | ... |
+| Authentication | ... |
+| Error Handling | Caught by Polly retry policy. |
+| Performance | ... |
+
+##### 2.5.7.11.2.0 Internal Process
+
+###### 2.5.7.11.2.1 Source Id
+
+REPO-SVC-AIWORKER
+
+###### 2.5.7.11.2.2 Target Id
+
+REPO-SVC-AIWORKER
+
+###### 2.5.7.11.2.3 Message
+
+Wait (Exponential Backoff + Jitter)
+
+###### 2.5.7.11.2.4 Sequence Number
+
+7.2
+
+###### 2.5.7.11.2.5 Type
+
+🔹 Internal Process
+
+###### 2.5.7.11.2.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.2.7 Return Message
+
+
+
+###### 2.5.7.11.2.8 Has Return
+
+❌ No
+
+###### 2.5.7.11.2.9 Is Activation
+
+❌ No
+
+###### 2.5.7.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | N/A |
+| Method | Task.Delay |
+| Parameters | ... |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | ... |
+
+##### 2.5.7.11.3.0 API Call
+
+###### 2.5.7.11.3.1 Source Id
+
+REPO-SVC-AIWORKER
+
+###### 2.5.7.11.3.2 Target Id
+
+REPO-EXT-OPENAI
+
+###### 2.5.7.11.3.3 Message
+
+Attempt 2: POST /v1/chat/completions
+
+###### 2.5.7.11.3.4 Sequence Number
+
+7.3
+
+###### 2.5.7.11.3.5 Type
+
+🔹 API Call
+
+###### 2.5.7.11.3.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.3.7 Return Message
+
+200 OK with JSON payload
+
+###### 2.5.7.11.3.8 Has Return
+
+✅ Yes
+
+###### 2.5.7.11.3.9 Is Activation
+
+❌ No
+
+###### 2.5.7.11.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | POST |
+| Parameters | ... |
+| Authentication | ... |
+| Error Handling | Success. |
+| Performance | ... |
+
+### 2.5.8.0.0.0 API Call
+
+#### 2.5.8.1.0.0 Source Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.8.2.0.0 Target Id
+
+REPO-EXT-OPENAI
+
+#### 2.5.8.3.0.0 Message
+
+Request vector embeddings for extracted skills
+
+#### 2.5.8.4.0.0 Sequence Number
+
+8
+
+#### 2.5.8.5.0.0 Type
+
+🔹 API Call
+
+#### 2.5.8.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7.0.0 Return Message
+
+Return array of vector embeddings
+
+#### 2.5.8.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.8.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.8.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS (OpenAI SDK) |
+| Method | OpenAIClient.GetEmbeddingsAsync |
+| Parameters | Model: 'text-embedding-ada-002', Input: Array of e... |
+| Authentication | Bearer <API_KEY_from_SecretsManager> |
+| Error Handling | Wrapped in Polly retry and circuit breaker policie... |
+| Performance | 1-5s |
+
+### 2.5.9.0.0.0 Database Transaction
+
+#### 2.5.9.1.0.0 Source Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.9.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.9.3.0.0 Message
+
+Persist extracted data, embeddings, and update status
+
+#### 2.5.9.4.0.0 Sequence Number
+
+9
+
+#### 2.5.9.5.0.0 Type
+
+🔹 Database Transaction
+
+#### 2.5.9.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7.0.0 Return Message
+
+Return transaction commit success
+
+#### 2.5.9.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.9.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.9.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Npgsql |
+| Method | DbContext.SaveChangesAsync within a TransactionSco... |
+| Parameters | UPDATE "SowDocuments" SET ..., status='ReviewPendi... |
+| Authentication | DB connection string credentials |
+| Error Handling | Transaction will be rolled back on any exception. |
+| Performance | < 200ms |
+
+### 2.5.10.0.0.0 Asynchronous Command
+
+#### 2.5.10.1.0.0 Source Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.10.2.0.0 Target Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.5.10.3.0.0 Message
+
+Acknowledge message processing complete
+
+#### 2.5.10.4.0.0 Sequence Number
+
+10
+
+#### 2.5.10.5.0.0 Type
+
+🔹 Asynchronous Command
+
+#### 2.5.10.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.10.7.0.0 Return Message
+
+
+
+#### 2.5.10.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.10.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.10.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AMQP 0-9-1 |
+| Method | Basic.Ack |
+| Parameters | deliveryTag |
+| Authentication | AMQP credentials |
+| Error Handling | If ACK fails, broker will redeliver message, requi... |
+| Performance | Minimal |
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+If idempotency check at step 2 finds a status other than 'Pending', the worker logs a warning, ACKs the message, and terminates the flow to prevent reprocessing.
+
+#### 2.6.1.2.0.0 Position
+
+top
+
+#### 2.6.1.3.0.0 Participant Id
+
+REPO-SVC-AIWORKER
+
+#### 2.6.1.4.0.0 Sequence Number
+
+2
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+If any step fails after exhausting all retries (e.g., OpenAI API is down), the entire process is aborted. The worker will send a 'Basic.Nack' with requeue=false, causing the message to be routed to the configured Dead-Letter Queue (DLQ) for manual inspection.
+
+#### 2.6.2.2.0.0 Position
+
+bottom
+
+#### 2.6.2.3.0.0 Participant Id
+
+REPO-SVC-AIWORKER
+
+#### 2.6.2.4.0.0 Sequence Number
+
+7
+
+### 2.6.3.0.0.0 Content
+
+#### 2.6.3.1.0.0 Content
+
+Upon successful completion at step 9, a 'SowProcessingCompleted' domain event is published internally, which a notification service will handle to alert the System Administrator.
+
+#### 2.6.3.2.0.0 Position
+
+bottom
+
+#### 2.6.3.3.0.0 Participant Id
+
+REPO-SVC-AIWORKER
+
+#### 2.6.3.4.0.0 Sequence Number
+
+9
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Worker must use an IAM role with least-privilege a... |
+| Performance Targets | End-to-end processing time for a standard SOW (<50... |
+| Error Handling Strategy | Implement Polly for retry (exponential backoff) an... |
+| Testing Considerations | Integration tests must mock all external services ... |
+| Monitoring Requirements | Monitor RabbitMQ queue depth and DLQ size. Track c... |
+| Deployment Considerations | The worker should be deployed as a separate, indep... |
+

@@ -1,0 +1,27 @@
+sequenceDiagram
+    participant "Frontend SPA" as FrontendSPA
+    participant "Backend API" as BackendAPI
+    participant "PostgreSQL Database" as PostgreSQLDatabase
+    participant "AWS S3 Storage" as AWSS3Storage
+    participant "RabbitMQ Broker" as RabbitMQBroker
+
+    activate BackendAPI
+    FrontendSPA->>BackendAPI: 1. POST /api/v1/projects/from-sow (multipart/form-data)
+    BackendAPI-->>FrontendSPA: 201 Created - { projectId, sowDocumentId }
+    BackendAPI->>BackendAPI: 2. Validate request: Authorize role, validate file type/size, confirm active Client exists.
+    BackendAPI-->>BackendAPI: Validation success or throws exception.
+    BackendAPI->>PostgreSQLDatabase: 3. BEGIN TRANSACTION
+    PostgreSQLDatabase-->>BackendAPI: Transaction started.
+    BackendAPI->>PostgreSQLDatabase: 4. INSERT INTO Projects; INSERT INTO SowDocuments; INSERT INTO AuditLogs
+    PostgreSQLDatabase-->>BackendAPI: New ProjectId, SowDocumentId, AuditLogId
+    BackendAPI->>AWSS3Storage: 5. PutObjectAsync(bucket, key, fileStream)
+    AWSS3Storage-->>BackendAPI: HTTP 200 OK
+    BackendAPI->>PostgreSQLDatabase: 6. COMMIT TRANSACTION
+    PostgreSQLDatabase-->>BackendAPI: Transaction committed.
+    BackendAPI->>RabbitMQBroker: 7. Publish('sow_processing_exchange', 'sow.uploaded.v1', eventMessage)
+    RabbitMQBroker-->>BackendAPI: Publisher Acknowledgment
+
+    note over BackendAPI: Transactional Boundary: The database operations (steps 4, 5) and the S3 upload (step 6) must be t...
+    note over RabbitMQBroker: Reliable Event Dispatch: Publishing the 'SowUploaded' event (step 8) occurs only after the databa...
+
+    deactivate BackendAPI

@@ -1,0 +1,34 @@
+sequenceDiagram
+    actor "User (Client Contact)" as UserClientContact
+    participant "Presentation.Frontend" as PresentationFrontend
+    participant "Application.API" as ApplicationAPI
+    participant "Infrastructure.Database" as InfrastructureDatabase
+    participant "External: AWS SES" as ExternalAWSSES
+
+    activate PresentationFrontend
+    UserClientContact->>PresentationFrontend: 1. 1. Clicks secure milestone approval link from email
+    PresentationFrontend-->>UserClientContact: 2. Renders milestone approval page shell
+    activate ApplicationAPI
+    PresentationFrontend->>ApplicationAPI: 2. 3. Validates token and fetches milestone details
+    ApplicationAPI-->>PresentationFrontend: 6. Returns milestone data or error
+    activate InfrastructureDatabase
+    ApplicationAPI->>InfrastructureDatabase: 3. 4. Finds approval token and related milestone
+    InfrastructureDatabase-->>ApplicationAPI: 5. Returns token record and milestone details
+    PresentationFrontend->>UserClientContact: 4. 7. [Alt: Valid Token] Displays milestone details with Approve/Reject actions
+    UserClientContact->>PresentationFrontend: 5. 8. Clicks 'Approve' button
+    PresentationFrontend->>ApplicationAPI: 6. 9. Submits milestone decision
+    ApplicationAPI-->>PresentationFrontend: 15. Returns success confirmation
+    ApplicationAPI->>InfrastructureDatabase: 7. 10. [Critical] BEGIN TRANSACTION
+    ApplicationAPI->>InfrastructureDatabase: 8. 11. Updates milestone status to 'Approved'
+    ApplicationAPI->>InfrastructureDatabase: 9. 12. Invalidates approval token (marks as used)
+    ApplicationAPI->>InfrastructureDatabase: 10. 13. Inserts event into audit log
+    ApplicationAPI->>InfrastructureDatabase: 11. 14. COMMIT TRANSACTION
+    activate ExternalAWSSES
+    ApplicationAPI->>ExternalAWSSES: 12. 16. (Async) Triggers internal notification of approval
+    PresentationFrontend->>UserClientContact: 13. 17. Displays success confirmation
+
+
+    deactivate ExternalAWSSES
+    deactivate InfrastructureDatabase
+    deactivate ApplicationAPI
+    deactivate PresentationFrontend

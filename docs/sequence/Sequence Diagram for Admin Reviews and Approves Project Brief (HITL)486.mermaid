@@ -1,0 +1,33 @@
+sequenceDiagram
+    actor "Admin User" as AdminUser
+    participant "Frontend SPA" as FrontendSPA
+    participant "Backend API" as BackendAPI
+    participant "PostgreSQL Database" as PostgreSQLDatabase
+
+    activate FrontendSPA
+    AdminUser->>FrontendSPA: 1. 1. Navigates to Project Brief Review page for a project with status 'ReviewPending'.
+    activate BackendAPI
+    FrontendSPA->>BackendAPI: 2. 2. Requests AI-extracted brief data for review.
+    BackendAPI-->>FrontendSPA: 2.4. Returns 200 OK with ProjectBriefReviewDto containing editable fields.
+    activate PostgreSQLDatabase
+    BackendAPI->>PostgreSQLDatabase: 2.1. 2.1. Fetches Project and associated ProjectBrief data.
+    PostgreSQLDatabase-->>BackendAPI: 2.2. Returns project and brief records.
+    BackendAPI->>BackendAPI: 2.3. 2.3. Maps domain entities to ProjectBriefReviewDto.
+    AdminUser->>FrontendSPA: 3. 3. Edits/corrects brief data and clicks 'Approve Project Brief'.
+    FrontendSPA->>BackendAPI: 4. 4. Submits final, approved Project Brief.
+    BackendAPI-->>FrontendSPA: 4.8. Returns 200 OK on successful approval and state transition.
+    BackendAPI->>BackendAPI: 4.1. 4.1. Validates UpdateProjectBriefDto against business rules.
+    BackendAPI->>PostgreSQLDatabase: 4.2. 4.2. Begins database transaction.
+    BackendAPI->>PostgreSQLDatabase: 4.3. 4.3. Updates ProjectBrief with corrected data and sets status to 'Approved'.
+    BackendAPI->>PostgreSQLDatabase: 4.4. 4.4. Updates parent Project status to 'PendingProposal'.
+    BackendAPI->>PostgreSQLDatabase: 4.5. 4.5. Inserts a record into the immutable Audit Log.
+    BackendAPI->>PostgreSQLDatabase: 4.6. 4.6. Commits database transaction.
+    BackendAPI->>BackendAPI: 4.7. 4.7. [Async] Dispatches ProjectBriefApprovedEvent for other listeners (e.g., notifications).
+    FrontendSPA->>AdminUser: 5. 5. Displays success notification and redirects to the project dashboard.
+
+    note over BackendAPI: Data Consistency: The use of a database transaction for all write operations (Steps 4.2 to 4.6) i...
+    note over BackendAPI: Business Rule Enforcement: The API validates that the Project status is 'ReviewPending' before al...
+
+    deactivate PostgreSQLDatabase
+    deactivate BackendAPI
+    deactivate FrontendSPA

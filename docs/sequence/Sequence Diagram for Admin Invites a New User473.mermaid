@@ -1,0 +1,34 @@
+sequenceDiagram
+    actor "Client Contact (User)" as ClientContactUser
+    participant "Frontend SPA" as FrontendSPA
+    participant "Backend API" as BackendAPI
+    participant "PostgreSQL DB" as PostgreSQLDB
+    participant "AWS SES" as AWSSES
+
+    activate FrontendSPA
+    ClientContactUser->>FrontendSPA: 1. 1. Clicks milestone approval link in email (e.g., /approve/milestone/{token})
+    FrontendSPA-->>ClientContactUser: Renders milestone approval page or error page
+    activate BackendAPI
+    FrontendSPA->>BackendAPI: 2. 2. GET /api/v1/milestone-approvals/{token}
+    BackendAPI-->>FrontendSPA: 200 OK with Milestone Details or 4xx/5xx Error
+    BackendAPI->>BackendAPI: 2.1. 2a. Validate Token
+    BackendAPI-->>BackendAPI: Token is valid or invalid
+    activate PostgreSQLDB
+    BackendAPI->>PostgreSQLDB: 2.2. 2b. SELECT m.*, c.name FROM Milestones m JOIN ... WHERE m.id = {token.milestoneId} AND m.approvalTokenStatus = 'PENDING'
+    PostgreSQLDB-->>BackendAPI: Milestone Record or NULL
+    FrontendSPA->>ClientContactUser: 3. 3. Displays milestone details and action buttons ('Approve' / 'Reject')
+    ClientContactUser-->>FrontendSPA: User makes a decision
+    ClientContactUser->>FrontendSPA: 4. 4. Clicks 'Approve'
+    FrontendSPA->>BackendAPI: 5. 5. POST /api/v1/milestone-approvals/{token}/approve
+    BackendAPI-->>FrontendSPA: 200 OK (Success) or 4xx/5xx Error
+    BackendAPI->>PostgreSQLDB: 5.1. 5a. BEGIN TRANSACTION; UPDATE Milestones; UPDATE ApprovalTokens; INSERT AuditLog; COMMIT;
+    PostgreSQLDB-->>BackendAPI: Transaction successful or rolled back
+    activate AWSSES
+    BackendAPI->>AWSSES: 5.2. 5b. SendEmail(to: admin_email, template: 'MilestoneApproved')
+    FrontendSPA->>ClientContactUser: 6. 6. Displays confirmation message: 'Thank you! The milestone has been approved.'
+
+
+    deactivate AWSSES
+    deactivate PostgreSQLDB
+    deactivate BackendAPI
+    deactivate FrontendSPA

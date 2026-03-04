@@ -1,0 +1,230 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-FF-001
+
+## 1.2 Name
+
+Semantic Vendor Matching
+
+## 1.3 Description
+
+After an Admin approves a Project Brief, they trigger the semantic search feature. The system uses the vector embeddings from the Project Brief's skills to query the database and find a ranked list of vendors with the most similar expertise.
+
+## 1.4 Type
+
+🔹 FeatureFlow
+
+## 1.5 Purpose
+
+To leverage AI-generated data to provide intelligent, data-driven recommendations for suitable vendors, fulfilling REQ-FUN-002's core matchmaking capability.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FRONTEND-SPA
+- REPO-API-MONOLITH
+- REPO-DB-POSTGRES
+
+## 1.10 Key Interactions
+
+- Admin clicks 'Find Matching Vendors' on an approved Project Brief page.
+- Frontend calls the API with the Project ID.
+- API retrieves the vector embeddings for the skills associated with the project.
+- API constructs and executes a vector similarity search query (e.g., cosine distance) against the vendor skills table in PostgreSQL using the pgvector extension.
+- The database's HNSW index efficiently finds the nearest neighbors and returns a ranked list of vendors with a similarity score for each.
+- API formats the results and returns the ranked list of recommended vendors to the frontend.
+
+## 1.11 Triggers
+
+- An Admin requests vendor recommendations for a specific, approved project brief.
+
+## 1.12 Outcomes
+
+- A ranked list of the most suitable vendors, along with their similarity scores, is displayed to the Admin for consideration.
+
+## 1.13 Business Rules
+
+- Only vendors with a status of 'Active' can be included in search results (REQ-BUS-001).
+- The search algorithm and number of results should be configurable system parameters.
+
+## 1.14 Error Scenarios
+
+- No vendors in the database have skills that meet a minimum similarity threshold.
+- The pgvector extension is not enabled or fails to execute the query, returning a server error.
+
+## 1.15 Integration Points
+
+- PostgreSQL with the pgvector extension and a pre-built HNSW index for performance.
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-FF-001-IMPL
+
+## 2.2 Name
+
+Implementation: Semantic Vendor Matching Feature Flow
+
+## 2.3 Description
+
+Technical sequence for an Administrator triggering a semantic search for vendors. This flow starts with a user interaction in the Next.js SPA, which calls a secured ASP.NET Core API endpoint. The backend orchestrates retrieving project skill vector embeddings and executes a high-performance vector similarity search against the PostgreSQL database using the pgvector extension and a pre-built HNSW index. The sequence details the internal application layers (Controller, Service, Repository) and the exact database queries involved, including error handling and performance considerations.
+
+## 2.4 Participants
+
+### 2.4.1 User Interface
+
+#### 2.4.1.1 Repository Id
+
+REPO-FRONTEND-SPA
+
+#### 2.4.1.2 Display Name
+
+Frontend SPA
+
+#### 2.4.1.3 Type
+
+🔹 User Interface
+
+#### 2.4.1.4 Technology
+
+Next.js 14, React 18, TypeScript
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #4285F4 |
+| Stereotype | <<UI>> |
+
+### 2.4.2.0 Application Service
+
+#### 2.4.2.1 Repository Id
+
+REPO-API-MONOLITH
+
+#### 2.4.2.2 Display Name
+
+Backend API
+
+#### 2.4.2.3 Type
+
+🔹 Application Service
+
+#### 2.4.2.4 Technology
+
+ASP.NET Core 8, EF Core 8
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #DB4437 |
+| Stereotype | <<Service>> |
+
+### 2.4.3.0 Database
+
+#### 2.4.3.1 Repository Id
+
+REPO-DB-POSTGRES
+
+#### 2.4.3.2 Display Name
+
+PostgreSQL Database
+
+#### 2.4.3.3 Type
+
+🔹 Database
+
+#### 2.4.3.4 Technology
+
+PostgreSQL 15+ with pgvector
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #F4B400 |
+| Stereotype | <<Database>> |
+
+## 2.5.0.0 Interactions
+
+- {'sourceId': 'REPO-FRONTEND-SPA', 'targetId': 'REPO-API-MONOLITH', 'message': '1. GET /api/v1/projects/{projectId}/matching-vendors?limit=20&threshold=0.75', 'sequenceNumber': 1, 'type': 'Synchronous Request', 'isSynchronous': True, 'returnMessage': '8. 200 OK with List<RecommendedVendorDto>', 'hasReturn': True, 'isActivation': True, 'technicalDetails': {'protocol': 'HTTPS', 'method': 'GET', 'parameters': 'Path: projectId (GUID). Query: limit (int, optional), threshold (float, optional).', 'authentication': 'Requires valid Bearer JWT. Endpoint is protected by `[Authorize(Roles = "SystemAdministrator")]` attribute.', 'errorHandling': 'Client handles 401 (Unauthorized), 403 (Forbidden), 404 (Project not found), and 500 (Internal Server Error) responses.', 'performance': 'This entire request-response cycle must adhere to the p95 < 250ms API latency requirement (REQ-NFR-001).'}, 'nestedInteractions': [{'sourceId': 'REPO-API-MONOLITH', 'targetId': 'REPO-API-MONOLITH', 'message': '2. [Controller] Invokes `VendorMatchingService.FindMatchingVendorsAsync(projectId, searchParams)`', 'sequenceNumber': 2, 'type': 'Internal Method Call', 'isSynchronous': True, 'returnMessage': '7. Returns `List<RecommendedVendorDto>`', 'hasReturn': True, 'isActivation': False, 'technicalDetails': {'protocol': 'In-process', 'method': 'FindMatchingVendorsAsync', 'parameters': '`projectId` (Guid), `searchParams` (DTO with Limit and Threshold)', 'authentication': 'Authorization is handled by controller-level attributes before this service is called.', 'errorHandling': 'Service layer exceptions are caught by global exception handling middleware.', 'performance': 'N/A'}, 'nestedInteractions': [{'sourceId': 'REPO-API-MONOLITH', 'targetId': 'REPO-DB-POSTGRES', 'message': '3. [Repository] Retrieves project\'s skill vector. `SELECT s."VectorEmbedding" FROM "Skills" s ... WHERE ps."ProjectId" = @projectId`', 'sequenceNumber': 3, 'type': 'Database Query', 'isSynchronous': True, 'returnMessage': '4. Returns `List<Vector>` of skill embeddings', 'hasReturn': True, 'isActivation': True, 'technicalDetails': {'protocol': 'Npgsql', 'method': 'EF Core LINQ query translated to SQL', 'parameters': 'Parameterized `@projectId`', 'authentication': 'N/A (handled by connection string)', 'errorHandling': 'Handles `NpgsqlException` for connectivity issues. Throws if no project brief or skills are found.', 'performance': 'Latency < 10ms. Requires index on `ProjectSkills.ProjectId`.'}, 'nestedInteractions': []}, {'sourceId': 'REPO-API-MONOLITH', 'targetId': 'REPO-API-MONOLITH', 'message': '5. [Service] Averages the skill vectors to create a single representative project vector.', 'sequenceNumber': 5, 'type': 'Internal Logic', 'isSynchronous': True, 'returnMessage': '', 'hasReturn': False, 'isActivation': False, 'technicalDetails': {'protocol': 'In-process', 'method': 'Vector averaging algorithm', 'parameters': 'List of vectors from step 4', 'authentication': 'N/A', 'errorHandling': 'Handles case where no vectors are returned.', 'performance': 'High-speed in-memory computation.'}, 'nestedInteractions': []}, {'sourceId': 'REPO-API-MONOLITH', 'targetId': 'REPO-DB-POSTGRES', 'message': '6. [Repository] Executes vector similarity search. `SELECT ..., (1 - (s."VectorEmbedding" <=> @projectVector)) AS "Similarity" ... ORDER BY "Similarity" DESC LIMIT @limit`', 'sequenceNumber': 6, 'type': 'Database Query', 'isSynchronous': True, 'returnMessage': '6.1 Returns ranked `List<Vendor>` with similarity scores', 'hasReturn': True, 'isActivation': True, 'technicalDetails': {'protocol': 'Npgsql with pgvector extension', 'method': 'EF Core query using `EF.Functions.CosineDistance` translated to `<=>` operator.', 'parameters': "Parameterized `@projectVector`, `@limit`, `@threshold`, and `Status='Active'`", 'authentication': 'N/A', 'errorHandling': 'Catches `NpgsqlException`. A specific log message is generated if the query fails due to pgvector issues.', 'performance': 'Latency < 100ms. Critically dependent on a pre-built HNSW index on the `Skills.VectorEmbedding` column.'}, 'nestedInteractions': []}]}]}
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+The user (System Administrator) has already navigated to a page displaying an 'Approved' Project Brief before this sequence begins.
+
+#### 2.6.1.2 Position
+
+top-left
+
+#### 2.6.1.3 Participant Id
+
+*Not specified*
+
+#### 2.6.1.4 Sequence Number
+
+0
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+The returned DTO is mapped from the Vendor entity and includes the calculated similarity score. Sensitive vendor data is omitted.
+
+#### 2.6.2.2 Position
+
+bottom-right
+
+#### 2.6.2.3 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.2.4 Sequence Number
+
+8
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The API endpoint MUST be protected by role-based a... |
+| Performance Targets | The end-to-end p95 latency for the API call must b... |
+| Error Handling Strategy | If the query in step 6 fails due to a database or ... |
+| Testing Considerations | Integration tests are required for the `VendorMatc... |
+| Monitoring Requirements | A custom metric (`vendor.matching.search.duration`... |
+| Deployment Considerations | A database migration script must be created to 1) ... |
+

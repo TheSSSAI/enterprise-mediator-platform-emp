@@ -1,0 +1,38 @@
+sequenceDiagram
+    actor "External User" as ExternalUser
+    participant "Frontend SPA" as FrontendSPA
+    participant "Backend API" as BackendAPI
+    participant "PostgreSQL DB" as PostgreSQLDB
+    participant "AWS Cognito" as AWSCognito
+
+    ExternalUser->>FrontendSPA: 1. Clicks unique registration link from invitation email (e.g., /register?token=...)
+    FrontendSPA-->>ExternalUser: Registration page is rendered
+    activate BackendAPI
+    FrontendSPA->>BackendAPI: 2. GET /api/v1/user-invitations/{token}
+    BackendAPI-->>FrontendSPA: 200 OK { email: '...' } | 404 Not Found | 410 Gone (Expired) | 409 Conflict (Used)
+    BackendAPI->>PostgreSQLDB: 3. SELECT * FROM UserInvitations WHERE Token = @token
+    PostgreSQLDB-->>BackendAPI: Invitation record or NULL
+    BackendAPI->>BackendAPI: 4. Validate token: Check existence, expiry (createdAt + lifespan), and usage (usedAt IS NULL)
+    BackendAPI-->>BackendAPI: Validation result (Valid/Expired/Used/Not Found)
+    ExternalUser->>FrontendSPA: 5. Submits registration form with name and strong password
+    FrontendSPA->>BackendAPI: 6. POST /api/v1/user-invitations/{token}/activate
+    BackendAPI-->>FrontendSPA: 200 OK | 400 Bad Request (Password Invalid) | 4xx (Token Invalid) | 502 Bad Gateway (Cognito Failure)
+    BackendAPI->>BackendAPI: 7. [Security Checkpoint] Re-validate token and password complexity rules
+    BackendAPI-->>BackendAPI: Validation result or exception
+    BackendAPI->>BackendAPI: 8. [Security Checkpoint] Hash password using Argon2id algorithm (REQ-NFR-003)
+    BackendAPI-->>BackendAPI: Hashed password string
+    BackendAPI->>PostgreSQLDB: 9. BEGIN TRANSACTION
+    BackendAPI->>PostgreSQLDB: 10. UPDATE Users SET Status='Active', HashedPassword=@hash, Name=@name WHERE Id=@userId
+    PostgreSQLDB-->>BackendAPI: Rows affected
+    BackendAPI->>PostgreSQLDB: 11. UPDATE UserInvitations SET UsedAt=NOW() WHERE Token=@token
+    PostgreSQLDB-->>BackendAPI: Rows affected
+    BackendAPI->>AWSCognito: 12. [Integration Point] Call AdminConfirmSignUp API
+    AWSCognito-->>BackendAPI: 200 OK | AWS SDK Exception
+    BackendAPI->>PostgreSQLDB: 13. COMMIT TRANSACTION
+    BackendAPI->>BackendAPI: 14. [Audit Requirement] Log 'User Activated' event
+    FrontendSPA->>ExternalUser: 15. Redirect to login page with a success message
+
+    note over BackendAPI: The initial GET request to validate the token is a UX enhancement. It prevents the user from fill...
+    note over BackendAPI: Failure of the AWS Cognito call is a critical failure path. The system must roll back all local d...
+
+    deactivate BackendAPI

@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant "Backend API" as BackendAPI
+    participant "PostgreSQL DB" as PostgreSQLDB
+    participant "Stripe Connect API" as StripeConnectAPI
+    participant "AWS SES" as AWSSES
+
+    activate BackendAPI
+    BackendAPI->>BackendAPI: 1. 1. Admin triggers invoice creation for 'Awarded' project (e.g., POST /api/v1/projects/{id}/invoices)
+    BackendAPI->>PostgreSQLDB: 2. 2. Get Project, Client & Invoice details
+    PostgreSQLDB-->>BackendAPI: Project, Client, Invoice data
+    BackendAPI->>StripeConnectAPI: 3. 3. Create Stripe Checkout Session
+    StripeConnectAPI-->>BackendAPI: Checkout Session object (id, url)
+    BackendAPI->>PostgreSQLDB: 4. 4. Persist Stripe Session ID to Invoice record
+    PostgreSQLDB-->>BackendAPI: Rows affected
+    BackendAPI->>AWSSES: 5. 5. Send invoice email with payment link
+    AWSSES-->>BackendAPI: SES Message ID
+    StripeConnectAPI->>BackendAPI: 6. 6. [Asynchronous] Client completes payment; Stripe sends webhook event
+    BackendAPI-->>StripeConnectAPI: HTTP 200 OK (synchronous response to webhook)
+    BackendAPI->>BackendAPI: 7. 6a. Verify webhook signature using secret
+    BackendAPI-->>BackendAPI: Boolean: isValid
+    BackendAPI->>PostgreSQLDB: 8. 6b. Check for existing Stripe Event ID for idempotency
+    PostgreSQLDB-->>BackendAPI: Boolean: exists
+    BackendAPI->>PostgreSQLDB: 9. 6c. Execute payment processing as atomic transaction
+    PostgreSQLDB-->>BackendAPI: Transaction committed
+
+    note over PostgreSQLDB: REQ-BUS-001: The update of the project status to 'Active' is contingent on the successful complet...
+
+    deactivate BackendAPI

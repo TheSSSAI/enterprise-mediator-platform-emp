@@ -1,0 +1,545 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-DF-001
+
+## 1.2 Name
+
+Scheduled Dashboard Metrics Calculation
+
+## 1.3 Description
+
+A scheduled background job runs periodically to aggregate data from various transactional tables (Projects, Invoices, Proposals, etc.) and populates a denormalized 'DashboardMetrics' table. This table is optimized for fast reads and powers the main admin dashboard.
+
+## 1.4 Type
+
+🔹 DataFlow
+
+## 1.5 Purpose
+
+To ensure the main administrative dashboard (REQ-FUN-005) loads quickly and meets strict performance NFRs (REQ-NFR-001) by pre-calculating and denormalizing key business intelligence metrics, avoiding complex, slow queries on user request.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🟡 Medium
+
+## 1.8 Frequency
+
+Hourly
+
+## 1.9 Participants
+
+- REPO-INFRA-AWS
+- REPO-API-MONOLITH
+- REPO-DB-POSTGRES
+
+## 1.10 Key Interactions
+
+- A scheduler (e.g., Kubernetes CronJob or AWS EventBridge) triggers the job on a defined schedule (e.g., '0 * * * *').
+- The job, a containerized service or function, is initiated.
+- The service executes several optimized, read-only SQL queries against the transactional tables within a single transaction.
+- The queries aggregate data such as COUNT of projects by status, SUM of revenue, number of pending SOWs, etc.
+- The service writes the aggregated results to a dedicated 'DashboardMetrics' table, typically by truncating and inserting new data.
+- The job logs its success or failure and the number of records processed, then completes.
+
+## 1.11 Triggers
+
+- A recurring schedule, such as a cron expression.
+
+## 1.12 Outcomes
+
+- The 'DashboardMetrics' table contains fresh, aggregated data.
+- The main admin dashboard can load its widgets extremely quickly by querying this single, simple table.
+
+## 1.13 Business Rules
+
+- The job must be idempotent and transactional; a failure should not leave the metrics table in an inconsistent state.
+- The job must be designed to not place excessive load on the primary database during its run.
+
+## 1.14 Error Scenarios
+
+- The aggregation queries fail due to a database lock or other issue, causing the job to fail and log an error.
+- The job takes longer to run than its scheduled interval, potentially causing overlapping runs if not handled correctly.
+
+## 1.15 Integration Points
+
+- A cloud-native scheduling service (e.g., Kubernetes CronJob, AWS EventBridge).
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-DF-001
+
+## 2.2 Name
+
+Implementation: Scheduled Dashboard Metrics Calculation
+
+## 2.3 Description
+
+A detailed technical sequence for a Kubernetes-scheduled background job that performs an ETL process. The job reads from multiple transactional tables within a PostgreSQL database, aggregates key business metrics, and populates a denormalized read-model table ('DashboardMetrics'). This sequence follows the CQRS pattern to optimize read performance for the main admin dashboard, ensuring adherence to strict performance NFRs (REQ-NFR-001).
+
+## 2.4 Participants
+
+### 2.4.1 OrchestrationScheduler
+
+#### 2.4.1.1 Repository Id
+
+REPO-INFRA-AWS
+
+#### 2.4.1.2 Display Name
+
+Kubernetes CronJob Scheduler
+
+#### 2.4.1.3 Type
+
+🔹 OrchestrationScheduler
+
+#### 2.4.1.4 Technology
+
+Kubernetes v1.29+ on AWS EKS
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #D22A1E |
+| Stereotype | «Scheduler» |
+
+### 2.4.2.0 BackgroundService
+
+#### 2.4.2.1 Repository Id
+
+REPO-API-MONOLITH
+
+#### 2.4.2.2 Display Name
+
+DashboardMetricsCalculator Worker
+
+#### 2.4.2.3 Type
+
+🔹 BackgroundService
+
+#### 2.4.2.4 Technology
+
+.NET 8 Worker Service, Docker, Serilog
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #2C759C |
+| Stereotype | «Job» |
+
+### 2.4.3.0 RelationalDatabase
+
+#### 2.4.3.1 Repository Id
+
+REPO-DB-POSTGRES
+
+#### 2.4.3.2 Display Name
+
+PostgreSQL Database (RDS)
+
+#### 2.4.3.3 Type
+
+🔹 RelationalDatabase
+
+#### 2.4.3.4 Technology
+
+PostgreSQL 16, AWS RDS, EF Core 8
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #005273 |
+| Stereotype | «Database» |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Trigger
+
+#### 2.5.1.1 Source Id
+
+REPO-INFRA-AWS
+
+#### 2.5.1.2 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.1.3 Message
+
+Triggers Pod creation based on cron schedule ('0 * * * *')
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Trigger
+
+#### 2.5.1.6 Is Synchronous
+
+❌ No
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Kubernetes API |
+| Method | create(Pod) |
+| Parameters | PodSpec defining the DashboardMetricsCalculator co... |
+| Authentication | Kubernetes Service Account credentials. |
+| Error Handling | Kubernetes event log captures pod creation failure... |
+| Performance | N/A |
+
+### 2.5.2.0 DatabaseOperation
+
+#### 2.5.2.1 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.2.2 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.2.3 Message
+
+BEGIN TRANSACTION (Isolation Level: Read Committed)
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 DatabaseOperation
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+Transaction context
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+❌ No
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Npgsql |
+| Method | DbContext.Database.BeginTransactionAsync(Isolation... |
+| Parameters | IsolationLevel enum |
+| Authentication | Database connection string from K8s Secret. |
+| Error Handling | Throws NpgsqlException on connection failure. Hand... |
+| Performance | Sub-millisecond latency. |
+
+### 2.5.3.0 DatabaseQuery
+
+#### 2.5.3.1 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.3.2 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.3.3 Message
+
+Execute optimized aggregation queries for all required metrics
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 DatabaseQuery
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+Aggregated data sets
+
+#### 2.5.3.8 Has Return
+
+✅ Yes
+
+#### 2.5.3.9 Is Activation
+
+❌ No
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Npgsql |
+| Method | EF Core LINQ queries translated to multiple SQL SE... |
+| Parameters | SQL: SELECT status, COUNT(*) FROM "Projects" GROUP... |
+| Authentication | Uses existing transaction context. |
+| Error Handling | Throws DbUpdateException on SQL execution error. C... |
+| Performance | All aggregation queries must be covered by indexes... |
+
+#### 2.5.3.11 Nested Interactions
+
+*No items available*
+
+### 2.5.4.0 DatabaseOperation
+
+#### 2.5.4.1 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.4.2 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.4.3 Message
+
+TRUNCATE TABLE "DashboardMetrics" and bulk INSERT new aggregated data
+
+#### 2.5.4.4 Sequence Number
+
+4
+
+#### 2.5.4.5 Type
+
+🔹 DatabaseOperation
+
+#### 2.5.4.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7 Return Message
+
+Rows affected count
+
+#### 2.5.4.8 Has Return
+
+✅ Yes
+
+#### 2.5.4.9 Is Activation
+
+❌ No
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Npgsql |
+| Method | DbContext.ExecuteSqlRawAsync("TRUNCATE TABLE \"Das... |
+| Parameters | A collection of new DashboardMetrics entities. |
+| Authentication | Uses existing transaction context. |
+| Error Handling | Throws DbUpdateException on failure, triggering tr... |
+| Performance | Bulk insert should be optimized. For very large da... |
+
+### 2.5.5.0 DatabaseOperation
+
+#### 2.5.5.1 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.5.2 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.5.3 Message
+
+COMMIT TRANSACTION
+
+#### 2.5.5.4 Sequence Number
+
+5
+
+#### 2.5.5.5 Type
+
+🔹 DatabaseOperation
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+Success confirmation
+
+#### 2.5.5.8 Has Return
+
+✅ Yes
+
+#### 2.5.5.9 Is Activation
+
+❌ No
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Npgsql |
+| Method | IDbContextTransaction.CommitAsync() |
+| Parameters | None |
+| Authentication | Uses existing transaction context. |
+| Error Handling | If commit fails, the job must log a critical error... |
+| Performance | Dependent on DB write performance. |
+
+### 2.5.6.0 Logging
+
+#### 2.5.6.1 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.6.2 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.6.3 Message
+
+Log successful execution with key metrics
+
+#### 2.5.6.4 Sequence Number
+
+6
+
+#### 2.5.6.5 Type
+
+🔹 Logging
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Return Message
+
+
+
+#### 2.5.6.8 Has Return
+
+❌ No
+
+#### 2.5.6.9 Is Activation
+
+❌ No
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Method Call |
+| Method | ILogger.LogInformation(...) |
+| Parameters | Structured log message: "Dashboard metrics refresh... |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Logging is asynchronous to not block job completio... |
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+Error Handling Block: If any exception occurs during steps 3, 4, or 5, a catch block must execute `ROLLBACK TRANSACTION`, log a critical error with full exception details, and the pod must exit with a non-zero status code to signal failure to Kubernetes.
+
+#### 2.6.1.2 Position
+
+bottom
+
+#### 2.6.1.3 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.1.4 Sequence Number
+
+5
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+The Kubernetes CronJob spec MUST use a concurrencyPolicy of 'Forbid' or 'Replace' to prevent overlapping job runs if a job takes longer than its schedule interval.
+
+#### 2.6.2.2 Position
+
+top
+
+#### 2.6.2.3 Participant Id
+
+REPO-INFRA-AWS
+
+#### 2.6.2.4 Sequence Number
+
+1
+
+### 2.6.3.0 Content
+
+#### 2.6.3.1 Content
+
+All aggregation queries must be analyzed with EXPLAIN ANALYZE to ensure they are using appropriate indexes and are not causing excessive load on the primary database.
+
+#### 2.6.3.2 Position
+
+right
+
+#### 2.6.3.3 Participant Id
+
+REPO-DB-POSTGRES
+
+#### 2.6.3.4 Sequence Number
+
+3
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The job's Kubernetes Service Account must be mappe... |
+| Performance Targets | The end-to-end job execution time must be less tha... |
+| Error Handling Strategy | The entire data processing logic (steps 3-5) must ... |
+| Testing Considerations | Integration tests are critical. A test suite must ... |
+| Monitoring Requirements | A Prometheus/Grafana dashboard should monitor the ... |
+| Deployment Considerations | The job will be deployed as a Kubernetes `CronJob`... |
+

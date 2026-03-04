@@ -1,0 +1,38 @@
+sequenceDiagram
+    participant "RabbitMQ Broker" as RabbitMQBroker
+    participant "AI Processing Worker" as AIProcessingWorker
+    participant "PostgreSQL Database" as PostgreSQLDatabase
+    participant "AWS S3" as AWSS3
+    participant "AWS Comprehend API" as AWSComprehendAPI
+    participant "OpenAI API" as OpenAIAPI
+
+    activate AIProcessingWorker
+    RabbitMQBroker->>AIProcessingWorker: 1. Deliver 'SowUploaded' message
+    AIProcessingWorker->>PostgreSQLDatabase: 2. Check SOW processing status for idempotency
+    PostgreSQLDatabase-->>AIProcessingWorker: Return SOW status ('Pending', 'Processing', etc.)
+    AIProcessingWorker->>PostgreSQLDatabase: 3. Update SOW status to 'Processing'
+    PostgreSQLDatabase-->>AIProcessingWorker: Return rows affected
+    AIProcessingWorker->>AWSS3: 4. Download original SOW document
+    AWSS3-->>AIProcessingWorker: Return SOW document stream (e.g., .docx, .pdf)
+    AIProcessingWorker->>AWSComprehendAPI: 5. Request PII entity detection
+    AWSComprehendAPI-->>AIProcessingWorker: Return collection of detected PII entities and their locations
+    AIProcessingWorker->>AWSS3: 6. Upload sanitized SOW text
+    AWSS3-->>AIProcessingWorker: Return ETag of uploaded object
+    AIProcessingWorker->>OpenAIAPI: 7. Request structured data extraction from sanitized text
+    OpenAIAPI-->>AIProcessingWorker: Return structured JSON object
+    AIProcessingWorker->>OpenAIAPI: 7.1. Attempt 1: POST /v1/chat/completions
+    OpenAIAPI-->>AIProcessingWorker: 503 Service Unavailable
+    AIProcessingWorker->>AIProcessingWorker: 7.2. Wait (Exponential Backoff + Jitter)
+    AIProcessingWorker->>OpenAIAPI: 7.3. Attempt 2: POST /v1/chat/completions
+    OpenAIAPI-->>AIProcessingWorker: 200 OK with JSON payload
+    AIProcessingWorker->>OpenAIAPI: 8. Request vector embeddings for extracted skills
+    OpenAIAPI-->>AIProcessingWorker: Return array of vector embeddings
+    AIProcessingWorker->>PostgreSQLDatabase: 9. Persist extracted data, embeddings, and update status
+    PostgreSQLDatabase-->>AIProcessingWorker: Return transaction commit success
+    AIProcessingWorker->>RabbitMQBroker: 10. Acknowledge message processing complete
+
+    note over AIProcessingWorker: If idempotency check at step 2 finds a status other than 'Pending', the worker logs a warning, AC...
+    note over AIProcessingWorker: If any step fails after exhausting all retries (e.g., OpenAI API is down), the entire process is ...
+    note over AIProcessingWorker: Upon successful completion at step 9, a 'SowProcessingCompleted' domain event is published intern...
+
+    deactivate AIProcessingWorker

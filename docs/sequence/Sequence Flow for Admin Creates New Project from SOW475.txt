@@ -1,0 +1,295 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-BP-001
+
+## 1.2 Name
+
+Admin Creates New Project from SOW
+
+## 1.3 Description
+
+An authenticated Admin initiates a new project by uploading a Statement of Work (SOW) document for an existing client. The system accepts the file, associates it with a new project record, stores the file securely, and triggers the asynchronous AI processing workflow via a message queue.
+
+## 1.4 Type
+
+🔹 BusinessProcess
+
+## 1.5 Purpose
+
+To kickstart the core business workflow of the platform by ingesting a new project's requirements via an SOW, as defined in REQ-FUN-002.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FRONTEND-SPA
+- REPO-API-MONOLITH
+- REPO-DB-POSTGRES
+- REPO-MQ-RABBITMQ
+- REPO-INFRA-AWS
+
+## 1.10 Key Interactions
+
+- Admin selects a client and uploads a .docx or .pdf file via the UI.
+- Frontend sends the file and associated Client ID to the API.
+- API creates a new Project record (linked to the Client) and an SOW record in the database with a 'Processing' status.
+- API uploads the original SOW document to a secure, private AWS S3 bucket with a unique key.
+- API publishes a 'SowUploaded' event to a durable message queue (RabbitMQ), containing the sowDocumentId and projectId.
+
+## 1.11 Triggers
+
+- An Admin uploads an SOW document to start a new project.
+
+## 1.12 Outcomes
+
+- A new Project and SOW record are created and persisted in the database.
+- The original SOW file is securely stored in AWS S3.
+- An event is published, decoupling the upload from the long-running AI analysis.
+
+## 1.13 Business Rules
+
+- A Project cannot be created without being associated with an existing, active Client (REQ-BUS-001).
+- The uploaded file must be of a supported format (.docx, .pdf) and within a size limit.
+
+## 1.14 Error Scenarios
+
+- The file upload fails due to network issues or size limits.
+- The message queue is unavailable, causing the entire transaction to be rolled back.
+- The S3 upload fails due to permission issues.
+
+## 1.15 Integration Points
+
+- AWS S3 for secure file storage.
+- RabbitMQ (or similar message broker) for asynchronous event publishing.
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-BP-001
+
+## 2.2 Name
+
+Admin Initiates New Project via SOW Upload
+
+## 2.3 Description
+
+A comprehensive sequence detailing the business process of initiating a new project. An authenticated System Administrator uploads a Statement of Work (SOW) document for a pre-existing client. The backend API orchestrates a transactional operation to persist project metadata, store the SOW file in a secure object store, and publish an event to a message broker to trigger an asynchronous AI analysis workflow. This sequence represents the primary entry point for the platform's core value stream.
+
+## 2.4 Participants
+
+### 2.4.1 Web Application
+
+#### 2.4.1.1 Repository Id
+
+REPO-FRONTEND-SPA
+
+#### 2.4.1.2 Display Name
+
+Frontend SPA
+
+#### 2.4.1.3 Type
+
+🔹 Web Application
+
+#### 2.4.1.4 Technology
+
+Next.js 14, React 18, TypeScript
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #4285F4 |
+| Stereotype | UI |
+
+### 2.4.2.0 Modular Monolith
+
+#### 2.4.2.1 Repository Id
+
+REPO-API-MONOLITH
+
+#### 2.4.2.2 Display Name
+
+Backend API
+
+#### 2.4.2.3 Type
+
+🔹 Modular Monolith
+
+#### 2.4.2.4 Technology
+
+ASP.NET Core 8, C# 12
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #34A853 |
+| Stereotype | Application Service |
+
+### 2.4.3.0 Relational Database
+
+#### 2.4.3.1 Repository Id
+
+REPO-DB-POSTGRES
+
+#### 2.4.3.2 Display Name
+
+PostgreSQL Database
+
+#### 2.4.3.3 Type
+
+🔹 Relational Database
+
+#### 2.4.3.4 Technology
+
+PostgreSQL 16
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #FBBC05 |
+| Stereotype | Persistence |
+
+### 2.4.4.0 Cloud Service
+
+#### 2.4.4.1 Repository Id
+
+REPO-INFRA-AWS
+
+#### 2.4.4.2 Display Name
+
+AWS S3 Storage
+
+#### 2.4.4.3 Type
+
+🔹 Cloud Service
+
+#### 2.4.4.4 Technology
+
+AWS S3 SDK for .NET
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | cloud |
+| Color | #EA4335 |
+| Stereotype | Infrastructure |
+
+### 2.4.5.0 Message Broker
+
+#### 2.4.5.1 Repository Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.4.5.2 Display Name
+
+RabbitMQ Broker
+
+#### 2.4.5.3 Type
+
+🔹 Message Broker
+
+#### 2.4.5.4 Technology
+
+AMQP 0-9-1
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | queue |
+| Color | #FF6D00 |
+| Stereotype | Messaging |
+
+## 2.5.0.0 Interactions
+
+- {'sourceId': 'REPO-FRONTEND-SPA', 'targetId': 'REPO-API-MONOLITH', 'message': 'POST /api/v1/projects/from-sow (multipart/form-data)', 'sequenceNumber': 1, 'type': 'Request', 'isSynchronous': True, 'returnMessage': '201 Created - { projectId, sowDocumentId }', 'hasReturn': True, 'isActivation': True, 'technicalDetails': {'protocol': 'HTTPS/1.1', 'method': 'POST', 'parameters': 'Form Data: { clientId: string, file: IFormFile }', 'authentication': "JWT Bearer Token required. Token must contain 'SystemAdministrator' role claim.", 'errorHandling': 'Returns 400 for invalid input, 401 for invalid token, 403 for insufficient permissions.', 'performance': 'p95 latency target < 1500ms (includes file I/O).'}, 'nestedInteractions': [{'sourceId': 'REPO-API-MONOLITH', 'targetId': 'REPO-API-MONOLITH', 'message': 'Validate request: Authorize role, validate file type/size, confirm active Client exists.', 'sequenceNumber': 2, 'type': 'Internal Method Call', 'isSynchronous': True, 'returnMessage': 'Validation success or throws exception.', 'hasReturn': True, 'isActivation': False, 'technicalDetails': {'protocol': 'In-process', 'method': 'ProjectService.CreateFromSowAsync(requestDto)', 'parameters': 'Client ID, IFormFile', 'authentication': 'N/A', 'errorHandling': 'Throws ArgumentException for invalid file, SecurityException for auth failure, NotFoundException for missing client. Handled by global exception middleware.', 'performance': 'p95 latency < 50ms.'}}, {'sourceId': 'REPO-API-MONOLITH', 'targetId': 'REPO-DB-POSTGRES', 'message': 'BEGIN TRANSACTION', 'sequenceNumber': 3, 'type': 'Database Command', 'isSynchronous': True, 'returnMessage': 'Transaction started.', 'hasReturn': True, 'isActivation': False, 'technicalDetails': {'protocol': 'TCP/IP', 'method': 'DbContext.Database.BeginTransactionAsync()', 'parameters': 'IsolationLevel.ReadCommitted', 'authentication': 'Connection string credentials.', 'errorHandling': 'Throws NpgsqlException on connection failure.', 'performance': 'p95 latency < 10ms.'}}, {'sourceId': 'REPO-API-MONOLITH', 'targetId': 'REPO-DB-POSTGRES', 'message': 'INSERT INTO Projects; INSERT INTO SowDocuments; INSERT INTO AuditLogs', 'sequenceNumber': 4, 'type': 'Database Command', 'isSynchronous': True, 'returnMessage': 'New ProjectId, SowDocumentId, AuditLogId', 'hasReturn': True, 'isActivation': False, 'technicalDetails': {'protocol': 'TCP/IP', 'method': 'DbContext.SaveChangesAsync()', 'parameters': "Project entity, SowDocument entity (Status='PROCESSING'), AuditLog entity.", 'authentication': 'N/A (within transaction).', 'errorHandling': 'Throws DbUpdateException on constraint violation. Transaction will be rolled back.', 'performance': 'p95 latency < 50ms.'}}, {'sourceId': 'REPO-API-MONOLITH', 'targetId': 'REPO-INFRA-AWS', 'message': 'PutObjectAsync(bucket, key, fileStream)', 'sequenceNumber': 5, 'type': 'API Call', 'isSynchronous': True, 'returnMessage': 'HTTP 200 OK', 'hasReturn': True, 'isActivation': False, 'technicalDetails': {'protocol': 'HTTPS', 'method': 'AWS SDK PutObjectAsync', 'parameters': "Bucket name, generated unique object key (e.g., '{projectId}/{sowDocumentId}/original.pdf'), file stream, metadata.", 'authentication': 'IAM Role credentials for EKS pod.', 'errorHandling': 'Throws AmazonS3Exception on failure. Transaction will be rolled back.', 'performance': 'Latency is variable based on file size. Implement request body size limits.'}}, {'sourceId': 'REPO-API-MONOLITH', 'targetId': 'REPO-DB-POSTGRES', 'message': 'COMMIT TRANSACTION', 'sequenceNumber': 6, 'type': 'Database Command', 'isSynchronous': True, 'returnMessage': 'Transaction committed.', 'hasReturn': True, 'isActivation': False, 'technicalDetails': {'protocol': 'TCP/IP', 'method': 'IDbContextTransaction.CommitAsync()', 'parameters': 'N/A', 'authentication': 'N/A', 'errorHandling': 'On failure, logs a critical error as data is in an inconsistent state.', 'performance': 'p95 latency < 20ms.'}}, {'sourceId': 'REPO-API-MONOLITH', 'targetId': 'REPO-MQ-RABBITMQ', 'message': "Publish('sow_processing_exchange', 'sow.uploaded.v1', eventMessage)", 'sequenceNumber': 7, 'type': 'Message Publish', 'isSynchronous': True, 'returnMessage': 'Publisher Acknowledgment', 'hasReturn': True, 'isActivation': False, 'technicalDetails': {'protocol': 'AMQP', 'method': 'BasicPublish', 'parameters': "JSON serialized 'SowUploaded' event payload with { sowDocumentId, projectId, correlationId }. Message must be marked as persistent.", 'authentication': 'Connection string credentials.', 'errorHandling': 'If publish fails after DB commit, log a critical error and enqueue a recovery task. This is a critical failure point requiring monitoring.', 'performance': 'p95 latency < 15ms.'}}]}
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+Transactional Boundary: The database operations (steps 4, 5) and the S3 upload (step 6) must be treated as a single atomic unit. A failure in any of these steps must trigger a rollback of the database transaction and deletion of the S3 object if it was created.
+
+#### 2.6.1.2 Position
+
+right
+
+#### 2.6.1.3 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.1.4 Sequence Number
+
+3
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+Reliable Event Dispatch: Publishing the 'SowUploaded' event (step 8) occurs only after the database transaction is successfully committed. This prevents a scenario where a consumer tries to process an event for data that doesn't exist. Failure to publish is a critical state that must be alerted on, with a recovery process (e.g., a background job that finds unprocessed SOWs) in place.
+
+#### 2.6.2.2 Position
+
+right
+
+#### 2.6.2.3 Participant Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.6.2.4 Sequence Number
+
+7
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The API endpoint must be protected with Role-Based... |
+| Performance Targets | The overall synchronous API call should complete i... |
+| Error Handling Strategy | A global exception handler in the API should catch... |
+| Testing Considerations | Integration tests should cover the entire transact... |
+| Monitoring Requirements | Monitor the rate of 5xx errors and p95 latency for... |
+| Deployment Considerations | The API service's IAM role must have `s3:PutObject... |
+

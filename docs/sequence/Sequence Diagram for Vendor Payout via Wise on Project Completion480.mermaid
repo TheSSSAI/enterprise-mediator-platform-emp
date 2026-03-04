@@ -1,0 +1,48 @@
+sequenceDiagram
+    actor "Client Contact" as ClientContact
+    participant "Frontend SPA" as FrontendSPA
+    participant "Backend API" as BackendAPI
+    participant "Primary Database" as PrimaryDatabase
+    participant "Audit Log Database" as AuditLogDatabase
+    participant "Email Service" as EmailService
+
+    activate FrontendSPA
+    ClientContact->>FrontendSPA: 1. 1. Clicks secure link from approval email.
+    FrontendSPA-->>ClientContact: Page load request is initiated.
+    activate BackendAPI
+    FrontendSPA->>BackendAPI: 2. 2. GET /api/v1/milestone-approvals/{token}
+    BackendAPI-->>FrontendSPA: 200 OK with Milestone data or Error Response.
+    BackendAPI->>BackendAPI: 2.1. 2a. Validate token (signature, expiry, format).
+    BackendAPI-->>BackendAPI: Token validity status.
+    activate PrimaryDatabase
+    BackendAPI->>PrimaryDatabase: 2.2. 2b. Fetch Milestone & Token data.
+    PrimaryDatabase-->>BackendAPI: Milestone, Project, Client records; Token status.
+    FrontendSPA->>ClientContact: 3. 3. Renders milestone details with 'Approve' and 'Reject' options.
+    ClientContact-->>FrontendSPA: User views the page.
+    ClientContact->>FrontendSPA: 4. 4. Clicks 'Approve'.
+    FrontendSPA-->>ClientContact: Initiates POST request.
+    FrontendSPA->>BackendAPI: 5. 5. POST /api/v1/milestone-approvals/{token}/approve
+    BackendAPI-->>FrontendSPA: 200 OK (Success) or Error Response.
+    BackendAPI->>PrimaryDatabase: 6. 6. **BEGIN ATOMIC TRANSACTION**
+    PrimaryDatabase-->>BackendAPI: Transaction started.
+    BackendAPI->>PrimaryDatabase: 6.1. 6a. Verify token is not used and update Milestone status.
+    PrimaryDatabase-->>BackendAPI: Update result.
+    BackendAPI->>PrimaryDatabase: 6.2. 6b. Invalidate token.
+    PrimaryDatabase-->>BackendAPI: Update result.
+    activate AuditLogDatabase
+    BackendAPI->>AuditLogDatabase: 6.3. 6c. Log approval event.
+    AuditLogDatabase-->>BackendAPI: Log entry created.
+    BackendAPI->>PrimaryDatabase: 6.4. 6d. **COMMIT TRANSACTION**
+    PrimaryDatabase-->>BackendAPI: Transaction committed.
+    activate EmailService
+    BackendAPI->>EmailService: 7. 7. Send notification to System Admin.
+    FrontendSPA->>ClientContact: 8. 8. Display 'Milestone Approved' confirmation message.
+
+    note over BackendAPI: SECURITY: Token is a short-lived JWT containing milestoneId and clientId as claims. Its hash is s...
+    note over BackendAPI: ATOMICITY: Steps 6a, 6b, and 6c are executed within a single database transaction to ensure data ...
+
+    deactivate EmailService
+    deactivate AuditLogDatabase
+    deactivate PrimaryDatabase
+    deactivate BackendAPI
+    deactivate FrontendSPA

@@ -1,0 +1,1093 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-AF-001
+
+## 1.2 Name
+
+Invited User Registration and Activation
+
+## 1.3 Description
+
+A new user clicks the unique link in their invitation email, is directed to a secure registration page, sets their name and a strong password, and upon submission, their account is activated in the system and the identity provider.
+
+## 1.4 Type
+
+🔹 AuthenticationFlow
+
+## 1.5 Purpose
+
+To complete the user onboarding process (REQ-FUN-001) by securely activating a user account, setting their credentials, and invalidating the invitation token.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-FRONTEND-SPA
+- REPO-API-MONOLITH
+- REPO-DB-POSTGRES
+- REPO-EXT-COGNITO
+
+## 1.10 Key Interactions
+
+- User clicks the link containing the registration token.
+- Frontend renders the registration page and sends the token to the API for pre-validation.
+- API validates the token's existence, format, and expiry. Rejects if invalid.
+- User submits their name and a strong password.
+- API re-validates the token and checks if it has been used.
+- API validates password against complexity rules (REQ-FUN-001).
+- API hashes the password using Argon2id (REQ-NFR-003).
+- API updates the user record in the database: sets status to 'Active', stores password hash, and marks the token as used.
+- API confirms the user's account in the AWS Cognito user pool.
+
+## 1.11 Triggers
+
+- A user with a 'Pending' account clicks their unique registration link from an invitation email.
+
+## 1.12 Outcomes
+
+- The user's account status is updated to 'Active' in the database.
+- The user is created and confirmed in AWS Cognito and can now log in.
+- The registration token is permanently invalidated.
+
+## 1.13 Business Rules
+
+- The registration token must be single-use.
+- Passwords must meet configurable complexity requirements (REQ-FUN-001).
+
+## 1.14 Error Scenarios
+
+- The registration link has expired.
+- The registration link has already been used.
+- The submitted password does not meet complexity requirements.
+- The call to AWS Cognito fails.
+
+## 1.15 Integration Points
+
+- AWS Cognito for user pool management.
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-AF-001
+
+## 2.2 Name
+
+Implementation: Invited User Registration and Activation
+
+## 2.3 Description
+
+A detailed technical breakdown of the user registration flow, initiated by a secure, single-use email token. This sequence covers token validation, password complexity enforcement, secure password hashing (Argon2id), atomic database updates for user activation, and final user confirmation in the external AWS Cognito identity provider as required by REQ-FUN-001 and REQ-NFR-003.
+
+## 2.4 Participants
+
+### 2.4.1 Actor
+
+#### 2.4.1.1 Repository Id
+
+ExternalUser
+
+#### 2.4.1.2 Display Name
+
+External User
+
+#### 2.4.1.3 Type
+
+🔹 Actor
+
+#### 2.4.1.4 Technology
+
+Human-computer Interaction
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #E6E6E6 |
+| Stereotype | User |
+
+### 2.4.2.0 Application
+
+#### 2.4.2.1 Repository Id
+
+REPO-FRONTEND-SPA
+
+#### 2.4.2.2 Display Name
+
+Frontend SPA
+
+#### 2.4.2.3 Type
+
+🔹 Application
+
+#### 2.4.2.4 Technology
+
+Next.js 14, React 18, TypeScript
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | rectangle |
+| Color | #D1E8FF |
+| Stereotype | Client |
+
+### 2.4.3.0 Application Service
+
+#### 2.4.3.1 Repository Id
+
+REPO-API-MONOLITH
+
+#### 2.4.3.2 Display Name
+
+Backend API
+
+#### 2.4.3.3 Type
+
+🔹 Application Service
+
+#### 2.4.3.4 Technology
+
+.NET 8, ASP.NET Core 8, C#
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | rectangle |
+| Color | #D5E8D4 |
+| Stereotype | Server |
+
+### 2.4.4.0 Database
+
+#### 2.4.4.1 Repository Id
+
+REPO-DB-POSTGRES
+
+#### 2.4.4.2 Display Name
+
+PostgreSQL DB
+
+#### 2.4.4.3 Type
+
+🔹 Database
+
+#### 2.4.4.4 Technology
+
+PostgreSQL 15+, pgvector
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #F8CECC |
+| Stereotype | Persistence |
+
+### 2.4.5.0 External Service
+
+#### 2.4.5.1 Repository Id
+
+REPO-EXT-COGNITO
+
+#### 2.4.5.2 Display Name
+
+AWS Cognito
+
+#### 2.4.5.3 Type
+
+🔹 External Service
+
+#### 2.4.5.4 Technology
+
+AWS Identity and Access Management
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | cloud |
+| Color | #FFE6CC |
+| Stereotype | IdP |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 User Interaction
+
+#### 2.5.1.1 Source Id
+
+ExternalUser
+
+#### 2.5.1.2 Target Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.1.3 Message
+
+Clicks unique registration link from invitation email (e.g., /register?token=...)
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 User Interaction
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+Registration page is rendered
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+❌ No
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | GET |
+| Parameters | URL with `token` query parameter |
+| Authentication | None |
+| Error Handling | Browser handles page load errors |
+| Performance | LCP < 2.5s (REQ-PERF-002) |
+
+#### 2.5.1.11 Nested Interactions
+
+*No items available*
+
+### 2.5.2.0 API Call
+
+#### 2.5.2.1 Source Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.2.2 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.2.3 Message
+
+GET /api/v1/user-invitations/{token}
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 API Call
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+200 OK { email: '...' } | 404 Not Found | 410 Gone (Expired) | 409 Conflict (Used)
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/1.1 |
+| Method | GET |
+| Parameters | Path parameter: {token} (string) |
+| Authentication | None (public endpoint) |
+| Error Handling | Frontend interprets status code to display appropr... |
+| Performance | p95 latency < 250ms |
+
+#### 2.5.2.11 Nested Interactions
+
+##### 2.5.2.11.1 Database Query
+
+###### 2.5.2.11.1.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.2.11.1.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.2.11.1.3 Message
+
+```sql
+SELECT * FROM UserInvitations WHERE Token = @token
+```
+
+###### 2.5.2.11.1.4 Sequence Number
+
+3
+
+###### 2.5.2.11.1.5 Type
+
+🔹 Database Query
+
+###### 2.5.2.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.1.7 Return Message
+
+Invitation record or NULL
+
+###### 2.5.2.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.2.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.2.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | SELECT |
+| Parameters | @token (string) |
+| Authentication | Database credentials from connection string |
+| Error Handling | Handled by EF Core connection resiliency |
+| Performance | p99 latency < 50ms (requires index on Token column... |
+
+###### 2.5.2.11.1.11 Nested Interactions
+
+*No items available*
+
+##### 2.5.2.11.2.0 Business Logic
+
+###### 2.5.2.11.2.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.2.11.2.2 Target Id
+
+REPO-API-MONOLITH
+
+###### 2.5.2.11.2.3 Message
+
+Validate token: Check existence, expiry (createdAt + lifespan), and usage (usedAt IS NULL)
+
+###### 2.5.2.11.2.4 Sequence Number
+
+4
+
+###### 2.5.2.11.2.5 Type
+
+🔹 Business Logic
+
+###### 2.5.2.11.2.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.2.7 Return Message
+
+Validation result (Valid/Expired/Used/Not Found)
+
+###### 2.5.2.11.2.8 Has Return
+
+✅ Yes
+
+###### 2.5.2.11.2.9 Is Activation
+
+❌ No
+
+###### 2.5.2.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Method Call |
+| Method | InvitationService.ValidateToken(tokenRecord) |
+| Parameters | UserInvitation tokenRecord |
+| Authentication | N/A |
+| Error Handling | Throws specific exceptions for each invalid state,... |
+| Performance | In-memory, < 1ms |
+
+###### 2.5.2.11.2.11 Nested Interactions
+
+*No items available*
+
+### 2.5.3.0.0.0 User Interaction
+
+#### 2.5.3.1.0.0 Source Id
+
+ExternalUser
+
+#### 2.5.3.2.0.0 Target Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.3.3.0.0 Message
+
+Submits registration form with name and strong password
+
+#### 2.5.3.4.0.0 Sequence Number
+
+5
+
+#### 2.5.3.5.0.0 Type
+
+🔹 User Interaction
+
+#### 2.5.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0 Return Message
+
+API request is sent
+
+#### 2.5.3.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.3.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.3.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | Form Submission |
+| Parameters | Name (string), Password (string) |
+| Authentication | None |
+| Error Handling | Client-side validation for password complexity (RE... |
+| Performance | N/A |
+
+#### 2.5.3.11.0.0 Nested Interactions
+
+*No items available*
+
+### 2.5.4.0.0.0 API Call
+
+#### 2.5.4.1.0.0 Source Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.4.2.0.0 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.4.3.0.0 Message
+
+POST /api/v1/user-invitations/{token}/activate
+
+#### 2.5.4.4.0.0 Sequence Number
+
+6
+
+#### 2.5.4.5.0.0 Type
+
+🔹 API Call
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0.0 Return Message
+
+200 OK | 400 Bad Request (Password Invalid) | 4xx (Token Invalid) | 502 Bad Gateway (Cognito Failure)
+
+#### 2.5.4.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.4.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/1.1 |
+| Method | POST |
+| Parameters | Body: { name: '...', password: '...' } |
+| Authentication | None |
+| Error Handling | Frontend displays specific error messages based on... |
+| Performance | p95 latency < 1000ms (includes hashing and externa... |
+
+#### 2.5.4.11.0.0 Nested Interactions
+
+##### 2.5.4.11.1.0 Business Logic
+
+###### 2.5.4.11.1.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.1.2 Target Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.1.3 Message
+
+[Security Checkpoint] Re-validate token and password complexity rules
+
+###### 2.5.4.11.1.4 Sequence Number
+
+7
+
+###### 2.5.4.11.1.5 Type
+
+🔹 Business Logic
+
+###### 2.5.4.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.1.7 Return Message
+
+Validation result or exception
+
+###### 2.5.4.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.4.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.4.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Method Call |
+| Method | ActivationService.ValidateRequest(token, password) |
+| Parameters | string token, string password |
+| Authentication | N/A |
+| Error Handling | Critical server-side validation to prevent invalid... |
+| Performance | p99 < 50ms |
+
+###### 2.5.4.11.1.11 Nested Interactions
+
+*No items available*
+
+##### 2.5.4.11.2.0 Security Operation
+
+###### 2.5.4.11.2.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.2.2 Target Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.2.3 Message
+
+[Security Checkpoint] Hash password using Argon2id algorithm (REQ-NFR-003)
+
+###### 2.5.4.11.2.4 Sequence Number
+
+8
+
+###### 2.5.4.11.2.5 Type
+
+🔹 Security Operation
+
+###### 2.5.4.11.2.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.2.7 Return Message
+
+Hashed password string
+
+###### 2.5.4.11.2.8 Has Return
+
+✅ Yes
+
+###### 2.5.4.11.2.9 Is Activation
+
+❌ No
+
+###### 2.5.4.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Method Call |
+| Method | IPasswordHasher.Hash(password) |
+| Parameters | string password |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | CPU-bound, latency target < 150ms |
+
+###### 2.5.4.11.2.11 Nested Interactions
+
+*No items available*
+
+##### 2.5.4.11.3.0 Database Transaction
+
+###### 2.5.4.11.3.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.3.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.4.11.3.3 Message
+
+BEGIN TRANSACTION
+
+###### 2.5.4.11.3.4 Sequence Number
+
+9
+
+###### 2.5.4.11.3.5 Type
+
+🔹 Database Transaction
+
+###### 2.5.4.11.3.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.3.7 Return Message
+
+
+
+###### 2.5.4.11.3.8 Has Return
+
+❌ No
+
+###### 2.5.4.11.3.9 Is Activation
+
+❌ No
+
+###### 2.5.4.11.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | BEGIN |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | Ensures atomicity of user activation and token inv... |
+| Performance | N/A |
+
+###### 2.5.4.11.3.11 Nested Interactions
+
+*No items available*
+
+##### 2.5.4.11.4.0 Database Query
+
+###### 2.5.4.11.4.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.4.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.4.11.4.3 Message
+
+```sql
+UPDATE Users SET Status='Active', HashedPassword=@hash, Name=@name WHERE Id=@userId
+```
+
+###### 2.5.4.11.4.4 Sequence Number
+
+10
+
+###### 2.5.4.11.4.5 Type
+
+🔹 Database Query
+
+###### 2.5.4.11.4.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.4.7 Return Message
+
+Rows affected
+
+###### 2.5.4.11.4.8 Has Return
+
+✅ Yes
+
+###### 2.5.4.11.4.9 Is Activation
+
+❌ No
+
+###### 2.5.4.11.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | UPDATE |
+| Parameters | @hash, @name, @userId |
+| Authentication | N/A |
+| Error Handling | Will be rolled back if subsequent steps fail. |
+| Performance | p99 < 50ms |
+
+###### 2.5.4.11.4.11 Nested Interactions
+
+*No items available*
+
+##### 2.5.4.11.5.0 Database Query
+
+###### 2.5.4.11.5.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.5.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.4.11.5.3 Message
+
+```sql
+UPDATE UserInvitations SET UsedAt=NOW() WHERE Token=@token
+```
+
+###### 2.5.4.11.5.4 Sequence Number
+
+11
+
+###### 2.5.4.11.5.5 Type
+
+🔹 Database Query
+
+###### 2.5.4.11.5.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.5.7 Return Message
+
+Rows affected
+
+###### 2.5.4.11.5.8 Has Return
+
+✅ Yes
+
+###### 2.5.4.11.5.9 Is Activation
+
+❌ No
+
+###### 2.5.4.11.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | UPDATE |
+| Parameters | @token |
+| Authentication | N/A |
+| Error Handling | Will be rolled back if subsequent steps fail. |
+| Performance | p99 < 50ms |
+
+###### 2.5.4.11.5.11 Nested Interactions
+
+*No items available*
+
+##### 2.5.4.11.6.0 External API Call
+
+###### 2.5.4.11.6.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.6.2 Target Id
+
+REPO-EXT-COGNITO
+
+###### 2.5.4.11.6.3 Message
+
+[Integration Point] Call AdminConfirmSignUp API
+
+###### 2.5.4.11.6.4 Sequence Number
+
+12
+
+###### 2.5.4.11.6.5 Type
+
+🔹 External API Call
+
+###### 2.5.4.11.6.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.6.7 Return Message
+
+200 OK | AWS SDK Exception
+
+###### 2.5.4.11.6.8 Has Return
+
+✅ Yes
+
+###### 2.5.4.11.6.9 Is Activation
+
+❌ No
+
+###### 2.5.4.11.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS/1.1 (AWS SDK) |
+| Method | AdminConfirmSignUp |
+| Parameters | { UserPoolId: '...', Username: 'user@email.com' } |
+| Authentication | AWS IAM credentials with Cognito permissions |
+| Error Handling | Failures (e.g., UserNotFound, Throttling) trigger ... |
+| Performance | p95 < 500ms |
+
+###### 2.5.4.11.6.11 Nested Interactions
+
+*No items available*
+
+##### 2.5.4.11.7.0 Database Transaction
+
+###### 2.5.4.11.7.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.7.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.4.11.7.3 Message
+
+COMMIT TRANSACTION
+
+###### 2.5.4.11.7.4 Sequence Number
+
+13
+
+###### 2.5.4.11.7.5 Type
+
+🔹 Database Transaction
+
+###### 2.5.4.11.7.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.4.11.7.7 Return Message
+
+
+
+###### 2.5.4.11.7.8 Has Return
+
+❌ No
+
+###### 2.5.4.11.7.9 Is Activation
+
+❌ No
+
+###### 2.5.4.11.7.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | COMMIT |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | Finalizes the changes if all preceding steps, incl... |
+| Performance | N/A |
+
+###### 2.5.4.11.7.11 Nested Interactions
+
+*No items available*
+
+##### 2.5.4.11.8.0 Audit
+
+###### 2.5.4.11.8.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.8.2 Target Id
+
+REPO-API-MONOLITH
+
+###### 2.5.4.11.8.3 Message
+
+[Audit Requirement] Log 'User Activated' event
+
+###### 2.5.4.11.8.4 Sequence Number
+
+14
+
+###### 2.5.4.11.8.5 Type
+
+🔹 Audit
+
+###### 2.5.4.11.8.6 Is Synchronous
+
+❌ No
+
+###### 2.5.4.11.8.7 Return Message
+
+
+
+###### 2.5.4.11.8.8 Has Return
+
+❌ No
+
+###### 2.5.4.11.8.9 Is Activation
+
+❌ No
+
+###### 2.5.4.11.8.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal Method Call |
+| Method | IAuditLogger.Log(auditEvent) |
+| Parameters | AuditEvent object with UserId, Action='USER_ACTIVA... |
+| Authentication | N/A |
+| Error Handling | Logging failures should not fail the main transact... |
+| Performance | N/A |
+
+###### 2.5.4.11.8.11 Nested Interactions
+
+*No items available*
+
+### 2.5.5.0.0.0 User Interaction
+
+#### 2.5.5.1.0.0 Source Id
+
+REPO-FRONTEND-SPA
+
+#### 2.5.5.2.0.0 Target Id
+
+ExternalUser
+
+#### 2.5.5.3.0.0 Message
+
+Redirect to login page with a success message
+
+#### 2.5.5.4.0.0 Sequence Number
+
+15
+
+#### 2.5.5.5.0.0 Type
+
+🔹 User Interaction
+
+#### 2.5.5.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0.0 Return Message
+
+
+
+#### 2.5.5.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.5.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | HTTP Redirect |
+| Parameters | N/A |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | N/A |
+
+#### 2.5.5.11.0.0 Nested Interactions
+
+*No items available*
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+The initial GET request to validate the token is a UX enhancement. It prevents the user from filling out a form only to find out the link is invalid. The POST handler MUST re-validate the token to be secure.
+
+#### 2.6.1.2.0.0 Position
+
+top
+
+#### 2.6.1.3.0.0 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.1.4.0.0 Sequence Number
+
+2
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+Failure of the AWS Cognito call is a critical failure path. The system must roll back all local database changes to ensure a consistent state, allowing the user to retry the activation later or for an admin to intervene.
+
+#### 2.6.2.2.0.0 Position
+
+bottom
+
+#### 2.6.2.3.0.0 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.2.4.0.0 Sequence Number
+
+12
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Registration tokens must be cryptographically secu... |
+| Performance Targets | The entire activation process, from form submissio... |
+| Error Handling Strategy | A transaction with rollback is critical. If the Co... |
+| Testing Considerations | E2E tests must cover all failure paths: expired to... |
+| Monitoring Requirements | Monitor the rate of successful vs. failed activati... |
+| Deployment Considerations | Password complexity rules and token lifespan shoul... |
+

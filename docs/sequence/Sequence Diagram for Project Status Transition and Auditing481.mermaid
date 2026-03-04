@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant "EMP API Service" as EMPAPIService
+    participant "Primary Operational DB" as PrimaryOperationalDB
+    participant "Audit & Observability DB" as AuditObservabilityDB
+
+    activate EMPAPIService
+    EMPAPIService->>EMPAPIService: 1. 1. [Trigger] ProjectsController receives request to change project status.
+    EMPAPIService->>PrimaryOperationalDB: 2. 2. Fetch current project state for validation and snapshot.
+    PrimaryOperationalDB-->>EMPAPIService: Returns current project entity.
+    EMPAPIService->>EMPAPIService: 3. 3. [Security & Compliance] Validate state transition against business rules.
+    EMPAPIService-->>EMPAPIService: Proceeds if valid.
+    EMPAPIService->>EMPAPIService: 4. 4. [Audit] Create 'before' state snapshot.
+    EMPAPIService->>PrimaryOperationalDB: 5. 5. Update project status within a transaction.
+    PrimaryOperationalDB-->>EMPAPIService: Returns success/failure of commit.
+    EMPAPIService->>EMPAPIService: 6. 6. [Audit] Construct immutable audit log entry.
+    EMPAPIService-->>EMPAPIService: Returns AuditLog object.
+    EMPAPIService->>AuditObservabilityDB: 7. 7. [Audit] Write audit log entry to dedicated data store.
+    AuditObservabilityDB-->>EMPAPIService: Returns success confirmation.
+    EMPAPIService->>EMPAPIService: 8. 8. Return success response to the initiator.
+    EMPAPIService-->>EMPAPIService: HTTP 200 OK with updated project DTO.
+
+    note over EMPAPIService: Compliance as Code: The business logic in Step 3 is a direct implementation of 'Compliance as Cod...
+    note over AuditObservabilityDB: Data Immutability: The OpenSearch index for audit logs must have a policy that denies update and ...
+    note over EMPAPIService: Transactional Consistency: The business rule 'audit log write must succeed for the entire operati...
+
+    deactivate EMPAPIService

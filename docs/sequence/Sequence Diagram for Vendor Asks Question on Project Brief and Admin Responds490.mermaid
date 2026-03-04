@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant "Frontend SPA (Vendor's Browser)" as FrontendSPAVendorsBrowser
+    participant "Backend API" as BackendAPI
+    participant "PostgreSQL Database" as PostgreSQLDatabase
+    participant "AWS SES" as AWSSES
+    participant "Frontend SPA (Admin's Browser)" as FrontendSPAAdminsBrowser
+
+    activate BackendAPI
+    FrontendSPAVendorsBrowser->>BackendAPI: 1. Submit Question for Project
+    BackendAPI-->>FrontendSPAVendorsBrowser: 201 Created | Question ID
+    BackendAPI->>PostgreSQLDatabase: 1.1. Persist New Question
+    PostgreSQLDatabase-->>BackendAPI: New Question Record
+    BackendAPI->>PostgreSQLDatabase: 1.2. Fetch Admin Contact for Notification
+    PostgreSQLDatabase-->>BackendAPI: Admin User Email
+    BackendAPI->>AWSSES: 1.3. Send 'New Question' Notification
+    FrontendSPAAdminsBrowser->>BackendAPI: 2. Submit Answer to Question
+    BackendAPI-->>FrontendSPAAdminsBrowser: 200 OK | Updated Q&A Object
+    BackendAPI->>PostgreSQLDatabase: 2.1. Update Question with Answer
+    PostgreSQLDatabase-->>BackendAPI: Updated Question Record
+    BackendAPI->>PostgreSQLDatabase: 2.2. Fetch All Invited Vendors for Project
+    PostgreSQLDatabase-->>BackendAPI: List of Vendor Emails
+    BackendAPI->>AWSSES: 2.3. LOOP: Send 'New Answer' Notification
+
+    note over FrontendSPAVendorsBrowser: Vendor enters question in a textarea within the <QandA> component. On submit, UI state is set to ...
+    note over FrontendSPAVendorsBrowser: On receiving a '201 Created' response, the UI updates to show the submitted question with a 'Pend...
+    note over FrontendSPAAdminsBrowser: Admin is notified (e.g., email) and navigates to the project management workspace. The UI fetches...
+    note over FrontendSPAAdminsBrowser: Admin types an answer. On submit, the UI enters a 'saving' state. On '200 OK' response, the UI up...
+
+    deactivate BackendAPI

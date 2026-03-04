@@ -1,0 +1,47 @@
+sequenceDiagram
+    actor "Client Contact" as ClientContact
+    participant "Presentation.Frontend.SPA" as PresentationFrontendSPA
+    participant "Application.API.Host" as ApplicationAPIHost
+    participant "Project Management Service" as ProjectManagementService
+    participant "Security Infrastructure" as SecurityInfrastructure
+    participant "Persistence Infrastructure" as PersistenceInfrastructure
+    participant "Audit Service" as AuditService
+    participant "Notification Service" as NotificationService
+
+    ClientContact->>PresentationFrontendSPA: 1. 1. Clicks secure link in email (e.g., https://app.emp.com/approve/milestone/{token})
+    PresentationFrontendSPA-->>ClientContact: Page load request
+    activate ApplicationAPIHost
+    PresentationFrontendSPA->>ApplicationAPIHost: 2. 2. Requests milestone details for review
+    ApplicationAPIHost-->>PresentationFrontendSPA: 200 OK with MilestoneReviewDto | 4xx Error
+    ApplicationAPIHost->>SecurityInfrastructure: 3. 3. ValidateApprovalToken(token)
+    SecurityInfrastructure-->>ApplicationAPIHost: TokenValidationResult (Success/FailureReason)
+    activate ProjectManagementService
+    ApplicationAPIHost->>ProjectManagementService: 4. 4. GetMilestoneForReview(tokenPayload)
+    ProjectManagementService-->>ApplicationAPIHost: MilestoneReviewDto
+    ProjectManagementService->>PersistenceInfrastructure: 4.1. 4.1. FindAsync(milestoneId)
+    PersistenceInfrastructure-->>ProjectManagementService: Milestone entity with Project navigation property
+    ClientContact->>PresentationFrontendSPA: 5. 5. Reviews details and clicks 'Approve'
+    PresentationFrontendSPA-->>ClientContact: POST request submission
+    PresentationFrontendSPA->>ApplicationAPIHost: 6. 6. Submits milestone approval
+    ApplicationAPIHost-->>PresentationFrontendSPA: 200 OK | 4xx Error
+    ApplicationAPIHost->>ProjectManagementService: 7. 7. ApproveMilestone(command)
+    ProjectManagementService->>SecurityInfrastructure: 7.1. 7.1. ValidateApprovalToken(token)
+    SecurityInfrastructure-->>ProjectManagementService: TokenValidationResult
+    ProjectManagementService->>PersistenceInfrastructure: 7.2. 7.2. BeginTransaction()
+    PersistenceInfrastructure-->>ProjectManagementService: Transaction object
+    ProjectManagementService->>PersistenceInfrastructure: 7.3. 7.3. Update milestone status to 'Approved' and invalidate token
+    ProjectManagementService->>AuditService: 7.4. 7.4. LogEvent(auditEntry)
+    ProjectManagementService->>PersistenceInfrastructure: 7.5. 7.5. CommitTransaction()
+    activate NotificationService
+    ProjectManagementService->>NotificationService: 8. 8. (Post-Commit) Raise Domain Event: MilestoneApprovedEvent
+    NotificationService->>NotificationService: 8.1. 8.1. Send milestone approval notification to System Admin
+    ApplicationAPIHost->>PresentationFrontendSPA: 9. 9. Returns 200 OK success response
+    PresentationFrontendSPA-->>ApplicationAPIHost: HTTP/1.1 200 OK
+    PresentationFrontendSPA->>ClientContact: 10. 10. Displays success confirmation message: 'Thank you! The milestone has been approved.'
+
+    note over SecurityInfrastructure: **Error Handling: Expired/Used Token** During step 3, if the Security Infrastructure determines t...
+    note over ApplicationAPIHost: **Idempotency** The API endpoint for approval (Step 6) must be idempotent. The second token valid...
+
+    deactivate NotificationService
+    deactivate ProjectManagementService
+    deactivate ApplicationAPIHost

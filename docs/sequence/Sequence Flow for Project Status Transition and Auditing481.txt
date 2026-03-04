@@ -1,0 +1,641 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-CF-001
+
+## 1.2 Name
+
+Project Status Transition and Auditing
+
+## 1.3 Description
+
+Throughout a project's lifecycle, any change to its status (e.g., from 'Active' to 'In Review') is validated against business rules and recorded. A corresponding immutable entry is created in a dedicated audit log to provide a complete, traceable history of the project.
+
+## 1.4 Type
+
+🔹 ComplianceFlow
+
+## 1.5 Purpose
+
+To enforce the defined project lifecycle (REQ-FUN-003) and maintain a comprehensive, immutable audit trail for all critical actions, supporting security, dispute resolution, and compliance needs (REQ-FUN-005, REQ-BUS-003).
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-API-MONOLITH
+- REPO-DB-POSTGRES
+- emp_observability_db
+
+## 1.10 Key Interactions
+
+- A user action (e.g., Admin approving a deliverable) triggers a status change request.
+- The API's application service receives the request.
+- The service's business logic validates if the requested transition is valid based on the current state and user role.
+- The service updates the Project entity's status in the primary PostgreSQL database.
+- Concurrently, the service captures the 'before' and 'after' state of the project entity.
+- An Audit Log entry is created containing the responsible user ID, timestamp, IP address, action type, target entity, and the before/after state snapshot.
+- The Audit Log entry is written to the dedicated observability database (OpenSearch).
+
+## 1.11 Triggers
+
+- Any system event or user action that changes a project's lifecycle status.
+
+## 1.12 Outcomes
+
+- The project's status is updated in the primary operational database.
+- A detailed, immutable audit log of the change is created and stored in a separate, secure system.
+
+## 1.13 Business Rules
+
+- Project state transitions must follow the predefined, valid lifecycle path.
+- No user, including System Administrator, can modify or delete audit log entries (REQ-SEC-001).
+- The audit log write must succeed for the entire operation to be considered successful.
+
+## 1.14 Error Scenarios
+
+- An invalid state transition is attempted and rejected by the API.
+- The audit log database is unavailable, causing the entire transaction to be rolled back to maintain consistency.
+
+## 1.15 Integration Points
+
+- Primary PostgreSQL DB and the separate Observability (OpenSearch) DB.
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-CF-001
+
+## 2.2 Name
+
+Project Status Transition with Immutable Auditing
+
+## 2.3 Description
+
+Implementation sequence for processing a project status change. The sequence ensures that the requested state transition is valid according to business rules, commits the change to the operational database, and then creates a corresponding immutable audit log entry in a separate observability data store. This flow is critical for compliance with REQ-FUN-003, REQ-FUN-005, and REQ-BUS-003.
+
+## 2.4 Participants
+
+### 2.4.1 Application Service
+
+#### 2.4.1.1 Repository Id
+
+REPO-SVC-API
+
+#### 2.4.1.2 Display Name
+
+EMP API Service
+
+#### 2.4.1.3 Type
+
+🔹 Application Service
+
+#### 2.4.1.4 Technology
+
+ASP.NET Core 8
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #1E90FF |
+| Stereotype | Monolith API |
+
+### 2.4.2.0 Relational Database
+
+#### 2.4.2.1 Repository Id
+
+REPO-DB-POSTGRES
+
+#### 2.4.2.2 Display Name
+
+Primary Operational DB
+
+#### 2.4.2.3 Type
+
+🔹 Relational Database
+
+#### 2.4.2.4 Technology
+
+PostgreSQL 16
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #4682B4 |
+| Stereotype | RDS |
+
+### 2.4.3.0 Search Database
+
+#### 2.4.3.1 Repository Id
+
+emp_observability_db
+
+#### 2.4.3.2 Display Name
+
+Audit & Observability DB
+
+#### 2.4.3.3 Type
+
+🔹 Search Database
+
+#### 2.4.3.4 Technology
+
+OpenSearch
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #32CD32 |
+| Stereotype | OpenSearch |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Controller Action
+
+#### 2.5.1.1 Source Id
+
+REPO-SVC-API
+
+#### 2.5.1.2 Target Id
+
+REPO-SVC-API
+
+#### 2.5.1.3 Message
+
+1. [Trigger] ProjectsController receives request to change project status.
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Controller Action
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTP/S |
+| Method | PUT /api/v1/projects/{projectId}/status |
+| Parameters | Body: { "newStatus": "Completed" } |
+| Authentication | JWT Bearer Token validation is performed by authen... |
+| Error Handling | Returns HTTP 401/403 for auth failures, HTTP 400 f... |
+| Performance | p99 latency < 50ms for request validation and cont... |
+
+### 2.5.2.0 Database Query
+
+#### 2.5.2.1 Source Id
+
+REPO-SVC-API
+
+#### 2.5.2.2 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.2.3 Message
+
+2. Fetch current project state for validation and snapshot.
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 Database Query
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+Returns current project entity.
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+❌ No
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | EF Core: dbContext.Projects.FindAsync(projectId) |
+| Parameters | SQL: SELECT * FROM "Projects" WHERE "Id" = @p0 LIM... |
+| Authentication | Database connection string with credentials from A... |
+| Error Handling | Throws `DbException` on connection failure; handle... |
+| Performance | p99 latency < 20ms. Requires index on primary key. |
+
+### 2.5.3.0 Business Logic
+
+#### 2.5.3.1 Source Id
+
+REPO-SVC-API
+
+#### 2.5.3.2 Target Id
+
+REPO-SVC-API
+
+#### 2.5.3.3 Message
+
+3. [Security & Compliance] Validate state transition against business rules.
+
+#### 2.5.3.4 Sequence Number
+
+3
+
+#### 2.5.3.5 Type
+
+🔹 Business Logic
+
+#### 2.5.3.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7 Return Message
+
+Proceeds if valid.
+
+#### 2.5.3.8 Has Return
+
+✅ Yes
+
+#### 2.5.3.9 Is Activation
+
+❌ No
+
+#### 2.5.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | ProjectDomainService.ValidateTransition(project, n... |
+| Parameters | Current project entity, target status string, user... |
+| Authentication | Authorization check: verifies user has permission ... |
+| Error Handling | Throws `InvalidStateTransitionException` if the tr... |
+| Performance | Execution time < 1ms. |
+
+### 2.5.4.0 Data Operation
+
+#### 2.5.4.1 Source Id
+
+REPO-SVC-API
+
+#### 2.5.4.2 Target Id
+
+REPO-SVC-API
+
+#### 2.5.4.3 Message
+
+4. [Audit] Create 'before' state snapshot.
+
+#### 2.5.4.4 Sequence Number
+
+4
+
+#### 2.5.4.5 Type
+
+🔹 Data Operation
+
+#### 2.5.4.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7 Return Message
+
+
+
+#### 2.5.4.8 Has Return
+
+❌ No
+
+#### 2.5.4.9 Is Activation
+
+❌ No
+
+#### 2.5.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | JsonSerializer.Serialize(project) |
+| Parameters | The project entity fetched in step 2. |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Execution time < 5ms. |
+
+### 2.5.5.0 Database Transaction
+
+#### 2.5.5.1 Source Id
+
+REPO-SVC-API
+
+#### 2.5.5.2 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.5.3 Message
+
+5. Update project status within a transaction.
+
+#### 2.5.5.4 Sequence Number
+
+5
+
+#### 2.5.5.5 Type
+
+🔹 Database Transaction
+
+#### 2.5.5.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7 Return Message
+
+Returns success/failure of commit.
+
+#### 2.5.5.8 Has Return
+
+✅ Yes
+
+#### 2.5.5.9 Is Activation
+
+❌ No
+
+#### 2.5.5.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP (Npgsql) |
+| Method | EF Core: project.Status = newStatus; dbContext.Sav... |
+| Parameters | SQL: BEGIN; UPDATE "Projects" SET "Status" = @p0 W... |
+| Authentication | Database connection credentials. |
+| Error Handling | Throws `DbUpdateConcurrencyException` or `DbUpdate... |
+| Performance | p99 latency < 50ms. |
+
+### 2.5.6.0 Data Operation
+
+#### 2.5.6.1 Source Id
+
+REPO-SVC-API
+
+#### 2.5.6.2 Target Id
+
+REPO-SVC-API
+
+#### 2.5.6.3 Message
+
+6. [Audit] Construct immutable audit log entry.
+
+#### 2.5.6.4 Sequence Number
+
+6
+
+#### 2.5.6.5 Type
+
+🔹 Data Operation
+
+#### 2.5.6.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7 Return Message
+
+Returns `AuditLog` object.
+
+#### 2.5.6.8 Has Return
+
+✅ Yes
+
+#### 2.5.6.9 Is Activation
+
+❌ No
+
+#### 2.5.6.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | In-Process |
+| Method | new AuditLog(...) |
+| Parameters | Populates fields: actorUserId, ipAddress, actionTy... |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | Execution time < 5ms. |
+
+### 2.5.7.0 Data Write
+
+#### 2.5.7.1 Source Id
+
+REPO-SVC-API
+
+#### 2.5.7.2 Target Id
+
+emp_observability_db
+
+#### 2.5.7.3 Message
+
+7. [Audit] Write audit log entry to dedicated data store.
+
+#### 2.5.7.4 Sequence Number
+
+7
+
+#### 2.5.7.5 Type
+
+🔹 Data Write
+
+#### 2.5.7.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7 Return Message
+
+Returns success confirmation.
+
+#### 2.5.7.8 Has Return
+
+✅ Yes
+
+#### 2.5.7.9 Is Activation
+
+❌ No
+
+#### 2.5.7.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTP/S |
+| Method | OpenSearch Client: client.IndexDocumentAsync(audit... |
+| Parameters | API Call: POST /audit_logs/_doc with the `AuditLog... |
+| Authentication | IAM role-based authentication for OpenSearch acces... |
+| Error Handling | If this write fails, a critical error is logged an... |
+| Performance | p99 latency < 100ms. |
+
+### 2.5.8.0 Controller Action
+
+#### 2.5.8.1 Source Id
+
+REPO-SVC-API
+
+#### 2.5.8.2 Target Id
+
+REPO-SVC-API
+
+#### 2.5.8.3 Message
+
+8. Return success response to the initiator.
+
+#### 2.5.8.4 Sequence Number
+
+8
+
+#### 2.5.8.5 Type
+
+🔹 Controller Action
+
+#### 2.5.8.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7 Return Message
+
+HTTP 200 OK with updated project DTO.
+
+#### 2.5.8.8 Has Return
+
+✅ Yes
+
+#### 2.5.8.9 Is Activation
+
+❌ No
+
+#### 2.5.8.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTP/S |
+| Method | Ok(projectDto) |
+| Parameters | Serialized DTO of the project's final state. |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | p99 latency < 20ms for serialization. |
+
+## 2.6.0.0 Notes
+
+### 2.6.1.0 Content
+
+#### 2.6.1.1 Content
+
+Compliance as Code: The business logic in Step 3 is a direct implementation of 'Compliance as Code'. The project state machine is codified and automatically enforced, ensuring all transitions adhere to the defined lifecycle (REQ-FUN-003).
+
+#### 2.6.1.2 Position
+
+top-right
+
+#### 2.6.1.3 Participant Id
+
+REPO-SVC-API
+
+#### 2.6.1.4 Sequence Number
+
+3
+
+### 2.6.2.0 Content
+
+#### 2.6.2.1 Content
+
+Data Immutability: The OpenSearch index for audit logs must have a policy that denies update and delete operations for all roles except a break-glass administrative role, enforcing the immutability requirement from REQ-SEC-001.
+
+#### 2.6.2.2 Position
+
+bottom-right
+
+#### 2.6.2.3 Participant Id
+
+emp_observability_db
+
+#### 2.6.2.4 Sequence Number
+
+7
+
+### 2.6.3.0 Content
+
+#### 2.6.3.1 Content
+
+Transactional Consistency: The business rule 'audit log write must succeed for the entire operation to be successful' presents a distributed transaction challenge. The chosen pattern prioritizes availability of the primary system. It commits the primary state change first, then handles audit failures with a guaranteed retry mechanism (e.g., a Dead Letter Queue and worker). This ensures the operational state is never blocked by an audit system outage, while a separate reconciliation process guarantees eventual consistency of the audit trail.
+
+#### 2.6.3.2 Position
+
+bottom-left
+
+#### 2.6.3.3 Participant Id
+
+REPO-SVC-API
+
+#### 2.6.3.4 Sequence Number
+
+7
+
+## 2.7.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | The endpoint must be protected by authentication a... |
+| Performance Targets | The entire synchronous operation (from request rec... |
+| Error Handling Strategy | 1. **Invalid Transition**: Return HTTP 409 Conflic... |
+| Testing Considerations | 1. **Integration Tests**: Verify that valid transi... |
+| Monitoring Requirements | 1. **Metrics**: Monitor the rate of project status... |
+| Deployment Considerations | The API service must be configured with credential... |
+

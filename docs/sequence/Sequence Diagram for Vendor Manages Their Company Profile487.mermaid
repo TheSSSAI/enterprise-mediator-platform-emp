@@ -1,0 +1,38 @@
+sequenceDiagram
+    actor "User (Client Contact)" as UserClientContact
+    participant "Frontend SPA" as FrontendSPA
+    participant "Backend API" as BackendAPI
+    participant "PostgreSQL DB" as PostgreSQLDB
+
+    activate FrontendSPA
+    UserClientContact->>FrontendSPA: 1. Clicks secure link from email; Browser navigates to /milestone-approval/{token}
+    FrontendSPA-->>UserClientContact: Renders milestone approval page shell
+    activate BackendAPI
+    FrontendSPA->>BackendAPI: 2. GET /api/v1/milestone-approvals/{token}
+    BackendAPI-->>FrontendSPA: 200 OK: { milestoneDetails } OR 4xx Error
+    BackendAPI->>BackendAPI: 2.1. Internal: Validate Token (JWT signature, expiry, 'aud' claim)
+    BackendAPI-->>BackendAPI: Decoded Payload or Throws Exception
+    activate PostgreSQLDB
+    BackendAPI->>PostgreSQLDB: 2.2. Check if token has been used. SELECT usedAt FROM SecureActionTokens WHERE jti = ?
+    PostgreSQLDB-->>BackendAPI: Row with usedAt timestamp or NULL
+    BackendAPI->>PostgreSQLDB: 2.3. Fetch milestone details. SELECT ... FROM Milestones WHERE id = ?
+    PostgreSQLDB-->>BackendAPI: Milestone data row
+    FrontendSPA->>FrontendSPA: 3. Renders milestone details and 'Approve' / 'Reject' buttons
+    UserClientContact->>FrontendSPA: 4. Clicks 'Approve' button
+    FrontendSPA->>BackendAPI: 5. POST /api/v1/milestone-approvals/{token}/approve
+    BackendAPI-->>FrontendSPA: 200 OK or 4xx Error
+    BackendAPI->>PostgreSQLDB: 5.1. Atomically consume token. UPDATE SecureActionTokens SET usedAt=NOW() WHERE jti = ? AND usedAt IS NULL AND expiresAt > NOW()
+    PostgreSQLDB-->>BackendAPI: Rows affected: 1 or 0
+    BackendAPI->>PostgreSQLDB: 5.2. Update milestone status. UPDATE Milestones SET status = 'Approved' WHERE id = ?
+    PostgreSQLDB-->>BackendAPI: Command Complete
+    BackendAPI->>PostgreSQLDB: 5.3. Log audit event. INSERT INTO AuditLog (...) VALUES (...)
+    BackendAPI->>BackendAPI: 5.4. Internal: Trigger notification to System Admin
+    FrontendSPA->>UserClientContact: 6. Display 'Milestone Approved' confirmation message
+
+    note over FrontendSPA: AC-003/004: If the API at step 2 returns a 410 Gone (expired/used), the Frontend must render a pa...
+    note over BackendAPI: AC-002: The 'Reject' flow is similar but the POST at step 5 would go to a /reject endpoint and in...
+    note over PostgreSQLDB: The database transaction at step 5.1 and 5.2 is critical. The token consumption and milestone upd...
+
+    deactivate PostgreSQLDB
+    deactivate BackendAPI
+    deactivate FrontendSPA

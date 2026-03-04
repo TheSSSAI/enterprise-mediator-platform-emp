@@ -1,0 +1,44 @@
+sequenceDiagram
+    actor "Client Contact Browser" as ClientContactBrowser
+    participant "Frontend Web Application" as FrontendWebApplication
+    participant "Backend API" as BackendAPI
+    participant "PostgreSQL Database" as PostgreSQLDatabase
+    participant "AWS SES" as AWSSES
+
+    activate FrontendWebApplication
+    ClientContactBrowser->>FrontendWebApplication: 1. 1. GET /approve/milestone/{jwt}
+    FrontendWebApplication-->>ClientContactBrowser: 8. Returns server-side rendered HTML page
+    activate BackendAPI
+    FrontendWebApplication->>BackendAPI: 2. 2. [SSR] GET /api/v1/public/milestones/review/{jwt}
+    BackendAPI-->>FrontendWebApplication: 7. Returns 200 OK with milestone details
+    BackendAPI->>BackendAPI: 3. 3. Validate JWT (Signature, Expiry, Type)
+    BackendAPI-->>BackendAPI: Validation result
+    activate PostgreSQLDatabase
+    BackendAPI->>PostgreSQLDatabase: 4. 4. SELECT ... FROM Milestones m JOIN ApprovalTokens t ON m.Id = t.MilestoneId WHERE t.Jti = {jwt.jti} AND t.UsedAt IS NULL
+    PostgreSQLDatabase-->>BackendAPI: 6. Returns Milestone & Project data
+    BackendAPI->>BackendAPI: 5. 5. Check if token JTI exists and is unused
+    ClientContactBrowser->>BackendAPI: 9. 9. POST /api/v1/public/milestones/approve/{jwt}
+    BackendAPI-->>ClientContactBrowser: 18. Returns 200 OK { success: true }
+    BackendAPI->>PostgreSQLDatabase: 10. 10. BEGIN TRANSACTION
+    PostgreSQLDatabase-->>BackendAPI: 14. COMMIT TRANSACTION
+    BackendAPI->>PostgreSQLDatabase: 11. 11. SELECT ... FROM ApprovalTokens WHERE Jti = {jwt.jti} FOR UPDATE
+    PostgreSQLDatabase-->>BackendAPI: Token record
+    BackendAPI->>PostgreSQLDatabase: 12. 12. UPDATE Milestones SET Status = 'Approved' WHERE Id = {milestoneId}
+    PostgreSQLDatabase-->>BackendAPI: Rows affected
+    BackendAPI->>PostgreSQLDatabase: 13. 13. UPDATE ApprovalTokens SET UsedAt = NOW() WHERE Jti = {jwt.jti}
+    PostgreSQLDatabase-->>BackendAPI: Rows affected
+    BackendAPI->>PostgreSQLDatabase: 14. 14. INSERT INTO AuditLogs (Action, Entity, ...)
+    PostgreSQLDatabase-->>BackendAPI: New record ID
+    activate AWSSES
+    BackendAPI->>AWSSES: 15. 15. [Async] Send 'Milestone Approved' email to Admin
+    AWSSES-->>BackendAPI: 16. Returns 200 OK
+    FrontendWebApplication->>ClientContactBrowser: 19. 19. Update UI to display confirmation message
+
+    note over BackendAPI: AC-002: If 'action' is 'REJECT', the POST body must include a 'reason' string. The API validates ...
+    note over BackendAPI: AC-003 & AC-004: If the token is expired (based on JWT 'exp' claim) or already used (based on 'Us...
+    note over BackendAPI: AC-005: Any malformed JWT or invalid signature will fail step 3 and result in an HTTP 400 or 403 ...
+
+    deactivate AWSSES
+    deactivate PostgreSQLDatabase
+    deactivate BackendAPI
+    deactivate FrontendWebApplication

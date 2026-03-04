@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant "AI Processing Worker" as AIProcessingWorker
+    participant "RabbitMQ Broker" as RabbitMQBroker
+    participant "AWS Monitoring & Alerting" as AWSMonitoringAlerting
+    participant "Operator" as Operator
+
+    activate AIProcessingWorker
+    RabbitMQBroker->>AIProcessingWorker: 1. AMQP basic.deliver (SowUploadedEvent, deliveryTag, redelivered=true)
+    AIProcessingWorker->>AIProcessingWorker: 2. Process message: Catch non-transient Exception (e.g., InvalidSowFileFormatException)
+    AIProcessingWorker->>AIProcessingWorker: 2.1. Update SOW status in DB to 'Failed'
+    AIProcessingWorker-->>AIProcessingWorker: Commit successful
+    AIProcessingWorker->>AWSMonitoringAlerting: 2.2. Log permanent failure event with Correlation ID
+    activate RabbitMQBroker
+    AIProcessingWorker->>RabbitMQBroker: 3. AMQP basic.nack (deliveryTag, requeue=false)
+    RabbitMQBroker->>RabbitMQBroker: 4. Route message to Dead-Letter Exchange (DLX)
+    RabbitMQBroker-->>RabbitMQBroker: Route to 'sow-processing-dlq'
+    AWSMonitoringAlerting->>AWSMonitoringAlerting: 5. Monitor DLQ metric (ApproximateNumberOfMessagesVisible)
+    AWSMonitoringAlerting->>AWSMonitoringAlerting: 6. CloudWatch Alarm state transitions to ALARM
+    AWSMonitoringAlerting-->>AWSMonitoringAlerting: Trigger SNS Action
+    AWSMonitoringAlerting->>Operator: 7. Publish SNS notification to alert endpoint (e.g., PagerDuty, Slack)
+    Operator->>AWSMonitoringAlerting: 8. Investigate: Query CloudWatch Logs using Correlation ID from alert
+    AWSMonitoringAlerting-->>Operator: Log stream with error details
+    Operator->>RabbitMQBroker: 9. Investigate: Inspect message contents in DLQ
+    RabbitMQBroker-->>Operator: Message payload and headers
+    Operator->>RabbitMQBroker: 10. Resolve: Manually re-queue or discard message
+    RabbitMQBroker-->>Operator: Action confirmation
+
+    note over RabbitMQBroker: The 'sow-processing-queue' in RabbitMQ must be configured with 'x-dead-letter-exchange' pointing ...
+    note over Operator: Operator's investigation is guided by a runbook that details how to interpret log messages, commo...
+
+    deactivate RabbitMQBroker
+    deactivate AIProcessingWorker

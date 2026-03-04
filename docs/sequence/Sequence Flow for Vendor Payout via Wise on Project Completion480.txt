@@ -1,0 +1,1051 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-IF-002
+
+## 1.2 Name
+
+Vendor Payout via Wise on Project Completion
+
+## 1.3 Description
+
+When a project is marked as 'Completed' and approved by a Finance Manager, the system initiates a payout to the vendor. It interacts with the Wise API to execute the international fund transfer to the vendor's registered account.
+
+## 1.4 Type
+
+🔹 IntegrationFlow
+
+## 1.5 Purpose
+
+To automate the final step of the financial lifecycle by securely and efficiently distributing funds to vendors, as per REQ-FUN-004 and REQ-TEC-001.
+
+## 1.6 Complexity
+
+High
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-API-MONOLITH
+- REPO-DB-POSTGRES
+- REPO-EXT-WISE
+- REPO-EXT-SES
+
+## 1.10 Key Interactions
+
+- An Admin marks the project as 'Completed'.
+- This triggers a payout request that enters a 'Pending Approval' state.
+- A Finance Manager reviews the payout details and clicks 'Approve Payout'.
+- API retrieves the vendor's payment details and the approved payout amount.
+- API calls the Wise API to create and execute the fund transfer, handling currency conversion if necessary.
+- Wise processes the payout and provides a transaction status via its API.
+- API records the payout transaction details in the internal ledger.
+- API sends a payout confirmation notification to the vendor via SES.
+
+## 1.11 Triggers
+
+- A Finance Manager approves a pending payout for a completed project.
+
+## 1.12 Outcomes
+
+- Funds are securely transferred from the company's Wise account to the vendor's account.
+- The payout is recorded in the system's financial records with exchange rates and fees.
+- The vendor is notified of the completed payment.
+
+## 1.13 Business Rules
+
+- A payout cannot be initiated until corresponding client funds are successfully held in escrow (REQ-BUS-002).
+- All payouts must be approved by a user with the Finance Manager role.
+- The payout amount cannot exceed the accepted proposal amount without an explicit override and justification.
+
+## 1.14 Error Scenarios
+
+- The vendor's registered payment details are invalid, causing the Wise transfer to fail.
+- The Wise API call fails due to transient network issues, requiring retries.
+- Insufficient funds in the source account to cover the payout.
+
+## 1.15 Integration Points
+
+- Wise API for international payouts.
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-PLM-003
+
+## 2.2 Name
+
+Implementation: Client Milestone Approval via Secure Link
+
+## 2.3 Description
+
+Technical sequence for a Client Contact approving or rejecting a project milestone via a secure, single-use, time-limited link delivered by email. This sequence covers token validation, state changes, audit logging, and notifications, focusing on a low-friction, unauthenticated user experience.
+
+## 2.4 Participants
+
+### 2.4.1 Actor
+
+#### 2.4.1.1 Repository Id
+
+User-ClientContact
+
+#### 2.4.1.2 Display Name
+
+Client Contact
+
+#### 2.4.1.3 Type
+
+🔹 Actor
+
+#### 2.4.1.4 Technology
+
+Human
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Actor |
+| Color | #999999 |
+| Stereotype |  |
+
+### 2.4.2.0 Presentation.Frontend
+
+#### 2.4.2.1 Repository Id
+
+REPO-FE-SPA
+
+#### 2.4.2.2 Display Name
+
+Frontend SPA
+
+#### 2.4.2.3 Type
+
+🔹 Presentation.Frontend
+
+#### 2.4.2.4 Technology
+
+Next.js 14, React 18
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Rectangle |
+| Color | #4287f5 |
+| Stereotype | Next.js |
+
+### 2.4.3.0 Application.API
+
+#### 2.4.3.1 Repository Id
+
+REPO-API-MONOLITH
+
+#### 2.4.3.2 Display Name
+
+Backend API
+
+#### 2.4.3.3 Type
+
+🔹 Application.API
+
+#### 2.4.3.4 Technology
+
+.NET 8, ASP.NET Core 8
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Rectangle |
+| Color | #42f59e |
+| Stereotype | Modular Monolith |
+
+### 2.4.4.0 Database
+
+#### 2.4.4.1 Repository Id
+
+REPO-DB-POSTGRES
+
+#### 2.4.4.2 Display Name
+
+Primary Database
+
+#### 2.4.4.3 Type
+
+🔹 Database
+
+#### 2.4.4.4 Technology
+
+PostgreSQL 16
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Database |
+| Color | #f5a442 |
+| Stereotype | RDS |
+
+### 2.4.5.0 Database
+
+#### 2.4.5.1 Repository Id
+
+REPO-DB-OBSERVABILITY
+
+#### 2.4.5.2 Display Name
+
+Audit Log Database
+
+#### 2.4.5.3 Type
+
+🔹 Database
+
+#### 2.4.5.4 Technology
+
+OpenSearch
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Database |
+| Color | #f542a4 |
+| Stereotype | OpenSearch |
+
+### 2.4.6.0 ExternalService
+
+#### 2.4.6.1 Repository Id
+
+REPO-EXT-SES
+
+#### 2.4.6.2 Display Name
+
+Email Service
+
+#### 2.4.6.3 Type
+
+🔹 ExternalService
+
+#### 2.4.6.4 Technology
+
+AWS SES
+
+#### 2.4.6.5 Order
+
+6
+
+#### 2.4.6.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | Cloud |
+| Color | #f56342 |
+| Stereotype | AWS SES |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 UserInteraction
+
+#### 2.5.1.1 Source Id
+
+User-ClientContact
+
+#### 2.5.1.2 Target Id
+
+REPO-FE-SPA
+
+#### 2.5.1.3 Message
+
+1. Clicks secure link from approval email.
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 UserInteraction
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+Page load request is initiated.
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Browser Navigation |
+| Method | GET |
+| Parameters | URL: /milestone-approval/{token} |
+| Authentication | None |
+| Error Handling | Browser handles navigation errors. |
+| Performance | N/A |
+
+### 2.5.2.0 ApiCall
+
+#### 2.5.2.1 Source Id
+
+REPO-FE-SPA
+
+#### 2.5.2.2 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.2.3 Message
+
+2. GET /api/v1/milestone-approvals/{token}
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 ApiCall
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+200 OK with Milestone data or Error Response.
+
+#### 2.5.2.8 Has Return
+
+✅ Yes
+
+#### 2.5.2.9 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | GET |
+| Parameters | Path: {token} (JWT) |
+| Authentication | None (Token-based) |
+| Error Handling | Returns 404 (Not Found), 410 (Gone for expired/use... |
+| Performance | p95 < 200ms |
+
+#### 2.5.2.11 Nested Interactions
+
+##### 2.5.2.11.1 InternalProcessing
+
+###### 2.5.2.11.1.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.2.11.1.2 Target Id
+
+REPO-API-MONOLITH
+
+###### 2.5.2.11.1.3 Message
+
+2a. Validate token (signature, expiry, format).
+
+###### 2.5.2.11.1.4 Sequence Number
+
+2.1
+
+###### 2.5.2.11.1.5 Type
+
+🔹 InternalProcessing
+
+###### 2.5.2.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.1.7 Return Message
+
+Token validity status.
+
+###### 2.5.2.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.2.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.2.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal |
+| Method | TokenValidationService.Validate() |
+| Parameters | token (string) |
+| Authentication | N/A |
+| Error Handling | Throws SecurityTokenException on failure. |
+| Performance | p99 < 10ms |
+
+##### 2.5.2.11.2.0 DatabaseQuery
+
+###### 2.5.2.11.2.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.2.11.2.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.2.11.2.3 Message
+
+2b. Fetch Milestone & Token data.
+
+###### 2.5.2.11.2.4 Sequence Number
+
+2.2
+
+###### 2.5.2.11.2.5 Type
+
+🔹 DatabaseQuery
+
+###### 2.5.2.11.2.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.2.7 Return Message
+
+Milestone, Project, Client records; Token status.
+
+###### 2.5.2.11.2.8 Has Return
+
+✅ Yes
+
+###### 2.5.2.11.2.9 Is Activation
+
+✅ Yes
+
+###### 2.5.2.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP |
+| Method | SELECT ... FROM MilestoneApprovalTokens WHERE Toke... |
+| Parameters | Hashed token |
+| Authentication | DB Connection String |
+| Error Handling | DB exceptions propagated. |
+| Performance | p99 < 50ms |
+
+### 2.5.3.0.0.0 UserInteraction
+
+#### 2.5.3.1.0.0 Source Id
+
+REPO-FE-SPA
+
+#### 2.5.3.2.0.0 Target Id
+
+User-ClientContact
+
+#### 2.5.3.3.0.0 Message
+
+3. Renders milestone details with 'Approve' and 'Reject' options.
+
+#### 2.5.3.4.0.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0.0 Type
+
+🔹 UserInteraction
+
+#### 2.5.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0 Return Message
+
+User views the page.
+
+#### 2.5.3.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.3.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.3.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Browser Rendering |
+| Method | Render UI |
+| Parameters | Milestone Data DTO |
+| Authentication | N/A |
+| Error Handling | Displays error page if API returned an error. |
+| Performance | LCP < 2.0s |
+
+### 2.5.4.0.0.0 UserInteraction
+
+#### 2.5.4.1.0.0 Source Id
+
+User-ClientContact
+
+#### 2.5.4.2.0.0 Target Id
+
+REPO-FE-SPA
+
+#### 2.5.4.3.0.0 Message
+
+4. Clicks 'Approve'.
+
+#### 2.5.4.4.0.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0.0 Type
+
+🔹 UserInteraction
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0.0 Return Message
+
+Initiates POST request.
+
+#### 2.5.4.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.4.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.4.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Browser Event |
+| Method | onClick |
+| Parameters | None |
+| Authentication | N/A |
+| Error Handling | UI prevents double-clicks. |
+| Performance | N/A |
+
+### 2.5.5.0.0.0 ApiCall
+
+#### 2.5.5.1.0.0 Source Id
+
+REPO-FE-SPA
+
+#### 2.5.5.2.0.0 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.5.3.0.0 Message
+
+5. POST /api/v1/milestone-approvals/{token}/approve
+
+#### 2.5.5.4.0.0 Sequence Number
+
+5
+
+#### 2.5.5.5.0.0 Type
+
+🔹 ApiCall
+
+#### 2.5.5.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0.0 Return Message
+
+200 OK (Success) or Error Response.
+
+#### 2.5.5.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.5.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.5.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | POST |
+| Parameters | Path: {token} |
+| Authentication | None (Token-based) |
+| Error Handling | Handles token validation errors, DB update failure... |
+| Performance | p95 < 200ms |
+
+### 2.5.6.0.0.0 DatabaseTransaction
+
+#### 2.5.6.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.6.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.6.3.0.0 Message
+
+6. **BEGIN ATOMIC TRANSACTION**
+
+#### 2.5.6.4.0.0 Sequence Number
+
+6
+
+#### 2.5.6.5.0.0 Type
+
+🔹 DatabaseTransaction
+
+#### 2.5.6.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7.0.0 Return Message
+
+Transaction started.
+
+#### 2.5.6.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.6.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.6.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP |
+| Method | EF Core: BeginTransactionAsync() |
+| Parameters | IsolationLevel.Serializable |
+| Authentication | DB Connection String |
+| Error Handling | Transaction will be rolled back on any subsequent ... |
+| Performance | N/A |
+
+#### 2.5.6.11.0.0 Nested Interactions
+
+##### 2.5.6.11.1.0 DatabaseQuery
+
+###### 2.5.6.11.1.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.6.11.1.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.6.11.1.3 Message
+
+6a. Verify token is not used and update Milestone status.
+
+###### 2.5.6.11.1.4 Sequence Number
+
+6.1
+
+###### 2.5.6.11.1.5 Type
+
+🔹 DatabaseQuery
+
+###### 2.5.6.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.6.11.1.7 Return Message
+
+Update result.
+
+###### 2.5.6.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.6.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.6.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP |
+| Method | UPDATE Milestones SET Status = 'Approved' WHERE ..... |
+| Parameters | milestoneId, tokenHash |
+| Authentication | DB Connection String |
+| Error Handling | Throws DbUpdateConcurrencyException if already upd... |
+| Performance | p99 < 50ms |
+
+##### 2.5.6.11.2.0 DatabaseQuery
+
+###### 2.5.6.11.2.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.6.11.2.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.6.11.2.3 Message
+
+6b. Invalidate token.
+
+###### 2.5.6.11.2.4 Sequence Number
+
+6.2
+
+###### 2.5.6.11.2.5 Type
+
+🔹 DatabaseQuery
+
+###### 2.5.6.11.2.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.6.11.2.7 Return Message
+
+Update result.
+
+###### 2.5.6.11.2.8 Has Return
+
+✅ Yes
+
+###### 2.5.6.11.2.9 Is Activation
+
+❌ No
+
+###### 2.5.6.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP |
+| Method | UPDATE MilestoneApprovalTokens SET UsedAt = NOW() ... |
+| Parameters | tokenHash |
+| Authentication | DB Connection String |
+| Error Handling | Database exceptions. |
+| Performance | p99 < 50ms |
+
+##### 2.5.6.11.3.0 DatabaseQuery
+
+###### 2.5.6.11.3.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.6.11.3.2 Target Id
+
+REPO-DB-OBSERVABILITY
+
+###### 2.5.6.11.3.3 Message
+
+6c. Log approval event.
+
+###### 2.5.6.11.3.4 Sequence Number
+
+6.3
+
+###### 2.5.6.11.3.5 Type
+
+🔹 DatabaseQuery
+
+###### 2.5.6.11.3.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.6.11.3.7 Return Message
+
+Log entry created.
+
+###### 2.5.6.11.3.8 Has Return
+
+✅ Yes
+
+###### 2.5.6.11.3.9 Is Activation
+
+✅ Yes
+
+###### 2.5.6.11.3.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | INSERT INTO AuditLog (..., changes) |
+| Parameters | AuditLog record with before/after state. |
+| Authentication | IAM Role |
+| Error Handling | Logged to primary log sink; does not fail transact... |
+| Performance | p99 < 100ms |
+
+##### 2.5.6.11.4.0 DatabaseTransaction
+
+###### 2.5.6.11.4.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.6.11.4.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.6.11.4.3 Message
+
+6d. **COMMIT TRANSACTION**
+
+###### 2.5.6.11.4.4 Sequence Number
+
+6.4
+
+###### 2.5.6.11.4.5 Type
+
+🔹 DatabaseTransaction
+
+###### 2.5.6.11.4.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.6.11.4.7 Return Message
+
+Transaction committed.
+
+###### 2.5.6.11.4.8 Has Return
+
+✅ Yes
+
+###### 2.5.6.11.4.9 Is Activation
+
+❌ No
+
+###### 2.5.6.11.4.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | TCP/IP |
+| Method | EF Core: CommitTransactionAsync() |
+| Parameters | None |
+| Authentication | DB Connection String |
+| Error Handling | N/A |
+| Performance | N/A |
+
+### 2.5.7.0.0.0 ApiCall
+
+#### 2.5.7.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.7.2.0.0 Target Id
+
+REPO-EXT-SES
+
+#### 2.5.7.3.0.0 Message
+
+7. Send notification to System Admin.
+
+#### 2.5.7.4.0.0 Sequence Number
+
+7
+
+#### 2.5.7.5.0.0 Type
+
+🔹 ApiCall
+
+#### 2.5.7.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.7.7.0.0 Return Message
+
+
+
+#### 2.5.7.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.7.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.7.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | AWS SES API: SendEmail |
+| Parameters | { To, From, Subject, Body } |
+| Authentication | AWS IAM Role/Keys |
+| Error Handling | Failures are logged; does not fail the primary use... |
+| Performance | N/A |
+
+### 2.5.8.0.0.0 UserInteraction
+
+#### 2.5.8.1.0.0 Source Id
+
+REPO-FE-SPA
+
+#### 2.5.8.2.0.0 Target Id
+
+User-ClientContact
+
+#### 2.5.8.3.0.0 Message
+
+8. Display 'Milestone Approved' confirmation message.
+
+#### 2.5.8.4.0.0 Sequence Number
+
+8
+
+#### 2.5.8.5.0.0 Type
+
+🔹 UserInteraction
+
+#### 2.5.8.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7.0.0 Return Message
+
+
+
+#### 2.5.8.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.8.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.8.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Browser Rendering |
+| Method | Render UI |
+| Parameters | Success message |
+| Authentication | N/A |
+| Error Handling | N/A |
+| Performance | N/A |
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+TRIGGER: This sequence is initiated by a System Admin via `POST /api/v1/projects/{projectId}/milestones/{milestoneId}/request-approval`. This action generates the secure token and triggers the initial email to the Client Contact.
+
+#### 2.6.1.2.0.0 Position
+
+TopLeft
+
+#### 2.6.1.3.0.0 Participant Id
+
+*Not specified*
+
+#### 2.6.1.4.0.0 Sequence Number
+
+0
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+SECURITY: Token is a short-lived JWT containing milestoneId and clientId as claims. Its hash is stored in the DB to prevent reuse. The API endpoint must be rate-limited.
+
+#### 2.6.2.2.0.0 Position
+
+Right
+
+#### 2.6.2.3.0.0 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.2.4.0.0 Sequence Number
+
+2.1
+
+### 2.6.3.0.0.0 Content
+
+#### 2.6.3.1.0.0 Content
+
+ATOMICITY: Steps 6a, 6b, and 6c are executed within a single database transaction to ensure data consistency. If any step fails, the entire operation is rolled back.
+
+#### 2.6.3.2.0.0 Position
+
+Left
+
+#### 2.6.3.3.0.0 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.3.4.0.0 Sequence Number
+
+6
+
+### 2.6.4.0.0.0 Content
+
+#### 2.6.4.1.0.0 Content
+
+ALTERNATIVE FLOW (REJECTION): An interaction similar to step 5, `POST .../{token}/reject` with a mandatory `reason` in the body, would update the milestone status to 'Rejected' and trigger a corresponding notification.
+
+#### 2.6.4.2.0.0 Position
+
+BottomRight
+
+#### 2.6.4.3.0.0 Participant Id
+
+*Not specified*
+
+#### 2.6.4.4.0.0 Sequence Number
+
+8
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Tokens must be generated using a secure JWT librar... |
+| Performance Targets | The dedicated approval page must have a Largest Co... |
+| Error Handling Strategy | GET `/api/v1/milestone-approvals/{token}`: Return ... |
+| Testing Considerations | E2E tests (using Playwright) are critical. They mu... |
+| Monitoring Requirements | Monitor the latency and error rates of the approva... |
+| Deployment Considerations | Requires a new unauthenticated route in the Next.j... |
+

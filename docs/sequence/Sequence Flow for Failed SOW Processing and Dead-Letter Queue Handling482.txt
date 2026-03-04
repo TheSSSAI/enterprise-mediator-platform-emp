@@ -1,0 +1,887 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-EH-001
+
+## 1.2 Name
+
+Failed SOW Processing and Dead-Letter Queue Handling
+
+## 1.3 Description
+
+When the SOW Processing Worker fails to process a message after all configured retries (e.g., due to a malformed document or a persistent external API failure), the message is automatically moved to a Dead-Letter Queue (DLQ). An automated alert is triggered for manual intervention by the operations team.
+
+## 1.4 Type
+
+🔹 ErrorHandling
+
+## 1.5 Purpose
+
+To create a resilient asynchronous processing system that can handle unrecoverable errors without losing data, preventing poison messages from halting the entire workflow, and notifying operators of failures that require investigation.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🔴 High
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-SVC-AIWORKER
+- REPO-MQ-RABBITMQ
+- REPO-INFRA-AWS
+
+## 1.10 Key Interactions
+
+- Worker fails to process a message from the main SOW processing queue due to a non-transient error.
+- The message broker's retry mechanism re-delivers the message a configured number of times.
+- After the final failed attempt, the message broker automatically moves the 'poison' message to the configured DLQ.
+- A CloudWatch Alarm is configured to monitor the 'ApproximateNumberOfMessagesVisible' metric of the DLQ.
+- When the metric is > 0 for a sustained period, the alarm transitions to an ALARM state.
+- The alarm triggers a notification (e.g., to an SNS topic) which alerts an operator.
+- An operator inspects the message content, reviews worker logs using the correlation ID, and decides on a resolution (e.g., fix a bug and re-queue, or discard).
+
+## 1.11 Triggers
+
+- A message in the SOW processing queue fails all configured retry attempts.
+
+## 1.12 Outcomes
+
+- The failing message is isolated in a DLQ, preventing it from blocking subsequent messages.
+- An automated alert is sent to the operations team for investigation.
+- No data (the SOW processing request) is lost, ensuring traceability.
+
+## 1.13 Business Rules
+
+- A message must only be dead-lettered after a defined number of retries has been exhausted.
+- Upon permanent failure, the SOW's status should be updated to 'Failed' in the database with an error summary.
+
+## 1.14 Error Scenarios
+
+- This entire sequence describes the handling of an error scenario.
+
+## 1.15 Integration Points
+
+- Message Queue (RabbitMQ) DLQ feature.
+- Monitoring and Alerting System (e.g., AWS CloudWatch).
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-EH-001
+
+## 2.2 Name
+
+SOW Processing Permanent Failure and Dead-Letter Queue Handling
+
+## 2.3 Description
+
+This sequence diagram details the technical implementation of the error handling workflow for non-recoverable failures in the asynchronous SOW processing service. It shows how a 'poison' message is identified after exhausting retries, moved to a Dead-Letter Queue (DLQ) by the message broker, and how automated monitoring triggers an alert for manual operator intervention, ensuring system resilience and data integrity.
+
+## 2.4 Participants
+
+### 2.4.1 Application Service
+
+#### 2.4.1.1 Repository Id
+
+REPO-SVC-AIWORKER
+
+#### 2.4.1.2 Display Name
+
+AI Processing Worker
+
+#### 2.4.1.3 Type
+
+🔹 Application Service
+
+#### 2.4.1.4 Technology
+
+.NET 8 Worker Service
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | component |
+| Color | #D35400 |
+| Stereotype | «Background Worker» |
+
+### 2.4.2.0 Message Broker
+
+#### 2.4.2.1 Repository Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.4.2.2 Display Name
+
+RabbitMQ Broker
+
+#### 2.4.2.3 Type
+
+🔹 Message Broker
+
+#### 2.4.2.4 Technology
+
+RabbitMQ (AMQP 0-9-1)
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | queue |
+| Color | #FF7800 |
+| Stereotype | «Message Broker» |
+
+### 2.4.3.0 Cloud Infrastructure
+
+#### 2.4.3.1 Repository Id
+
+REPO-INFRA-AWS
+
+#### 2.4.3.2 Display Name
+
+AWS Monitoring & Alerting
+
+#### 2.4.3.3 Type
+
+🔹 Cloud Infrastructure
+
+#### 2.4.3.4 Technology
+
+AWS CloudWatch, SNS
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | cloud |
+| Color | #232F3E |
+| Stereotype | «Monitoring Platform» |
+
+### 2.4.4.0 Human Actor
+
+#### 2.4.4.1 Repository Id
+
+OPERATOR
+
+#### 2.4.4.2 Display Name
+
+Operator
+
+#### 2.4.4.3 Type
+
+🔹 Human Actor
+
+#### 2.4.4.4 Technology
+
+Monitoring Dashboard, CLI
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #34495E |
+| Stereotype | «Human» |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 Message Delivery
+
+#### 2.5.1.1 Source Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.5.1.2 Target Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.1.3 Message
+
+AMQP basic.deliver (SowUploadedEvent, deliveryTag, redelivered=true)
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 Message Delivery
+
+#### 2.5.1.6 Is Synchronous
+
+❌ No
+
+#### 2.5.1.7 Return Message
+
+
+
+#### 2.5.1.8 Has Return
+
+❌ No
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AMQP |
+| Method | basic.deliver |
+| Parameters | SowUploadedEvent message from 'sow-processing-queu... |
+| Authentication | Connection credentials (username/password) from AW... |
+| Error Handling | The consumer is responsible for acknowledging or r... |
+| Performance | Low latency delivery is expected. |
+
+#### 2.5.1.11 Nested Interactions
+
+*No items available*
+
+### 2.5.2.0 Internal Processing
+
+#### 2.5.2.1 Source Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.2.2 Target Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.2.3 Message
+
+Process message: Catch non-transient Exception (e.g., InvalidSowFileFormatException)
+
+#### 2.5.2.4 Sequence Number
+
+2
+
+#### 2.5.2.5 Type
+
+🔹 Internal Processing
+
+#### 2.5.2.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7 Return Message
+
+
+
+#### 2.5.2.8 Has Return
+
+❌ No
+
+#### 2.5.2.9 Is Activation
+
+❌ No
+
+#### 2.5.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | Internal |
+| Method | SowUploadedEventHandler.Handle() |
+| Parameters | SowUploadedEvent |
+| Authentication | N/A |
+| Error Handling | The handler's main try-catch block captures termin... |
+| Performance | N/A |
+
+#### 2.5.2.11 Nested Interactions
+
+##### 2.5.2.11.1 Database Operation
+
+###### 2.5.2.11.1.1 Source Id
+
+REPO-SVC-AIWORKER
+
+###### 2.5.2.11.1.2 Target Id
+
+REPO-SVC-AIWORKER
+
+###### 2.5.2.11.1.3 Message
+
+Update SOW status in DB to 'Failed'
+
+###### 2.5.2.11.1.4 Sequence Number
+
+2.1
+
+###### 2.5.2.11.1.5 Type
+
+🔹 Database Operation
+
+###### 2.5.2.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.2.11.1.7 Return Message
+
+Commit successful
+
+###### 2.5.2.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.2.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.2.11.1.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | EF Core / Npgsql |
+| Method | DbContext.SaveChangesAsync() |
+| Parameters | UPDATE SowDocuments SET Status = 'Failed', ErrorMe... |
+| Authentication | Database connection string with credentials. |
+| Error Handling | Standard database transient fault handling. |
+| Performance | Must complete quickly to avoid holding message ack... |
+
+##### 2.5.2.11.2.0 Logging
+
+###### 2.5.2.11.2.1 Source Id
+
+REPO-SVC-AIWORKER
+
+###### 2.5.2.11.2.2 Target Id
+
+REPO-INFRA-AWS
+
+###### 2.5.2.11.2.3 Message
+
+Log permanent failure event with Correlation ID
+
+###### 2.5.2.11.2.4 Sequence Number
+
+2.2
+
+###### 2.5.2.11.2.5 Type
+
+🔹 Logging
+
+###### 2.5.2.11.2.6 Is Synchronous
+
+❌ No
+
+###### 2.5.2.11.2.7 Return Message
+
+
+
+###### 2.5.2.11.2.8 Has Return
+
+❌ No
+
+###### 2.5.2.11.2.9 Is Activation
+
+❌ No
+
+###### 2.5.2.11.2.10 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS |
+| Method | AWS CloudWatch Logs API: PutLogEvents |
+| Parameters | Structured JSON log: { Level: 'Error', Message: 'P... |
+| Authentication | IAM Role for EKS Pod. |
+| Error Handling | Logging sink will retry internally on transient fa... |
+| Performance | Asynchronous fire-and-forget. |
+
+### 2.5.3.0.0.0 Message Rejection
+
+#### 2.5.3.1.0.0 Source Id
+
+REPO-SVC-AIWORKER
+
+#### 2.5.3.2.0.0 Target Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.5.3.3.0.0 Message
+
+AMQP basic.nack (deliveryTag, requeue=false)
+
+#### 2.5.3.4.0.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0.0 Type
+
+🔹 Message Rejection
+
+#### 2.5.3.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.3.7.0.0 Return Message
+
+
+
+#### 2.5.3.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.3.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.3.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AMQP |
+| Method | basic.nack |
+| Parameters | The deliveryTag of the failed message. `requeue=fa... |
+| Authentication | N/A (existing connection). |
+| Error Handling | Broker handles the dead-lettering logic. |
+| Performance | Immediate. |
+
+#### 2.5.3.11.0.0 Nested Interactions
+
+*No items available*
+
+### 2.5.4.0.0.0 Message Routing
+
+#### 2.5.4.1.0.0 Source Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.5.4.2.0.0 Target Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.5.4.3.0.0 Message
+
+Route message to Dead-Letter Exchange (DLX)
+
+#### 2.5.4.4.0.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0.0 Type
+
+🔹 Message Routing
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0.0 Return Message
+
+Route to 'sow-processing-dlq'
+
+#### 2.5.4.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.4.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.4.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AMQP (Internal) |
+| Method | DLX Routing |
+| Parameters | The original message is published to the exchange ... |
+| Authentication | N/A |
+| Error Handling | If the DLX/DLQ is misconfigured, the message is dr... |
+| Performance | High-speed internal broker operation. |
+
+#### 2.5.4.11.0.0 Nested Interactions
+
+*No items available*
+
+### 2.5.5.0.0.0 Metric Polling
+
+#### 2.5.5.1.0.0 Source Id
+
+REPO-INFRA-AWS
+
+#### 2.5.5.2.0.0 Target Id
+
+REPO-INFRA-AWS
+
+#### 2.5.5.3.0.0 Message
+
+Monitor DLQ metric (ApproximateNumberOfMessagesVisible)
+
+#### 2.5.5.4.0.0 Sequence Number
+
+5
+
+#### 2.5.5.5.0.0 Type
+
+🔹 Metric Polling
+
+#### 2.5.5.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.5.7.0.0 Return Message
+
+
+
+#### 2.5.5.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.5.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AWS Internal |
+| Method | CloudWatch Metric Collection |
+| Parameters | MetricNamespace: AWS/SQS or custom for RabbitMQ, M... |
+| Authentication | N/A |
+| Error Handling | Managed by AWS. |
+| Performance | Polling period defined in alarm (e.g., 1 minute). |
+
+#### 2.5.5.11.0.0 Nested Interactions
+
+*No items available*
+
+### 2.5.6.0.0.0 State Transition
+
+#### 2.5.6.1.0.0 Source Id
+
+REPO-INFRA-AWS
+
+#### 2.5.6.2.0.0 Target Id
+
+REPO-INFRA-AWS
+
+#### 2.5.6.3.0.0 Message
+
+CloudWatch Alarm state transitions to ALARM
+
+#### 2.5.6.4.0.0 Sequence Number
+
+6
+
+#### 2.5.6.5.0.0 Type
+
+🔹 State Transition
+
+#### 2.5.6.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7.0.0 Return Message
+
+Trigger SNS Action
+
+#### 2.5.6.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.6.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.6.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | AWS Internal |
+| Method | Alarm Evaluation |
+| Parameters | Threshold: > 0, EvaluationPeriods: 1, DatapointsTo... |
+| Authentication | N/A |
+| Error Handling | Managed by AWS. |
+| Performance | Near real-time. |
+
+#### 2.5.6.11.0.0 Nested Interactions
+
+*No items available*
+
+### 2.5.7.0.0.0 Notification
+
+#### 2.5.7.1.0.0 Source Id
+
+REPO-INFRA-AWS
+
+#### 2.5.7.2.0.0 Target Id
+
+OPERATOR
+
+#### 2.5.7.3.0.0 Message
+
+Publish SNS notification to alert endpoint (e.g., PagerDuty, Slack)
+
+#### 2.5.7.4.0.0 Sequence Number
+
+7
+
+#### 2.5.7.5.0.0 Type
+
+🔹 Notification
+
+#### 2.5.7.6.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.7.7.0.0 Return Message
+
+
+
+#### 2.5.7.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.7.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.7.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS (Webhook) |
+| Method | SNS: Publish |
+| Parameters | Message payload includes AlarmName, Reason, Metric... |
+| Authentication | IAM permissions for CloudWatch to publish to SNS t... |
+| Error Handling | SNS provides built-in retry policies for delivery ... |
+| Performance | Typically completes within seconds. |
+
+#### 2.5.7.11.0.0 Nested Interactions
+
+*No items available*
+
+### 2.5.8.0.0.0 Manual Investigation
+
+#### 2.5.8.1.0.0 Source Id
+
+OPERATOR
+
+#### 2.5.8.2.0.0 Target Id
+
+REPO-INFRA-AWS
+
+#### 2.5.8.3.0.0 Message
+
+Investigate: Query CloudWatch Logs using Correlation ID from alert
+
+#### 2.5.8.4.0.0 Sequence Number
+
+8
+
+#### 2.5.8.5.0.0 Type
+
+🔹 Manual Investigation
+
+#### 2.5.8.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.8.7.0.0 Return Message
+
+Log stream with error details
+
+#### 2.5.8.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.8.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.8.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS (AWS Console/CLI) |
+| Method | CloudWatch Logs Insights Query |
+| Parameters | fields @timestamp, @message \| filter correlationI... |
+| Authentication | IAM user credentials with appropriate permissions. |
+| Error Handling | N/A |
+| Performance | Dependent on query complexity and time range. |
+
+#### 2.5.8.11.0.0 Nested Interactions
+
+*No items available*
+
+### 2.5.9.0.0.0 Manual Investigation
+
+#### 2.5.9.1.0.0 Source Id
+
+OPERATOR
+
+#### 2.5.9.2.0.0 Target Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.5.9.3.0.0 Message
+
+Investigate: Inspect message contents in DLQ
+
+#### 2.5.9.4.0.0 Sequence Number
+
+9
+
+#### 2.5.9.5.0.0 Type
+
+🔹 Manual Investigation
+
+#### 2.5.9.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.9.7.0.0 Return Message
+
+Message payload and headers
+
+#### 2.5.9.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.9.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.9.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS (RabbitMQ Management UI) / AMQP |
+| Method | Get Messages |
+| Parameters | QueueName: 'sow-processing-dlq' |
+| Authentication | Management UI credentials. |
+| Error Handling | N/A |
+| Performance | Immediate. |
+
+#### 2.5.9.11.0.0 Nested Interactions
+
+*No items available*
+
+### 2.5.10.0.0.0 Manual Resolution
+
+#### 2.5.10.1.0.0 Source Id
+
+OPERATOR
+
+#### 2.5.10.2.0.0 Target Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.5.10.3.0.0 Message
+
+Resolve: Manually re-queue or discard message
+
+#### 2.5.10.4.0.0 Sequence Number
+
+10
+
+#### 2.5.10.5.0.0 Type
+
+🔹 Manual Resolution
+
+#### 2.5.10.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.10.7.0.0 Return Message
+
+Action confirmation
+
+#### 2.5.10.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.10.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.10.10.0.0 Technical Details
+
+| Property | Value |
+|----------|-------|
+| Protocol | HTTPS (RabbitMQ Management UI) / AMQP |
+| Method | Move/Purge Message |
+| Parameters | Message ID, Target Queue/Exchange. |
+| Authentication | Management UI credentials. |
+| Error Handling | Requires careful handling to avoid data loss. |
+| Performance | Immediate. |
+
+#### 2.5.10.11.0.0 Nested Interactions
+
+*No items available*
+
+## 2.6.0.0.0.0 Notes
+
+### 2.6.1.0.0.0 Content
+
+#### 2.6.1.1.0.0 Content
+
+The 'sow-processing-queue' in RabbitMQ must be configured with 'x-dead-letter-exchange' pointing to a dedicated exchange (e.g., 'dlx_exchange') and 'x-dead-letter-routing-key' pointing to the DLQ's routing key (e.g., 'sow-processing-dlq.key').
+
+#### 2.6.1.2.0.0 Position
+
+top
+
+#### 2.6.1.3.0.0 Participant Id
+
+REPO-MQ-RABBITMQ
+
+#### 2.6.1.4.0.0 Sequence Number
+
+4
+
+### 2.6.2.0.0.0 Content
+
+#### 2.6.2.1.0.0 Content
+
+Operator's investigation is guided by a runbook that details how to interpret log messages, common failure modes, and criteria for re-queuing vs. discarding a message.
+
+#### 2.6.2.2.0.0 Position
+
+bottom
+
+#### 2.6.2.3.0.0 Participant Id
+
+OPERATOR
+
+#### 2.6.2.4.0.0 Sequence Number
+
+8
+
+## 2.7.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | IAM permissions must be strictly scoped: AI Worker... |
+| Performance Targets | Recovery Time Objective (RTO) for a poison message... |
+| Error Handling Strategy | This sequence IS the error handling strategy for p... |
+| Testing Considerations | Chaos engineering: Inject a malformed message into... |
+| Monitoring Requirements | A dedicated dashboard in Grafana/CloudWatch should... |
+| Deployment Considerations | The RabbitMQ DLQ and DLX configuration should be m... |
+

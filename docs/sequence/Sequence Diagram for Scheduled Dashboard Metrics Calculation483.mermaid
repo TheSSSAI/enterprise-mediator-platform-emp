@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant "Kubernetes CronJob Scheduler" as KubernetesCronJobScheduler
+    participant "DashboardMetricsCalculator Worker" as DashboardMetricsCalculatorWorker
+    participant "PostgreSQL Database (RDS)" as PostgreSQLDatabaseRDS
+
+    activate DashboardMetricsCalculatorWorker
+    KubernetesCronJobScheduler->>DashboardMetricsCalculatorWorker: 1. Triggers Pod creation based on cron schedule ('0 * * * *')
+    DashboardMetricsCalculatorWorker->>PostgreSQLDatabaseRDS: 2. BEGIN TRANSACTION (Isolation Level: Read Committed)
+    PostgreSQLDatabaseRDS-->>DashboardMetricsCalculatorWorker: Transaction context
+    DashboardMetricsCalculatorWorker->>PostgreSQLDatabaseRDS: 3. Execute optimized aggregation queries for all required metrics
+    PostgreSQLDatabaseRDS-->>DashboardMetricsCalculatorWorker: Aggregated data sets
+    DashboardMetricsCalculatorWorker->>PostgreSQLDatabaseRDS: 4. TRUNCATE TABLE "DashboardMetrics" and bulk INSERT new aggregated data
+    PostgreSQLDatabaseRDS-->>DashboardMetricsCalculatorWorker: Rows affected count
+    DashboardMetricsCalculatorWorker->>PostgreSQLDatabaseRDS: 5. COMMIT TRANSACTION
+    PostgreSQLDatabaseRDS-->>DashboardMetricsCalculatorWorker: Success confirmation
+    DashboardMetricsCalculatorWorker->>DashboardMetricsCalculatorWorker: 6. Log successful execution with key metrics
+
+    note over DashboardMetricsCalculatorWorker: Error Handling Block: If any exception occurs during steps 3, 4, or 5, a catch block must execute...
+    note over KubernetesCronJobScheduler: The Kubernetes CronJob spec MUST use a concurrencyPolicy of 'Forbid' or 'Replace' to prevent over...
+    note over PostgreSQLDatabaseRDS: All aggregation queries must be analyzed with EXPLAIN ANALYZE to ensure they are using appropriat...
+
+    deactivate DashboardMetricsCalculatorWorker

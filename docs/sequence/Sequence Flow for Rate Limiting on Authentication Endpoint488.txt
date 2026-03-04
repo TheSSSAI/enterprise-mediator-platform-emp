@@ -1,0 +1,1200 @@
+# 1 Overview
+
+## 1.1 Diagram Id
+
+SEQ-SF-001
+
+## 1.2 Name
+
+Rate Limiting on Authentication Endpoint
+
+## 1.3 Description
+
+When a user or automated tool makes an excessive number of failed login attempts against the API, the system temporarily blocks further attempts from that IP address to mitigate brute-force attacks.
+
+## 1.4 Type
+
+🔹 SecurityFlow
+
+## 1.5 Purpose
+
+To protect user accounts and system resources from abuse by implementing the rate limiting security requirement from REQ-NFR-003.
+
+## 1.6 Complexity
+
+Medium
+
+## 1.7 Priority
+
+🚨 Critical
+
+## 1.8 Frequency
+
+OnDemand
+
+## 1.9 Participants
+
+- REPO-API-MONOLITH
+- REPO-INFRA-REDIS
+
+## 1.10 Key Interactions
+
+- User submits login credentials to the authentication endpoint.
+- The API's rate-limiting middleware intercepts the request.
+- The middleware checks a counter for the source IP address in Redis.
+- If the attempt count is below the threshold, it increments the counter and allows the request to proceed.
+- If the attempt count exceeds the threshold, the middleware immediately rejects the request with an HTTP 429 'Too Many Requests' status.
+- The counter in Redis has a rolling time window expiry.
+
+## 1.11 Triggers
+
+- Any request to a protected endpoint, such as user login.
+
+## 1.12 Outcomes
+
+- The system is protected from brute-force login attempts.
+- Abusive clients are temporarily blocked.
+
+## 1.13 Business Rules
+
+- The rate limit threshold (e.g., 10 failed attempts per minute) must be configurable.
+
+## 1.14 Error Scenarios
+
+- A legitimate user with a shared corporate IP address is inadvertently blocked.
+
+## 1.15 Integration Points
+
+- Redis for distributed, high-performance counting.
+
+# 2.0 Details
+
+## 2.1 Diagram Id
+
+SEQ-US-095-MilestoneApproval
+
+## 2.2 Name
+
+Client Milestone Approval via Secure Link
+
+## 2.3 Description
+
+Technical sequence for an unauthenticated client contact approving or rejecting a project milestone using a secure, single-use, time-limited JWT. This flow covers the critical security checkpoints of token validation, the atomic state transition of the milestone, comprehensive audit logging, and subsequent internal notification. It implements a zero-trust pattern by granting temporary, scoped access for a specific business action.
+
+## 2.4 Participants
+
+### 2.4.1 Actor
+
+#### 2.4.1.1 Repository Id
+
+client_browser
+
+#### 2.4.1.2 Display Name
+
+Client Contact Browser
+
+#### 2.4.1.3 Type
+
+🔹 Actor
+
+#### 2.4.1.4 Technology
+
+N/A (Standard Web Browser)
+
+#### 2.4.1.5 Order
+
+1
+
+#### 2.4.1.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | actor |
+| Color | #999999 |
+| Stereotype | External User |
+
+### 2.4.2.0 Presentation Layer
+
+#### 2.4.2.1 Repository Id
+
+REPO-FE-SPA
+
+#### 2.4.2.2 Display Name
+
+Frontend Web Application
+
+#### 2.4.2.3 Type
+
+🔹 Presentation Layer
+
+#### 2.4.2.4 Technology
+
+Next.js 14, React 18, TypeScript
+
+#### 2.4.2.5 Order
+
+2
+
+#### 2.4.2.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #4287f5 |
+| Stereotype | UI/SSR |
+
+### 2.4.3.0 Application Service
+
+#### 2.4.3.1 Repository Id
+
+REPO-API-MONOLITH
+
+#### 2.4.3.2 Display Name
+
+Backend API
+
+#### 2.4.3.3 Type
+
+🔹 Application Service
+
+#### 2.4.3.4 Technology
+
+ASP.NET Core 8, C# 12
+
+#### 2.4.3.5 Order
+
+3
+
+#### 2.4.3.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #f58742 |
+| Stereotype | API/Business Logic |
+
+### 2.4.4.0 Database
+
+#### 2.4.4.1 Repository Id
+
+REPO-DB-POSTGRES
+
+#### 2.4.4.2 Display Name
+
+PostgreSQL Database
+
+#### 2.4.4.3 Type
+
+🔹 Database
+
+#### 2.4.4.4 Technology
+
+PostgreSQL 16
+
+#### 2.4.4.5 Order
+
+4
+
+#### 2.4.4.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | database |
+| Color | #336791 |
+| Stereotype | System of Record |
+
+### 2.4.5.0 External Service
+
+#### 2.4.5.1 Repository Id
+
+EXT-AWS-SES
+
+#### 2.4.5.2 Display Name
+
+AWS SES
+
+#### 2.4.5.3 Type
+
+🔹 External Service
+
+#### 2.4.5.4 Technology
+
+AWS Simple Email Service API
+
+#### 2.4.5.5 Order
+
+5
+
+#### 2.4.5.6 Style
+
+| Property | Value |
+|----------|-------|
+| Shape | participant |
+| Color | #FF9900 |
+| Stereotype | Notification Gateway |
+
+## 2.5.0.0 Interactions
+
+### 2.5.1.0 HTTP Request
+
+#### 2.5.1.1 Source Id
+
+client_browser
+
+#### 2.5.1.2 Target Id
+
+REPO-FE-SPA
+
+#### 2.5.1.3 Message
+
+1. GET /approve/milestone/{jwt}
+
+#### 2.5.1.4 Sequence Number
+
+1
+
+#### 2.5.1.5 Type
+
+🔹 HTTP Request
+
+#### 2.5.1.6 Is Synchronous
+
+✅ Yes
+
+#### 2.5.1.7 Return Message
+
+8. Returns server-side rendered HTML page
+
+#### 2.5.1.8 Has Return
+
+✅ Yes
+
+#### 2.5.1.9 Is Activation
+
+✅ Yes
+
+#### 2.5.1.10 Technical Details
+
+##### 2.5.1.10.1 Protocol
+
+HTTPS
+
+##### 2.5.1.10.2 Method
+
+GET
+
+##### 2.5.1.10.3 Parameters
+
+- {'name': 'jwt', 'type': 'string', 'description': 'Path parameter containing the secure, time-limited JWT for milestone approval.'}
+
+##### 2.5.1.10.4 Authentication
+
+None (Unauthenticated)
+
+##### 2.5.1.10.5 Error Handling
+
+Standard HTTP error page rendering (404, 500).
+
+##### 2.5.1.10.6 Performance
+
+###### 2.5.1.10.6.1 Latency
+
+LCP < 2s
+
+### 2.5.2.0.0.0 API Call
+
+#### 2.5.2.1.0.0 Source Id
+
+REPO-FE-SPA
+
+#### 2.5.2.2.0.0 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.2.3.0.0 Message
+
+2. [SSR] GET /api/v1/public/milestones/review/{jwt}
+
+#### 2.5.2.4.0.0 Sequence Number
+
+2
+
+#### 2.5.2.5.0.0 Type
+
+🔹 API Call
+
+#### 2.5.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.2.7.0.0 Return Message
+
+7. Returns 200 OK with milestone details
+
+#### 2.5.2.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.2.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.2.10.0.0 Technical Details
+
+##### 2.5.2.10.1.0 Protocol
+
+HTTPS
+
+##### 2.5.2.10.2.0 Method
+
+GET
+
+##### 2.5.2.10.3.0 Parameters
+
+- {'name': 'jwt', 'type': 'string', 'description': 'JWT from the original request.'}
+
+##### 2.5.2.10.4.0 Authentication
+
+None (Public Endpoint)
+
+##### 2.5.2.10.5.0 Error Handling
+
+Receives 410 Gone for expired/used tokens, 400 for malformed, 500 for server errors.
+
+##### 2.5.2.10.6.0 Performance
+
+###### 2.5.2.10.6.1 Latency
+
+< 150ms p95
+
+### 2.5.3.0.0.0 Internal Method Call
+
+#### 2.5.3.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.3.2.0.0 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.3.3.0.0 Message
+
+3. Validate JWT (Signature, Expiry, Type)
+
+#### 2.5.3.4.0.0 Sequence Number
+
+3
+
+#### 2.5.3.5.0.0 Type
+
+🔹 Internal Method Call
+
+#### 2.5.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.3.7.0.0 Return Message
+
+Validation result
+
+#### 2.5.3.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.3.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.3.10.0.0 Technical Details
+
+##### 2.5.3.10.1.0 Protocol
+
+Internal
+
+##### 2.5.3.10.2.0 Method
+
+TokenValidationService.Validate()
+
+##### 2.5.3.10.3.0 Parameters
+
+*No items available*
+
+##### 2.5.3.10.4.0 Authentication
+
+N/A
+
+##### 2.5.3.10.5.0 Error Handling
+
+Throws SecurityTokenExpiredException, SecurityTokenInvalidSignatureException.
+
+##### 2.5.3.10.6.0 Performance
+
+###### 2.5.3.10.6.1 Latency
+
+< 5ms
+
+### 2.5.4.0.0.0 Database Query
+
+#### 2.5.4.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.4.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.4.3.0.0 Message
+
+4. SELECT ... FROM Milestones m JOIN ApprovalTokens t ON m.Id = t.MilestoneId WHERE t.Jti = {jwt.jti} AND t.UsedAt IS NULL
+
+#### 2.5.4.4.0.0 Sequence Number
+
+4
+
+#### 2.5.4.5.0.0 Type
+
+🔹 Database Query
+
+#### 2.5.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.4.7.0.0 Return Message
+
+6. Returns Milestone & Project data
+
+#### 2.5.4.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.4.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.4.10.0.0 Technical Details
+
+##### 2.5.4.10.1.0 Protocol
+
+Npgsql
+
+##### 2.5.4.10.2.0 Method
+
+```sql
+SELECT
+```
+
+##### 2.5.4.10.3.0 Parameters
+
+- {'name': 'jti', 'type': 'Guid', 'description': 'JWT ID claim used to prevent token reuse.'}
+
+##### 2.5.4.10.4.0 Authentication
+
+DB Connection Credentials
+
+##### 2.5.4.10.5.0 Error Handling
+
+Handles record not found.
+
+##### 2.5.4.10.6.0 Performance
+
+###### 2.5.4.10.6.1 Latency
+
+< 20ms p99
+
+### 2.5.5.0.0.0 Business Rule Check
+
+#### 2.5.5.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.5.2.0.0 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.5.3.0.0 Message
+
+5. Check if token JTI exists and is unused
+
+#### 2.5.5.4.0.0 Sequence Number
+
+5
+
+#### 2.5.5.5.0.0 Type
+
+🔹 Business Rule Check
+
+#### 2.5.5.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.5.7.0.0 Return Message
+
+
+
+#### 2.5.5.8.0.0 Has Return
+
+❌ No
+
+#### 2.5.5.9.0.0 Is Activation
+
+❌ No
+
+#### 2.5.5.10.0.0 Technical Details
+
+##### 2.5.5.10.1.0 Protocol
+
+Internal
+
+##### 2.5.5.10.2.0 Method
+
+if (dbResult == null) throw new TokenInvalidException()
+
+##### 2.5.5.10.3.0 Parameters
+
+*No items available*
+
+##### 2.5.5.10.4.0 Authentication
+
+N/A
+
+##### 2.5.5.10.5.0 Error Handling
+
+Throws custom exception if token is invalid, mapping to 410 Gone.
+
+##### 2.5.5.10.6.0 Performance
+
+###### 2.5.5.10.6.1 Latency
+
+In-memory
+
+### 2.5.6.0.0.0 API Call
+
+#### 2.5.6.1.0.0 Source Id
+
+client_browser
+
+#### 2.5.6.2.0.0 Target Id
+
+REPO-API-MONOLITH
+
+#### 2.5.6.3.0.0 Message
+
+9. POST /api/v1/public/milestones/approve/{jwt}
+
+#### 2.5.6.4.0.0 Sequence Number
+
+9
+
+#### 2.5.6.5.0.0 Type
+
+🔹 API Call
+
+#### 2.5.6.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.6.7.0.0 Return Message
+
+18. Returns 200 OK { success: true }
+
+#### 2.5.6.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.6.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.6.10.0.0 Technical Details
+
+##### 2.5.6.10.1.0 Protocol
+
+HTTPS
+
+##### 2.5.6.10.2.0 Method
+
+POST
+
+##### 2.5.6.10.3.0 Parameters
+
+- {'name': 'Body', 'type': 'JSON', 'description': '{ "action": "APPROVE" } or { "action": "REJECT", "reason": "..." }'}
+
+##### 2.5.6.10.4.0 Authentication
+
+None (Token-based action)
+
+##### 2.5.6.10.5.0 Error Handling
+
+Handles 410, 422 (missing reason), 500.
+
+##### 2.5.6.10.6.0 Performance
+
+###### 2.5.6.10.6.1 Latency
+
+< 200ms p95
+
+### 2.5.7.0.0.0 Database Command
+
+#### 2.5.7.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.7.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+#### 2.5.7.3.0.0 Message
+
+10. BEGIN TRANSACTION
+
+#### 2.5.7.4.0.0 Sequence Number
+
+10
+
+#### 2.5.7.5.0.0 Type
+
+🔹 Database Command
+
+#### 2.5.7.6.0.0 Is Synchronous
+
+✅ Yes
+
+#### 2.5.7.7.0.0 Return Message
+
+14. COMMIT TRANSACTION
+
+#### 2.5.7.8.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.7.9.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.7.10.0.0 Technical Details
+
+##### 2.5.7.10.1.0 Protocol
+
+Npgsql
+
+##### 2.5.7.10.2.0 Method
+
+BEGIN
+
+##### 2.5.7.10.3.0 Parameters
+
+*No items available*
+
+##### 2.5.7.10.4.0 Authentication
+
+DB Connection Credentials
+
+##### 2.5.7.10.5.0 Error Handling
+
+Rolls back transaction on any failure within the block.
+
+##### 2.5.7.10.6.0 Performance
+
+###### 2.5.7.10.6.1 Latency
+
+< 5ms
+
+#### 2.5.7.11.0.0 Nested Interactions
+
+##### 2.5.7.11.1.0 Database Query
+
+###### 2.5.7.11.1.1 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.7.11.1.2 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.7.11.1.3 Message
+
+11. SELECT ... FROM ApprovalTokens WHERE Jti = {jwt.jti} FOR UPDATE
+
+###### 2.5.7.11.1.4 Sequence Number
+
+11
+
+###### 2.5.7.11.1.5 Type
+
+🔹 Database Query
+
+###### 2.5.7.11.1.6 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.1.7 Return Message
+
+Token record
+
+###### 2.5.7.11.1.8 Has Return
+
+✅ Yes
+
+###### 2.5.7.11.1.9 Is Activation
+
+❌ No
+
+###### 2.5.7.11.1.10 Technical Details
+
+####### 2.5.7.11.1.10.1 Protocol
+
+Npgsql
+
+####### 2.5.7.11.1.10.2 Method
+
+```sql
+SELECT
+```
+
+####### 2.5.7.11.1.10.3 Parameters
+
+- {'name': 'FOR UPDATE', 'type': 'Clause', 'description': 'Applies a pessimistic lock to the row to prevent race conditions.'}
+
+####### 2.5.7.11.1.10.4 Authentication
+
+DB Connection Credentials
+
+####### 2.5.7.11.1.10.5 Error Handling
+
+Throws if token not found or already used, triggering transaction rollback.
+
+####### 2.5.7.11.1.10.6 Performance
+
+######## 2.5.7.11.1.10.6.1 Latency
+
+< 20ms p99
+
+##### 2.5.7.11.2.0.0.0 Database Command
+
+###### 2.5.7.11.2.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.7.11.2.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.7.11.2.3.0.0 Message
+
+12. UPDATE Milestones SET Status = 'Approved' WHERE Id = {milestoneId}
+
+###### 2.5.7.11.2.4.0.0 Sequence Number
+
+12
+
+###### 2.5.7.11.2.5.0.0 Type
+
+🔹 Database Command
+
+###### 2.5.7.11.2.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.2.7.0.0 Return Message
+
+Rows affected
+
+###### 2.5.7.11.2.8.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.7.11.2.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.7.11.2.10.0.0 Technical Details
+
+####### 2.5.7.11.2.10.1.0 Protocol
+
+Npgsql
+
+####### 2.5.7.11.2.10.2.0 Method
+
+```sql
+UPDATE
+```
+
+####### 2.5.7.11.2.10.3.0 Parameters
+
+*No items available*
+
+####### 2.5.7.11.2.10.4.0 Authentication
+
+DB Connection Credentials
+
+####### 2.5.7.11.2.10.5.0 Error Handling
+
+Triggers transaction rollback on failure.
+
+####### 2.5.7.11.2.10.6.0 Performance
+
+######## 2.5.7.11.2.10.6.1 Latency
+
+< 10ms
+
+##### 2.5.7.11.3.0.0.0 Database Command
+
+###### 2.5.7.11.3.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.7.11.3.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.7.11.3.3.0.0 Message
+
+13. UPDATE ApprovalTokens SET UsedAt = NOW() WHERE Jti = {jwt.jti}
+
+###### 2.5.7.11.3.4.0.0 Sequence Number
+
+13
+
+###### 2.5.7.11.3.5.0.0 Type
+
+🔹 Database Command
+
+###### 2.5.7.11.3.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.3.7.0.0 Return Message
+
+Rows affected
+
+###### 2.5.7.11.3.8.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.7.11.3.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.7.11.3.10.0.0 Technical Details
+
+####### 2.5.7.11.3.10.1.0 Protocol
+
+Npgsql
+
+####### 2.5.7.11.3.10.2.0 Method
+
+```sql
+UPDATE
+```
+
+####### 2.5.7.11.3.10.3.0 Parameters
+
+*No items available*
+
+####### 2.5.7.11.3.10.4.0 Authentication
+
+DB Connection Credentials
+
+####### 2.5.7.11.3.10.5.0 Error Handling
+
+Triggers transaction rollback on failure.
+
+####### 2.5.7.11.3.10.6.0 Performance
+
+######## 2.5.7.11.3.10.6.1 Latency
+
+< 10ms
+
+##### 2.5.7.11.4.0.0.0 Database Command
+
+###### 2.5.7.11.4.1.0.0 Source Id
+
+REPO-API-MONOLITH
+
+###### 2.5.7.11.4.2.0.0 Target Id
+
+REPO-DB-POSTGRES
+
+###### 2.5.7.11.4.3.0.0 Message
+
+14. INSERT INTO AuditLogs (Action, Entity, ...)
+
+###### 2.5.7.11.4.4.0.0 Sequence Number
+
+14
+
+###### 2.5.7.11.4.5.0.0 Type
+
+🔹 Database Command
+
+###### 2.5.7.11.4.6.0.0 Is Synchronous
+
+✅ Yes
+
+###### 2.5.7.11.4.7.0.0 Return Message
+
+New record ID
+
+###### 2.5.7.11.4.8.0.0 Has Return
+
+✅ Yes
+
+###### 2.5.7.11.4.9.0.0 Is Activation
+
+❌ No
+
+###### 2.5.7.11.4.10.0.0 Technical Details
+
+####### 2.5.7.11.4.10.1.0 Protocol
+
+Npgsql
+
+####### 2.5.7.11.4.10.2.0 Method
+
+```sql
+INSERT
+```
+
+####### 2.5.7.11.4.10.3.0 Parameters
+
+- {'name': 'Payload', 'type': 'JSONB', 'description': 'Contains details like client contact ID, IP address, and rejection reason if applicable.'}
+
+####### 2.5.7.11.4.10.4.0 Authentication
+
+DB Connection Credentials
+
+####### 2.5.7.11.4.10.5.0 Error Handling
+
+Triggers transaction rollback on failure.
+
+####### 2.5.7.11.4.10.6.0 Performance
+
+######## 2.5.7.11.4.10.6.1 Latency
+
+< 10ms
+
+### 2.5.8.0.0.0.0.0 API Call
+
+#### 2.5.8.1.0.0.0.0 Source Id
+
+REPO-API-MONOLITH
+
+#### 2.5.8.2.0.0.0.0 Target Id
+
+EXT-AWS-SES
+
+#### 2.5.8.3.0.0.0.0 Message
+
+15. [Async] Send 'Milestone Approved' email to Admin
+
+#### 2.5.8.4.0.0.0.0 Sequence Number
+
+15
+
+#### 2.5.8.5.0.0.0.0 Type
+
+🔹 API Call
+
+#### 2.5.8.6.0.0.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.8.7.0.0.0.0 Return Message
+
+16. Returns 200 OK
+
+#### 2.5.8.8.0.0.0.0 Has Return
+
+✅ Yes
+
+#### 2.5.8.9.0.0.0.0 Is Activation
+
+✅ Yes
+
+#### 2.5.8.10.0.0.0.0 Technical Details
+
+##### 2.5.8.10.1.0.0.0 Protocol
+
+HTTPS
+
+##### 2.5.8.10.2.0.0.0 Method
+
+SendEmail
+
+##### 2.5.8.10.3.0.0.0 Parameters
+
+###### 2.5.8.10.3.1.0.0 To
+
+####### 2.5.8.10.3.1.1.0 Name
+
+To
+
+####### 2.5.8.10.3.1.2.0 Type
+
+🔹 string
+
+####### 2.5.8.10.3.1.3.0 Description
+
+System Administrator's email address.
+
+###### 2.5.8.10.3.2.0.0 Template
+
+####### 2.5.8.10.3.2.1.0 Name
+
+Template
+
+####### 2.5.8.10.3.2.2.0 Type
+
+🔹 string
+
+####### 2.5.8.10.3.2.3.0 Description
+
+MilestoneApprovedNotification
+
+##### 2.5.8.10.4.0.0.0 Authentication
+
+AWS IAM Credentials
+
+##### 2.5.8.10.5.0.0.0 Error Handling
+
+Failures are logged; does not block the primary user-facing response.
+
+##### 2.5.8.10.6.0.0.0 Performance
+
+###### 2.5.8.10.6.1.0.0 Latency
+
+Variable, handled asynchronously.
+
+### 2.5.9.0.0.0.0.0 UI Update
+
+#### 2.5.9.1.0.0.0.0 Source Id
+
+REPO-FE-SPA
+
+#### 2.5.9.2.0.0.0.0 Target Id
+
+client_browser
+
+#### 2.5.9.3.0.0.0.0 Message
+
+19. Update UI to display confirmation message
+
+#### 2.5.9.4.0.0.0.0 Sequence Number
+
+19
+
+#### 2.5.9.5.0.0.0.0 Type
+
+🔹 UI Update
+
+#### 2.5.9.6.0.0.0.0 Is Synchronous
+
+❌ No
+
+#### 2.5.9.7.0.0.0.0 Return Message
+
+
+
+#### 2.5.9.8.0.0.0.0 Has Return
+
+❌ No
+
+#### 2.5.9.9.0.0.0.0 Is Activation
+
+❌ No
+
+#### 2.5.9.10.0.0.0.0 Technical Details
+
+##### 2.5.9.10.1.0.0.0 Protocol
+
+Internal (JavaScript)
+
+##### 2.5.9.10.2.0.0.0 Method
+
+setUiState('success')
+
+##### 2.5.9.10.3.0.0.0 Parameters
+
+*No items available*
+
+##### 2.5.9.10.4.0.0.0 Authentication
+
+N/A
+
+##### 2.5.9.10.5.0.0.0 Error Handling
+
+N/A
+
+##### 2.5.9.10.6.0.0.0 Performance
+
+###### 2.5.9.10.6.1.0.0 Latency
+
+Immediate
+
+## 2.6.0.0.0.0.0.0 Notes
+
+### 2.6.1.0.0.0.0.0 Content
+
+#### 2.6.1.1.0.0.0.0 Content
+
+AC-002: If 'action' is 'REJECT', the POST body must include a 'reason' string. The API validates this, returning 422 if missing. The rejection reason is included in the Audit Log and the notification email to the Admin.
+
+#### 2.6.1.2.0.0.0.0 Position
+
+bottom
+
+#### 2.6.1.3.0.0.0.0 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.1.4.0.0.0.0 Sequence Number
+
+9
+
+### 2.6.2.0.0.0.0.0 Content
+
+#### 2.6.2.1.0.0.0.0 Content
+
+AC-003 & AC-004: If the token is expired (based on JWT 'exp' claim) or already used (based on 'UsedAt' DB field check), the API returns HTTP 410 Gone. The Frontend renders a dedicated page explaining the link is no longer valid.
+
+#### 2.6.2.2.0.0.0.0 Position
+
+top
+
+#### 2.6.2.3.0.0.0.0 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.2.4.0.0.0.0 Sequence Number
+
+2
+
+### 2.6.3.0.0.0.0.0 Content
+
+#### 2.6.3.1.0.0.0.0 Content
+
+AC-005: Any malformed JWT or invalid signature will fail step 3 and result in an HTTP 400 or 403 response, preventing any database access.
+
+#### 2.6.3.2.0.0.0.0 Position
+
+top
+
+#### 2.6.3.3.0.0.0.0 Participant Id
+
+REPO-API-MONOLITH
+
+#### 2.6.3.4.0.0.0.0 Sequence Number
+
+3
+
+## 2.7.0.0.0.0.0.0 Implementation Guidance
+
+| Property | Value |
+|----------|-------|
+| Security Requirements | Token (JWT) must contain 'milestoneId', 'clientCon... |
+| Performance Targets | The entire server-side process for the POST reques... |
+| Error Handling Strategy | A failure inside the transaction block (steps 11-1... |
+| Testing Considerations | E2E tests must cover all Acceptance Criteria, usin... |
+| Monitoring Requirements | Monitor the HTTP status codes for the public endpo... |
+| Deployment Considerations | The JWT signing key must be managed securely via A... |
+

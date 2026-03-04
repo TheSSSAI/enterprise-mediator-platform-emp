@@ -1,0 +1,14 @@
+sequenceDiagram
+    participant "Frontend SPA" as FrontendSPA
+    participant "Backend API" as BackendAPI
+    participant "PostgreSQL Database" as PostgreSQLDatabase
+
+    activate BackendAPI
+    FrontendSPA->>BackendAPI: 1. 1. GET /api/v1/projects/{projectId}/matching-vendors?limit=20&threshold=0.75
+    BackendAPI-->>FrontendSPA: 8. 200 OK with List<RecommendedVendorDto>
+    BackendAPI->>BackendAPI: 2. 2. [Controller] Invokes VendorMatchingService.FindMatchingVendorsAsync(projectId, searchParams)
+    BackendAPI-->>BackendAPI: 7. Returns List<RecommendedVendorDto>
+
+    note over BackendAPI: The returned DTO is mapped from the Vendor entity and includes the calculated similarity score. S...
+
+    deactivate BackendAPI
