@@ -1,0 +1,345 @@
+-- Enterprise Mediator Platform - Transactional Database Schema
+-- Technology: PostgreSQL 16
+-- Generated on: CURRENT_DATE
+
+-- --------------------------------------------
+-- 1. EXTENSIONS
+-- --------------------------------------------
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- --------------------------------------------
+-- 2. TABLE CREATION
+-- --------------------------------------------
+
+-- Role Table: Defines user roles and permissions.
+CREATE TABLE "Role" (
+    "roleId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "name" VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Client Table: Represents a client company.
+CREATE TABLE "Client" (
+    "clientId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "companyName" VARCHAR(255) NOT NULL,
+    "address" JSONB,
+    "billingDetails" JSONB,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'Active' CHECK ("status" IN ('Active', 'Inactive')),
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Vendor Table: Represents a vendor company.
+CREATE TABLE "Vendor" (
+    "vendorId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "companyName" VARCHAR(255) NOT NULL,
+    "contactInfo" JSONB,
+    "address" JSONB,
+    "paymentDetails" JSONB,
+    "paymentGatewayAccountId" VARCHAR(255) UNIQUE,
+    "vettingStatus" VARCHAR(50) NOT NULL DEFAULT 'PendingVetting' CHECK ("vettingStatus" IN ('PendingVetting', 'Active', 'Deactivated')),
+    "performanceMetrics" JSONB,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User Table: Represents system users with authentication and profile info.
+CREATE TABLE "User" (
+    "userId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "email" VARCHAR(255) NOT NULL UNIQUE CHECK ("email" ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}$'),
+    "passwordHash" VARCHAR(255) NOT NULL,
+    "firstName" VARCHAR(100) NOT NULL,
+    "lastName" VARCHAR(100) NOT NULL,
+    "roleId" UUID NOT NULL,
+    "clientId" UUID,
+    "vendorId" UUID,
+    "mfaEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "mfaSecret" VARCHAR(255),
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Skill Table: Master list of skills and expertise.
+CREATE TABLE "Skill" (
+    "skillId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "name" VARCHAR(100) NOT NULL UNIQUE,
+    "vectorEmbedding" vector(1536)
+);
+
+-- VendorSkill Table: Join table for Vendors and Skills.
+CREATE TABLE "VendorSkill" (
+    "vendorId" UUID NOT NULL,
+    "skillId" UUID NOT NULL,
+    PRIMARY KEY ("vendorId", "skillId")
+);
+
+-- Proposal Table: A vendor's proposal for a project.
+CREATE TABLE "Proposal" (
+    "proposalId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "vendorId" UUID NOT NULL,
+    "cost" DECIMAL(12, 2) NOT NULL,
+    "currency" VARCHAR(3) NOT NULL,
+    "timelineDescription" TEXT NOT NULL,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'SUBMITTED' CHECK ("status" IN ('SUBMITTED', 'IN_REVIEW', 'SHORTLISTED', 'REJECTED', 'ACCEPTED')),
+    "submittedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_Proposal_Project_Vendor" UNIQUE ("projectId", "vendorId")
+);
+
+-- Project Table: A project derived from an SOW.
+CREATE TABLE "Project" (
+    "projectId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "clientId" UUID NOT NULL,
+    "awardedVendorId" UUID,
+    "awardedProposalId" UUID UNIQUE,
+    "name" VARCHAR(255) NOT NULL,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'SOW_REVIEW' CHECK ("status" IN ('SOW_REVIEW', 'MATCHING', 'PROPOSED', 'AWARDED', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ON_HOLD', 'DISPUTED')),
+    "startDate" TIMESTAMPTZ,
+    "endDate" TIMESTAMPTZ,
+    "marginOverride" DECIMAL(5, 2),
+    "totalInvoicedAmount" DECIMAL(14, 2) NOT NULL DEFAULT 0.00,
+    "totalPaidOutAmount" DECIMAL(14, 2) NOT NULL DEFAULT 0.00,
+    "calculatedProfit" DECIMAL(14, 2) NOT NULL DEFAULT 0.00,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- SowDocument Table: Metadata about an uploaded SOW document.
+CREATE TABLE "SowDocument" (
+    "sowDocumentId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL UNIQUE,
+    "originalFilename" VARCHAR(255) NOT NULL,
+    "storagePath" VARCHAR(1024) NOT NULL,
+    "sanitizedStoragePath" VARCHAR(1024),
+    "status" VARCHAR(50) NOT NULL DEFAULT 'PROCESSING' CHECK ("status" IN ('PROCESSING', 'REVIEW_PENDING', 'FAILED', 'COMPLETED')),
+    "processingErrorDetails" TEXT,
+    "uploadedById" UUID NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ProjectBrief Table: AI-extracted and human-verified data from an SOW.
+CREATE TABLE "ProjectBrief" (
+    "projectBriefId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL UNIQUE,
+    "scopeSummary" TEXT,
+    "extractedData" JSONB,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'PENDING_REVIEW' CHECK ("status" IN ('PENDING_REVIEW', 'APPROVED')),
+    "reviewedById" UUID,
+    "reviewedAt" TIMESTAMPTZ
+);
+
+-- ProjectBriefSkill Table: Join table for Project Briefs and required Skills.
+CREATE TABLE "ProjectBriefSkill" (
+    "projectBriefId" UUID NOT NULL,
+    "skillId" UUID NOT NULL,
+    PRIMARY KEY ("projectBriefId", "skillId")
+);
+
+-- ProposalQuestion Table: Questions from vendors during the proposal phase.
+CREATE TABLE "ProposalQuestion" (
+    "proposalQuestionId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "submittedByVendorId" UUID NOT NULL,
+    "questionText" TEXT NOT NULL,
+    "answerText" TEXT,
+    "answeredById" UUID,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "answeredAt" TIMESTAMPTZ
+);
+
+-- Invoice Table: A financial invoice sent to a client.
+CREATE TABLE "Invoice" (
+    "invoiceId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "amount" DECIMAL(12, 2) NOT NULL,
+    "currency" VARCHAR(3) NOT NULL,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'DRAFT' CHECK ("status" IN ('DRAFT', 'SENT', 'PAID', 'OVERDUE', 'VOID')),
+    "issuedDate" TIMESTAMPTZ NOT NULL,
+    "dueDate" TIMESTAMPTZ NOT NULL
+);
+
+-- Payout Table: A financial payout made to a vendor.
+CREATE TABLE "Payout" (
+    "payoutId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "vendorId" UUID NOT NULL,
+    "amount" DECIMAL(12, 2) NOT NULL,
+    "currency" VARCHAR(3) NOT NULL,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'PENDING' CHECK ("status" IN ('PENDING', 'PAID', 'FAILED')),
+    "paidDate" TIMESTAMPTZ
+);
+
+-- Transaction Table: Unified ledger for all financial movements.
+CREATE TABLE "Transaction" (
+    "transactionId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "invoiceId" UUID,
+    "payoutId" UUID,
+    "paymentGatewayTransactionId" VARCHAR(255) NOT NULL UNIQUE,
+    "type" VARCHAR(50) NOT NULL CHECK ("type" IN ('PAYMENT', 'PAYOUT', 'REFUND', 'PLATFORM_FEE')),
+    "amount" DECIMAL(14, 2) NOT NULL,
+    "currency" VARCHAR(3) NOT NULL,
+    "status" VARCHAR(50) NOT NULL CHECK ("status" IN ('PENDING', 'COMPLETED', 'FAILED')),
+    "processedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- SystemSetting Table: Global system configuration values.
+CREATE TABLE "SystemSetting" (
+    "settingKey" VARCHAR(100) PRIMARY KEY,
+    "settingValue" JSONB NOT NULL,
+    "description" TEXT
+);
+
+-- Notification Table: Notification events for users.
+CREATE TABLE "Notification" (
+    "notificationId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "recipientUserId" UUID NOT NULL,
+    "eventType" VARCHAR(100) NOT NULL,
+    "content" TEXT NOT NULL,
+    "relatedEntityName" VARCHAR(100),
+    "relatedEntityId" UUID,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "readAt" TIMESTAMPTZ,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- WebhookEndpoint Table: Configured webhook endpoints for integrations.
+CREATE TABLE "WebhookEndpoint" (
+    "webhookEndpointId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "url" VARCHAR(2048) NOT NULL UNIQUE,
+    "description" TEXT,
+    "secretToken" VARCHAR(255),
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- WebhookEventLog Table: Stores processed webhook event IDs for idempotency.
+CREATE TABLE "WebhookEventLog" (
+    "eventId" VARCHAR(255) NOT NULL,
+    "source" VARCHAR(50) NOT NULL,
+    "isProcessed" BOOLEAN NOT NULL DEFAULT true,
+    "receivedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY ("eventId", "source")
+);
+
+-- DashboardMetrics Table: Pre-aggregated, denormalized data for dashboards.
+CREATE TABLE "DashboardMetrics" (
+    "metricKey" VARCHAR(50) PRIMARY KEY DEFAULT 'main',
+    "metricsData" JSONB NOT NULL,
+    "lastUpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- --------------------------------------------
+-- 3. FOREIGN KEY CONSTRAINTS
+-- --------------------------------------------
+
+ALTER TABLE "User" ADD CONSTRAINT "FK_User_Role" FOREIGN KEY ("roleId") REFERENCES "Role"("roleId");
+ALTER TABLE "User" ADD CONSTRAINT "FK_User_Client" FOREIGN KEY ("clientId") REFERENCES "Client"("clientId");
+ALTER TABLE "User" ADD CONSTRAINT "FK_User_Vendor" FOREIGN KEY ("vendorId") REFERENCES "Vendor"("vendorId");
+
+ALTER TABLE "VendorSkill" ADD CONSTRAINT "FK_VendorSkill_Vendor" FOREIGN KEY ("vendorId") REFERENCES "Vendor"("vendorId");
+ALTER TABLE "VendorSkill" ADD CONSTRAINT "FK_VendorSkill_Skill" FOREIGN KEY ("skillId") REFERENCES "Skill"("skillId");
+
+ALTER TABLE "Project" ADD CONSTRAINT "FK_Project_Client" FOREIGN KEY ("clientId") REFERENCES "Client"("clientId");
+ALTER TABLE "Project" ADD CONSTRAINT "FK_Project_AwardedVendor" FOREIGN KEY ("awardedVendorId") REFERENCES "Vendor"("vendorId");
+ALTER TABLE "Project" ADD CONSTRAINT "FK_Project_AwardedProposal" FOREIGN KEY ("awardedProposalId") REFERENCES "Proposal"("proposalId") DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE "Proposal" ADD CONSTRAINT "FK_Proposal_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId");
+ALTER TABLE "Proposal" ADD CONSTRAINT "FK_Proposal_Vendor" FOREIGN KEY ("vendorId") REFERENCES "Vendor"("vendorId");
+
+ALTER TABLE "SowDocument" ADD CONSTRAINT "FK_SowDocument_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId");
+ALTER TABLE "SowDocument" ADD CONSTRAINT "FK_SowDocument_UploadedBy" FOREIGN KEY ("uploadedById") REFERENCES "User"("userId");
+
+ALTER TABLE "ProjectBrief" ADD CONSTRAINT "FK_ProjectBrief_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId");
+ALTER TABLE "ProjectBrief" ADD CONSTRAINT "FK_ProjectBrief_ReviewedBy" FOREIGN KEY ("reviewedById") REFERENCES "User"("userId");
+
+ALTER TABLE "ProjectBriefSkill" ADD CONSTRAINT "FK_ProjectBriefSkill_Brief" FOREIGN KEY ("projectBriefId") REFERENCES "ProjectBrief"("projectBriefId");
+ALTER TABLE "ProjectBriefSkill" ADD CONSTRAINT "FK_ProjectBriefSkill_Skill" FOREIGN KEY ("skillId") REFERENCES "Skill"("skillId");
+
+ALTER TABLE "ProposalQuestion" ADD CONSTRAINT "FK_ProposalQuestion_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId");
+ALTER TABLE "ProposalQuestion" ADD CONSTRAINT "FK_ProposalQuestion_Vendor" FOREIGN KEY ("submittedByVendorId") REFERENCES "Vendor"("vendorId");
+ALTER TABLE "ProposalQuestion" ADD CONSTRAINT "FK_ProposalQuestion_AnsweredBy" FOREIGN KEY ("answeredById") REFERENCES "User"("userId");
+
+ALTER TABLE "Invoice" ADD CONSTRAINT "FK_Invoice_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId");
+
+ALTER TABLE "Payout" ADD CONSTRAINT "FK_Payout_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId");
+ALTER TABLE "Payout" ADD CONSTRAINT "FK_Payout_Vendor" FOREIGN KEY ("vendorId") REFERENCES "Vendor"("vendorId");
+
+ALTER TABLE "Transaction" ADD CONSTRAINT "FK_Transaction_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId");
+ALTER TABLE "Transaction" ADD CONSTRAINT "FK_Transaction_Invoice" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("invoiceId");
+ALTER TABLE "Transaction" ADD CONSTRAINT "FK_Transaction_Payout" FOREIGN KEY ("payoutId") REFERENCES "Payout"("payoutId");
+
+ALTER TABLE "Notification" ADD CONSTRAINT "FK_Notification_Recipient" FOREIGN KEY ("recipientUserId") REFERENCES "User"("userId");
+
+
+-- --------------------------------------------
+-- 4. INDEXES
+-- --------------------------------------------
+
+-- Indexes for User table
+CREATE INDEX "IX_User_FullName" ON "User" USING BTREE ("firstName", "lastName");
+CREATE INDEX "IX_User_RoleId" ON "User" USING BTREE ("roleId");
+CREATE INDEX "IX_User_Active_NotDeleted" ON "User" USING BTREE ("isActive", "isDeleted");
+
+-- Indexes for Client table
+CREATE INDEX "IX_Client_CompanyName" ON "Client" USING BTREE ("companyName");
+CREATE INDEX "IX_Client_Status_NotDeleted_Name" ON "Client" USING BTREE ("status", "isDeleted", "companyName");
+
+-- Indexes for Vendor table
+CREATE INDEX "IX_Vendor_CompanyName" ON "Vendor" USING BTREE ("companyName");
+CREATE INDEX "IX_Vendor_VettingStatus" ON "Vendor" USING BTREE ("vettingStatus");
+
+-- Indexes for Skill table
+CREATE INDEX "IX_Skill_VectorEmbedding_HNSW" ON "Skill" USING HNSW ("vectorEmbedding" vector_l2_ops);
+
+-- Indexes for VendorSkill table
+CREATE INDEX "IX_VendorSkill_SkillId" ON "VendorSkill" USING BTREE ("skillId");
+
+-- Indexes for Project table
+CREATE INDEX "IX_Project_ClientId" ON "Project" USING BTREE ("clientId");
+CREATE INDEX "IX_Project_AwardedVendorId" ON "Project" USING BTREE ("awardedVendorId");
+CREATE INDEX "IX_Project_Status_NotDeleted" ON "Project" USING BTREE ("status", "isDeleted");
+
+-- Indexes for SowDocument table
+CREATE INDEX "IX_SowDocument_Status" ON "SowDocument" USING BTREE ("status");
+
+-- Indexes for ProjectBrief table
+CREATE INDEX "IX_ProjectBrief_Status" ON "ProjectBrief" USING BTREE ("status");
+
+-- Indexes for ProjectBriefSkill table
+CREATE INDEX "IX_ProjectBriefSkill_SkillId" ON "ProjectBriefSkill" USING BTREE ("skillId");
+
+-- Indexes for Proposal table
+CREATE INDEX "IX_Proposal_ProjectId_Status" ON "Proposal" USING BTREE ("projectId", "status");
+CREATE INDEX "IX_Proposal_Vendor_SubmittedAt" ON "Proposal" USING BTREE ("vendorId", "submittedAt");
+
+-- Indexes for ProposalQuestion table
+CREATE INDEX "IX_ProposalQuestion_ProjectId" ON "ProposalQuestion" USING BTREE ("projectId");
+
+-- Indexes for Invoice table
+CREATE INDEX "IX_Invoice_ProjectId" ON "Invoice" USING BTREE ("projectId");
+CREATE INDEX "IX_Invoice_Status_DueDate" ON "Invoice" USING BTREE ("status", "dueDate");
+
+-- Indexes for Payout table
+CREATE INDEX "IX_Payout_ProjectId" ON "Payout" USING BTREE ("projectId");
+CREATE INDEX "IX_Payout_VendorId" ON "Payout" USING BTREE ("vendorId");
+CREATE INDEX "IX_Payout_Status" ON "Payout" USING BTREE ("status");
+
+-- Indexes for Transaction table
+CREATE INDEX "IX_Transaction_ProjectId" ON "Transaction" USING BTREE ("projectId");
+CREATE INDEX "IX_Transaction_Type_Status_Date" ON "Transaction" USING BTREE ("type", "status", "processedAt");
+
+-- Indexes for Notification table
+CREATE INDEX "IX_Notification_Recipient_Unread" ON "Notification" USING BTREE ("recipientUserId", "isRead");
+CREATE INDEX "IX_Notification_Recipient_CreatedAt" ON "Notification" USING BTREE ("recipientUserId", "createdAt");
+
+-- Indexes for WebhookEndpoint table
+CREATE INDEX "IX_WebhookEndpoint_IsActive" ON "WebhookEndpoint" USING BTREE ("isActive");

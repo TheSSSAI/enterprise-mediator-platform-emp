@@ -1,0 +1,296 @@
+-- Enable necessary extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgvector";
+
+-- Define ENUM types for status fields
+CREATE TYPE client_status_enum AS ENUM ('Active', 'Inactive');
+CREATE TYPE project_status_enum AS ENUM ('SOW_REVIEW', 'MATCHING', 'PROPOSAL', 'ACTIVE', 'COMPLETED', 'CANCELLED');
+CREATE TYPE sow_document_status_enum AS ENUM ('PROCESSING', 'REVIEW_PENDING', 'FAILED', 'COMPLETED');
+CREATE TYPE project_brief_status_enum AS ENUM ('PENDING_REVIEW', 'APPROVED');
+CREATE TYPE proposal_status_enum AS ENUM ('SUBMITTED', 'SHORTLISTED', 'REJECTED', 'AWARDED');
+CREATE TYPE invoice_status_enum AS ENUM ('DRAFT', 'SENT', 'PAID', 'OVERDUE');
+CREATE TYPE payout_status_enum AS ENUM ('PENDING', 'PAID', 'FAILED');
+CREATE TYPE audit_log_action_type_enum AS ENUM ('CREATE', 'UPDATE', 'DELETE', 'OVERRIDE');
+
+-- Table: Role
+CREATE TABLE "Role" (
+    "roleId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "name" VARCHAR(50) NOT NULL,
+    CONSTRAINT "UC_Role_Name" UNIQUE ("name")
+);
+
+-- Table: Client
+CREATE TABLE "Client" (
+    "clientId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "companyName" VARCHAR(255) NOT NULL,
+    "status" client_status_enum NOT NULL DEFAULT 'Active',
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: Vendor
+CREATE TABLE "Vendor" (
+    "vendorId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "companyName" VARCHAR(255) NOT NULL,
+    "contactInfo" JSONB,
+    "paymentDetails" JSONB,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: Skill
+CREATE TABLE "Skill" (
+    "skillId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "name" VARCHAR(100) NOT NULL,
+    "vectorEmbedding" VECTOR, -- Assuming pgvector extension is used. Specify size, e.g., VECTOR(1536)
+    CONSTRAINT "UC_Skill_Name" UNIQUE ("name")
+);
+
+-- Table: User
+CREATE TABLE "User" (
+    "userId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "email" VARCHAR(255) NOT NULL,
+    "passwordHash" VARCHAR(255) NOT NULL,
+    "firstName" VARCHAR(100) NOT NULL,
+    "lastName" VARCHAR(100) NOT NULL,
+    "roleId" UUID NOT NULL,
+    "clientId" UUID,
+    "vendorId" UUID,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_User_Email" UNIQUE ("email")
+);
+
+-- Table: VendorSkill (Join Table)
+CREATE TABLE "VendorSkill" (
+    "vendorId" UUID NOT NULL,
+    "skillId" UUID NOT NULL,
+    PRIMARY KEY ("vendorId", "skillId")
+);
+
+-- Table: Project
+CREATE TABLE "Project" (
+    "projectId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "clientId" UUID NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "status" project_status_enum NOT NULL DEFAULT 'SOW_REVIEW',
+    "marginOverride" DECIMAL(5, 2),
+    "totalInvoicedAmount" DECIMAL(14, 2) NOT NULL DEFAULT 0.00,
+    "totalPaidOutAmount" DECIMAL(14, 2) NOT NULL DEFAULT 0.00,
+    "calculatedProfit" DECIMAL(14, 2) NOT NULL DEFAULT 0.00,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: SowDocument
+CREATE TABLE "SowDocument" (
+    "sowDocumentId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "originalFilename" VARCHAR(255) NOT NULL,
+    "storagePath" VARCHAR(1024) NOT NULL,
+    "status" sow_document_status_enum NOT NULL DEFAULT 'PROCESSING',
+    "processingErrorDetails" TEXT,
+    "uploadedById" UUID NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_SowDocument_ProjectId" UNIQUE ("projectId")
+);
+
+-- Table: ProjectBrief
+CREATE TABLE "ProjectBrief" (
+    "projectBriefId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "scopeSummary" TEXT,
+    "status" project_brief_status_enum NOT NULL DEFAULT 'PENDING_REVIEW',
+    "reviewedById" UUID,
+    "reviewedAt" TIMESTAMPTZ,
+    CONSTRAINT "UC_ProjectBrief_ProjectId" UNIQUE ("projectId")
+);
+
+-- Table: ProjectBriefSkill (Join Table)
+CREATE TABLE "ProjectBriefSkill" (
+    "projectBriefId" UUID NOT NULL,
+    "skillId" UUID NOT NULL,
+    PRIMARY KEY ("projectBriefId", "skillId")
+);
+
+-- Table: Proposal
+CREATE TABLE "Proposal" (
+    "proposalId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "vendorId" UUID NOT NULL,
+    "cost" DECIMAL(12, 2) NOT NULL,
+    "timelineDescription" TEXT NOT NULL,
+    "status" proposal_status_enum NOT NULL DEFAULT 'SUBMITTED',
+    "submittedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_Proposal_Project_Vendor" UNIQUE ("projectId", "vendorId")
+);
+
+-- Table: ProposalQuestion
+CREATE TABLE "ProposalQuestion" (
+    "proposalQuestionId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "submittedByVendorId" UUID NOT NULL,
+    "questionText" TEXT NOT NULL,
+    "answerText" TEXT,
+    "answeredById" UUID,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "answeredAt" TIMESTAMPTZ
+);
+
+-- Table: Invoice (Partitioned)
+CREATE TABLE "Invoice" (
+    "invoiceId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "amount" DECIMAL(12, 2) NOT NULL,
+    "status" invoice_status_enum NOT NULL DEFAULT 'DRAFT',
+    "issuedDate" TIMESTAMPTZ NOT NULL,
+    "dueDate" TIMESTAMPTZ NOT NULL
+) PARTITION BY RANGE ("issuedDate");
+-- Note: Partitions must be created manually, e.g.:
+-- CREATE TABLE "Invoice_y2024" PARTITION OF "Invoice" FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
+
+-- Table: Payout
+CREATE TABLE "Payout" (
+    "payoutId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "vendorId" UUID NOT NULL,
+    "amount" DECIMAL(12, 2) NOT NULL,
+    "status" payout_status_enum NOT NULL DEFAULT 'PENDING',
+    "paidDate" TIMESTAMPTZ
+);
+
+-- Table: ProjectPayoutRule
+CREATE TABLE "ProjectPayoutRule" (
+    "projectPayoutRuleId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "projectId" UUID NOT NULL,
+    "description" VARCHAR(255) NOT NULL,
+    "payoutPercentage" DECIMAL(5, 2)
+);
+
+-- Table: AuditLog (Partitioned)
+CREATE TABLE "AuditLog" (
+    "auditLogId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "actorUserId" UUID NOT NULL,
+    "actionType" audit_log_action_type_enum NOT NULL,
+    "entityName" VARCHAR(100) NOT NULL,
+    "entityId" VARCHAR(36) NOT NULL,
+    "changes" JSONB NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+) PARTITION BY RANGE ("createdAt");
+-- Note: Partitions must be created manually, e.g.:
+-- CREATE TABLE "AuditLog_2024_01" PARTITION OF "AuditLog" FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
+
+-- Table: SystemSetting
+CREATE TABLE "SystemSetting" (
+    "settingKey" VARCHAR(100) PRIMARY KEY,
+    "settingValue" JSONB NOT NULL,
+    "description" TEXT
+);
+
+-- Table: Notification
+CREATE TABLE "Notification" (
+    "notificationId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "recipientUserId" UUID NOT NULL,
+    "eventType" VARCHAR(100) NOT NULL,
+    "content" TEXT NOT NULL,
+    "relatedEntityName" VARCHAR(100),
+    "relatedEntityId" UUID,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "readAt" TIMESTAMPTZ,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: WebhookEndpoint
+CREATE TABLE "WebhookEndpoint" (
+    "webhookEndpointId" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "url" VARCHAR(2048) NOT NULL,
+    "description" TEXT,
+    "secretToken" VARCHAR(255),
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UC_WebhookEndpoint_Url" UNIQUE ("url")
+);
+
+-- Table: DashboardMetrics
+CREATE TABLE "DashboardMetrics" (
+    "metricKey" VARCHAR(50) PRIMARY KEY DEFAULT 'main',
+    "projectsByStatusCount" JSONB,
+    "pendingActionsCount" JSONB,
+    "financialMetrics" JSONB,
+    "upcomingMilestones" JSONB,
+    "lastUpdatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes
+CREATE INDEX "IX_User_FullName" ON "User" ("firstName", "lastName");
+CREATE INDEX "IX_User_Active_NotDeleted" ON "User" ("isActive", "isDeleted");
+CREATE INDEX "IX_Client_CompanyName" ON "Client" ("companyName");
+CREATE INDEX "IX_Client_Status_NotDeleted" ON "Client" ("status", "isDeleted");
+CREATE INDEX "IX_Client_Status_Deleted_Name" ON "Client" ("status", "isDeleted", "companyName");
+CREATE INDEX "IX_Vendor_CompanyName" ON "Vendor" ("companyName");
+CREATE INDEX "IX_Skill_VectorEmbedding_HNSW" ON "Skill" USING HNSW ("vectorEmbedding" vector_l2_ops);
+CREATE INDEX "IX_VendorSkill_SkillId" ON "VendorSkill" ("skillId");
+CREATE INDEX "IX_Project_ClientId" ON "Project" ("clientId");
+CREATE INDEX "IX_Project_Status_NotDeleted" ON "Project" ("status", "isDeleted");
+CREATE INDEX "IX_SowDocument_Status" ON "SowDocument" ("status");
+CREATE INDEX "IX_ProjectBrief_Status" ON "ProjectBrief" ("status");
+CREATE INDEX "IX_ProjectBriefSkill_SkillId" ON "ProjectBriefSkill" ("skillId");
+CREATE INDEX "IX_Proposal_ProjectId_Status" ON "Proposal" ("projectId", "status");
+CREATE INDEX "IX_Proposal_Vendor_SubmittedAt" ON "Proposal" ("vendorId", "submittedAt" DESC);
+CREATE INDEX "IX_ProposalQuestion_ProjectId" ON "ProposalQuestion" ("projectId");
+CREATE INDEX "IX_Invoice_ProjectId" ON "Invoice" ("projectId");
+CREATE INDEX "IX_Invoice_Status" ON "Invoice" ("status");
+CREATE INDEX "IX_Invoice_IssuedDate" ON "Invoice" ("issuedDate");
+CREATE INDEX "IX_Payout_ProjectId" ON "Payout" ("projectId");
+CREATE INDEX "IX_Payout_VendorId" ON "Payout" ("vendorId");
+CREATE INDEX "IX_Payout_Status" ON "Payout" ("status");
+CREATE INDEX "IX_ProjectPayoutRule_ProjectId" ON "ProjectPayoutRule" ("projectId");
+CREATE INDEX "IX_AuditLog_Entity" ON "AuditLog" ("entityName", "entityId");
+CREATE INDEX "IX_AuditLog_Actor" ON "AuditLog" ("actorUserId");
+CREATE INDEX "IX_AuditLog_CreatedAt_EntityName" ON "AuditLog" ("createdAt" DESC, "entityName");
+CREATE INDEX "IX_Notification_Recipient_Unread" ON "Notification" ("recipientUserId", "isRead");
+CREATE INDEX "IX_Notification_Recipient_CreatedAt" ON "Notification" ("recipientUserId", "createdAt" DESC);
+CREATE INDEX "IX_WebhookEndpoint_IsActive" ON "WebhookEndpoint" ("isActive");
+
+-- Foreign Key Constraints
+ALTER TABLE "User" ADD CONSTRAINT "FK_User_Role" FOREIGN KEY ("roleId") REFERENCES "Role"("roleId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "User" ADD CONSTRAINT "FK_User_Client" FOREIGN KEY ("clientId") REFERENCES "Client"("clientId") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "User" ADD CONSTRAINT "FK_User_Vendor" FOREIGN KEY ("vendorId") REFERENCES "Vendor"("vendorId") ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE "VendorSkill" ADD CONSTRAINT "FK_VendorSkill_Vendor" FOREIGN KEY ("vendorId") REFERENCES "Vendor"("vendorId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "VendorSkill" ADD CONSTRAINT "FK_VendorSkill_Skill" FOREIGN KEY ("skillId") REFERENCES "Skill"("skillId") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "Project" ADD CONSTRAINT "FK_Project_Client" FOREIGN KEY ("clientId") REFERENCES "Client"("clientId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE "SowDocument" ADD CONSTRAINT "FK_SowDocument_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "SowDocument" ADD CONSTRAINT "FK_SowDocument_User_Uploader" FOREIGN KEY ("uploadedById") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE "ProjectBrief" ADD CONSTRAINT "FK_ProjectBrief_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ProjectBrief" ADD CONSTRAINT "FK_ProjectBrief_User_Reviewer" FOREIGN KEY ("reviewedById") REFERENCES "User"("userId") ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE "ProjectBriefSkill" ADD CONSTRAINT "FK_ProjectBriefSkill_ProjectBrief" FOREIGN KEY ("projectBriefId") REFERENCES "ProjectBrief"("projectBriefId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ProjectBriefSkill" ADD CONSTRAINT "FK_ProjectBriefSkill_Skill" FOREIGN KEY ("skillId") REFERENCES "Skill"("skillId") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "Proposal" ADD CONSTRAINT "FK_Proposal_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Proposal" ADD CONSTRAINT "FK_Proposal_Vendor" FOREIGN KEY ("vendorId") REFERENCES "Vendor"("vendorId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE "ProposalQuestion" ADD CONSTRAINT "FK_ProposalQuestion_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ProposalQuestion" ADD CONSTRAINT "FK_ProposalQuestion_Vendor_Submitter" FOREIGN KEY ("submittedByVendorId") REFERENCES "Vendor"("vendorId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ProposalQuestion" ADD CONSTRAINT "FK_ProposalQuestion_User_Answerer" FOREIGN KEY ("answeredById") REFERENCES "User"("userId") ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE "Invoice" ADD CONSTRAINT "FK_Invoice_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "Payout" ADD CONSTRAINT "FK_Payout_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Payout" ADD CONSTRAINT "FK_Payout_Vendor" FOREIGN KEY ("vendorId") REFERENCES "Vendor"("vendorId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE "ProjectPayoutRule" ADD CONSTRAINT "FK_ProjectPayoutRule_Project" FOREIGN KEY ("projectId") REFERENCES "Project"("projectId") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "AuditLog" ADD CONSTRAINT "FK_AuditLog_User_Actor" FOREIGN KEY ("actorUserId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE "Notification" ADD CONSTRAINT "FK_Notification_User_Recipient" FOREIGN KEY ("recipientUserId") REFERENCES "User"("userId") ON DELETE CASCADE ON UPDATE CASCADE;

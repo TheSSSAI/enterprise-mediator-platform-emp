@@ -1,0 +1,25 @@
+PUT /audit_logs
+{
+  "settings": {
+    "index": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    }
+  },
+  "mappings": {
+    "properties": {
+      "auditLogId": { "type": "keyword" },
+      "actorUserId": { "type": "keyword" },
+      "ipAddress": { "type": "ip" },
+      "userAgent": { "type": "text" },
+      "actionType": { "type": "keyword" },
+      "entityName": { "type": "keyword" },
+      "entityId": { "type": "keyword" },
+      "changes": {
+        "type": "object",
+        "enabled": true
+      },
+      "createdAt": { "type": "date" }
+    }
+  }
+}
