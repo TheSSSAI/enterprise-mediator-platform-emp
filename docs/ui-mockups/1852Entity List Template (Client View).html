@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Management | Enterprise Mediator Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS & RESET 
+      Based on "2040" Design Concept & JSON Specification
+    */
+    :root {
+      /* Color Palette - Primary (Teal) */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-200: #99f6e4;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      
+      /* Color Palette - Neutrals */
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-800: #1e293b;
+      --color-gray-900: #0f172a;
+
+      /* Semantic Colors */
+      --color-success-bg: #f0fdf4;
+      --color-success-text: #15803d;
+      --color-warning-bg: #fffbeb;
+      --color-warning-text: #b45309;
+      --color-error-bg: #fef2f2;
+      --color-error-text: #b91c1c;
+
+      /* Layout & Spacing */
+      --font-primary: "Plus Jakarta Sans", sans-serif;
+      --font-secondary: "Inter", sans-serif;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      
+      /* Layout Dimensions */
+      --header-height: 64px;
+      --sidebar-width: 260px;
+      --sidebar-width-collapsed: 64px;
+    }
+
+    /* CSS Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-secondary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* TYPOGRAPHY UTILITIES */
+    .text-h1 { font-family: var(--font-primary); font-size: 32px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.2; }
+    .text-h2 { font-family: var(--font-primary); font-size: 24px; font-weight: 600; letter-spacing: -0.025em; }
+    .text-h3 { font-family: var(--font-primary); font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
+    .text-body { font-size: 14px; font-weight: 400; color: var(--color-gray-600); }
+    .text-body-sm { font-size: 13px; font-weight: 400; color: var(--color-gray-500); }
+    .text-caption { font-size: 12px; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; }
+    
+    /* LAYOUT STRUCTURE */
+    .app-shell {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* SIDEBAR COMPONENT */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--color-white);
+      border-right: 1px solid var(--color-gray-200);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+      z-index: 50;
+    }
+
+    .sidebar__logo {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .sidebar__logo-text {
+      font-family: var(--font-primary);
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--color-primary-600);
+      letter-spacing: -0.02em;
+    }
+
+    .sidebar__nav {
+      padding: 24px 16px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      color: var(--color-gray-600);
+      text-decoration: none;
+      border-radius: var(--radius-md);
+      margin-bottom: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .nav-item:hover {
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+    }
+
+    .nav-item.is-active {
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-700);
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2px;
+    }
+
+    .sidebar__user {
+      padding: 16px;
+      border-top: 1px solid var(--color-gray-200);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* MAIN CONTENT AREA */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* HEADER COMPONENT */
+    .top-header {
+      height: var(--header-height);
+      background-color: var(--color-white);
+      border-bottom: 1px solid var(--color-gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      flex-shrink: 0;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      color: var(--color-gray-600);
+    }
+
+    /* PAGE CONTENT */
+    .page-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* ACTION BAR / FILTERS */
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      background: var(--color-white);
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-gray-200);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-wrapper {
+      flex: 1;
+      min-width: 240px;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-gray-400);
+      width: 16px;
+      height: 16px;
+    }
+
+    /* FORM ELEMENTS */
+    .input {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px 0 36px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--color-gray-900);
+      background: var(--color-white);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 2px var(--color-primary-100);
+    }
+
+    .select {
+      height: 40px;
+      padding: 0 32px 0 12px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--color-gray-700);
+      background-color: var(--color-white);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 16px;
+      appearance: none;
+      min-width: 140px;
+      cursor: pointer;
+    }
+
+    /* BUTTONS */
+    .btn {
+      height: 40px;
+      padding: 0 16px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-family: var(--font-secondary);
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary-600);
+      color: var(--color-white);
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--color-primary-700);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: var(--color-white);
+      border: 1px solid var(--color-gray-300);
+      color: var(--color-gray-700);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    /* DATA TABLE */
+    .table-container {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .data-table th {
+      background: var(--color-gray-50);
+      padding: 12px 24px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-gray-600);
+      border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .data-table td {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--color-gray-100);
+      color: var(--color-gray-900);
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    .data-table tr:hover {
+      background-color: var(--color-gray-50);
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Entity Info Cell */
+    .entity-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--color-primary-100);
+      color: var(--color-primary-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .entity-info h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-gray-900);
+      margin: 0;
+    }
+
+    .entity-info p {
+      font-size: 13px;
+      color: var(--color-gray-500);
+      margin: 2px 0 0 0;
+    }
+
+    /* BADGES */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    .badge-success { background-color: var(--color-success-bg); color: var(--color-success-text); }
+    .badge-warning { background-color: var(--color-warning-bg); color: var(--color-warning-text); }
+    .badge-error { background-color: var(--color-error-bg); color: var(--color-error-text); }
+
+    /* ACTION MENU */
+    .action-btn {
+      background: transparent;
+      border: none;
+      color: var(--color-gray-400);
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .action-btn:hover { background-color: var(--color-gray-100); color: var(--color-gray-600); }
+
+    /* PAGINATION */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-top: 1px solid var(--color-gray-200);
+      background: var(--color-white);
+    }
+
+    /* STATES */
+    .state-container {
+      padding: 64px 24px;
+      text-align: center;
+      display: none; /* Hidden by default */
+    }
+    .state-container.is-visible { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+    .skeleton {
+      background: #e2e8f0;
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 4px;
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* DEMO CONTROLS (Floating) */
+    .demo-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1e293b;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      z-index: 1000;
+      color: white;
+    }
+    .demo-controls h5 { margin-bottom: 8px; font-size: 12px; text-transform: uppercase; color: #94a3b8; }
+    .demo-controls button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 6px 12px;
+      margin-bottom: 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .demo-controls button:hover { background: #334155; color: white; }
+
+    /* RESPONSIVE ADAPTATIONS */
+    @media (max-width: 1024px) {
+      .sidebar { width: var(--sidebar-width-collapsed); }
+      .sidebar__logo-text, .nav-text { display: none; }
+      .sidebar__nav { padding: 24px 12px; }
+      .nav-item { justify-content: center; padding: 12px; }
+      .nav-item svg { margin: 0; }
+    }
+
+    @media (max-width: 768px) {
+      .app-shell { flex-direction: column; }
+      .sidebar { 
+        position: fixed; 
+        left: -100%; 
+        width: 280px; 
+        height: 100%; 
+        box-shadow: 20px 0 30px rgba(0,0,0,0.1); 
+      }
+      .sidebar.is-open { transform: translateX(100%); left: -280px; }
+      .sidebar__logo-text, .nav-text { display: block; }
+      .nav-item { justify-content: flex-start; }
+      
+      .mobile-menu-btn { display: block; }
+      .top-header { padding: 0 16px; }
+      .page-container { padding: 16px; }
+      
+      .action-bar { flex-direction: column; }
+      .search-wrapper, .select { width: 100%; }
+
+      /* Table to Card Transformation */
+      .data-table, .data-table thead, .data-table tbody, .data-table th, .data-table td, .data-table tr { 
+        display: block; 
+      }
+      
+      .data-table thead { display: none; }
+      
+      .data-table tr {
+        border: 1px solid var(--color-gray-200);
+        margin-bottom: 16px;
+        border-radius: 8px;
+        background: white;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      }
+      
+      .data-table td {
+        border: none;
+        padding: 8px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+      }
+      
+      .data-table td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--color-gray-500);
+        text-transform: uppercase;
+        margin-right: 12px;
+        text-align: left;
+      }
+
+      .data-table td:first-child {
+        border-bottom: 1px solid var(--color-gray-100);
+        padding-bottom: 12px;
+        margin-bottom: 8px;
+        text-align: left;
+      }
+      .data-table td:first-child:before { display: none; }
+      
+      .data-table td:last-child {
+        margin-top: 12px;
+        border-top: 1px solid var(--color-gray-100);
+        padding-top: 12px;
+        justify-content: flex-end;
+      }
+      .data-table td:last-child:before { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary-600" style="color: var(--color-primary-600); margin-right: 12px;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        <span class="sidebar__logo-text">EMP Admin</span>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="#" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+          <span class="nav-text">Dashboard</span>
+        </a>
+        <a href="#" class="nav-item is-active" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          <span class="nav-text">Clients</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+          <span class="nav-text">Vendors</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+          <span class="nav-text">Projects</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <span class="nav-text">Financials</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__user">
+        <div class="avatar" style="background-color: var(--color-gray-800); color: white;">AD</div>
+        <div class="nav-text" style="flex: 1;">
+          <p style="font-size: 14px; font-weight: 500; color: var(--color-gray-900);">Admin User</p>
+          <p style="font-size: 12px; color: var(--color-gray-500);">System Admin</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      
+      <!-- TOP HEADER -->
+      <header class="top-header">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('is-open')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <nav aria-label="Breadcrumb">
+            <ol style="display: flex; gap: 8px; list-style: none; font-size: 14px; color: var(--color-gray-500);">
+              <li>Dashboard</li>
+              <li>/</li>
+              <li style="color: var(--color-gray-900); font-weight: 500;">Clients</li>
+            </ol>
+          </nav>
+        </div>
+        
+        <div style="display: flex; gap: 16px;">
+          <button class="btn btn-secondary" aria-label="Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- PAGE CONTENT SCROLLABLE AREA -->
+      <div class="page-container">
+        
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+          <div>
+            <h1 class="text-h2">Clients</h1>
+            <p class="text-body">Manage your client relationships and projects.</p>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button class="btn btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              Export
+            </button>
+            <button class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+              Add Client
+            </button>
+          </div>
+        </div>
+
+        <!-- ACTION BAR / FILTERS -->
+        <div class="action-bar">
+          <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <input type="text" class="input" placeholder="Search clients by name, email..." aria-label="Search clients">
+          </div>
+          
+          <select class="select" aria-label="Filter by Status">
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="pending">Pending</option>
+          </select>
+
+          <select class="select" aria-label="Filter by Account Manager">
+            <option value="all">All Managers</option>
+            <option value="me">Assigned to Me</option>
+          </select>
+        </div>
+
+        <!-- DATA STATE (Table) -->
+        <div id="view-data" class="table-container">
+          <table class="data-table" role="grid">
+            <thead>
+              <tr>
+                <th scope="col" style="width: 40px;"><input type="checkbox" aria-label="Select all rows"></th>
+                <th scope="col" aria-sort="ascending" style="cursor: pointer;">Company</th>
+                <th scope="col">Primary Contact</th>
+                <th scope="col">Status</th>
+                <th scope="col">Active Projects</th>
+                <th scope="col" style="text-align: right;">Total Billed</th>
+                <th scope="col" style="width: 60px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Row 1 -->
+              <tr>
+                <td data-label="Select"><input type="checkbox" aria-label="Select Acme Corp"></td>
+                <td data-label="Company">
+                  <div class="entity-cell">
+                    <div class="avatar" style="background-color: #e0f2fe; color: #0369a1;">AC</div>
+                    <div class="entity-info">
+                      <h4>Acme Corp</h4>
+                      <p>Technology • San Francisco, CA</p>
+                    </div>
+                  </div>
+                </td>
+                <td data-label="Contact">
+                  <div class="entity-info">
+                    <h4 style="font-weight: 500;">Sarah Johnson</h4>
+                    <p>sarah.j@acme.com</p>
+                  </div>
+                </td>
+                <td data-label="Status">
+                  <span class="badge badge-success">Active</span>
+                </td>
+                <td data-label="Projects">3 Active</td>
+                <td data-label="Total Billed" style="text-align: right; font-family: var(--font-primary); font-weight: 500;">$142,000</td>
+                <td data-label="Actions">
+                  <button class="action-btn" aria-label="Actions for Acme Corp">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Row 2 -->
+              <tr>
+                <td data-label="Select"><input type="checkbox" aria-label="Select Globex Inc"></td>
+                <td data-label="Company">
+                  <div class="entity-cell">
+                    <div class="avatar" style="background-color: #fef3c7; color: #b45309;">GI</div>
+                    <div class="entity-info">
+                      <h4>Globex Inc</h4>
+                      <p>Manufacturing • Austin, TX</p>
+                    </div>
+                  </div>
+                </td>
+                <td data-label="Contact">
+                  <div class="entity-info">
+                    <h4 style="font-weight: 500;">Michael Chen</h4>
+                    <p>m.chen@globex.com</p>
+                  </div>
+                </td>
+                <td data-label="Status">
+                  <span class="badge badge-warning">Pending</span>
+                </td>
+                <td data-label="Projects">1 Onboarding</td>
+                <td data-label="Total Billed" style="text-align: right; font-family: var(--font-primary); font-weight: 500;">$0</td>
+                <td data-label="Actions">
+                  <button class="action-btn" aria-label="Actions for Globex Inc">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Row 3 -->
+              <tr>
+                <td data-label="Select"><input type="checkbox" aria-label="Select Stark Ind"></td>
+                <td data-label="Company">
+                  <div class="entity-cell">
+                    <div class="avatar" style="background-color: #fee2e2; color: #b91c1c;">SI</div>
+                    <div class="entity-info">
+                      <h4>Stark Industries</h4>
+                      <p>Defense • New York, NY</p>
+                    </div>
+                  </div>
+                </td>
+                <td data-label="Contact">
+                  <div class="entity-info">
+                    <h4 style="font-weight: 500;">Pepper Potts</h4>
+                    <p>ceo@stark.com</p>
+                  </div>
+                </td>
+                <td data-label="Status">
+                  <span class="badge badge-error">Inactive</span>
+                </td>
+                <td data-label="Projects">0 Active</td>
+                <td data-label="Total Billed" style="text-align: right; font-family: var(--font-primary); font-weight: 500;">$850,000</td>
+                <td data-label="Actions">
+                  <button class="action-btn" aria-label="Actions for Stark Industries">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
+                  </button>
+                </td>
+              </tr>
+              
+              <!-- Row 4 -->
+              <tr>
+                <td data-label="Select"><input type="checkbox" aria-label="Select Cyberdyne"></td>
+                <td data-label="Company">
+                  <div class="entity-cell">
+                    <div class="avatar" style="background-color: #f3f4f6; color: #374151;">CY</div>
+                    <div class="entity-info">
+                      <h4>Cyberdyne</h4>
+                      <p>AI Research • Palo Alto, CA</p>
+                    </div>
+                  </div>
+                </td>
+                <td data-label="Contact">
+                  <div class="entity-info">
+                    <h4 style="font-weight: 500;">Miles Dyson</h4>
+                    <p>m.dyson@cyberdyne.net</p>
+                  </div>
+                </td>
+                <td data-label="Status">
+                  <span class="badge badge-success">Active</span>
+                </td>
+                <td data-label="Projects">12 Active</td>
+                <td data-label="Total Billed" style="text-align: right; font-family: var(--font-primary); font-weight: 500;">$2,450,000</td>
+                <td data-label="Actions">
+                  <button class="action-btn" aria-label="Actions for Cyberdyne">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <!-- PAGINATION FOOTER -->
+          <div class="pagination">
+            <span class="text-body-sm">Showing 1 to 4 of 24 results</span>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary" disabled>Previous</button>
+              <button class="btn btn-secondary">Next</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOADING STATE (Hidden by default) -->
+        <div id="view-loading" class="table-container state-container">
+          <!-- Header Skeleton -->
+          <div style="display: flex; gap: 16px; padding: 16px; border-bottom: 1px solid var(--color-gray-200);">
+            <div class="skeleton" style="width: 40px; height: 20px;"></div>
+            <div class="skeleton" style="width: 200px; height: 20px;"></div>
+            <div class="skeleton" style="width: 150px; height: 20px; margin-left: auto;"></div>
+          </div>
+          <!-- Rows Skeleton -->
+          <div style="padding: 0 16px;">
+            <div style="display: flex; gap: 16px; padding: 24px 0; border-bottom: 1px solid var(--color-gray-100); align-items: center;">
+              <div class="skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+              <div style="flex: 1;">
+                <div class="skeleton" style="width: 140px; height: 16px; margin-bottom: 8px;"></div>
+                <div class="skeleton" style="width: 100px; height: 12px;"></div>
+              </div>
+              <div class="skeleton" style="width: 80px; height: 24px; border-radius: 12px;"></div>
+            </div>
+            <div style="display: flex; gap: 16px; padding: 24px 0; border-bottom: 1px solid var(--color-gray-100); align-items: center;">
+              <div class="skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+              <div style="flex: 1;">
+                <div class="skeleton" style="width: 160px; height: 16px; margin-bottom: 8px;"></div>
+                <div class="skeleton" style="width: 90px; height: 12px;"></div>
+              </div>
+              <div class="skeleton" style="width: 80px; height: 24px; border-radius: 12px;"></div>
+            </div>
+            <div style="display: flex; gap: 16px; padding: 24px 0; border-bottom: 1px solid var(--color-gray-100); align-items: center;">
+              <div class="skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></div>
+              <div style="flex: 1;">
+                <div class="skeleton" style="width: 130px; height: 16px; margin-bottom: 8px;"></div>
+                <div class="skeleton" style="width: 110px; height: 12px;"></div>
+              </div>
+              <div class="skeleton" style="width: 80px; height: 24px; border-radius: 12px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EMPTY STATE (Hidden by default) -->
+        <div id="view-empty" class="table-container state-container">
+          <div style="max-width: 320px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
+            <div style="width: 64px; height: 64px; background: var(--color-gray-100); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--color-gray-400);">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            </div>
+            <h3 class="text-h3" style="color: var(--color-gray-900); margin-bottom: 8px;">No clients found</h3>
+            <p class="text-body" style="margin-bottom: 24px;">Get started by adding your first client or adjusting your search filters.</p>
+            <button class="btn btn-primary">Add Client</button>
+          </div>
+        </div>
+
+        <!-- ERROR STATE (Hidden by default) -->
+        <div id="view-error" class="table-container state-container">
+          <div style="max-width: 320px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
+            <div style="width: 64px; height: 64px; background: var(--color-error-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--color-error-text);">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <h3 class="text-h3" style="color: var(--color-gray-900); margin-bottom: 8px;">Unable to load data</h3>
+            <p class="text-body" style="margin-bottom: 24px;">There was a problem connecting to the server. Please check your internet connection and try again.</p>
+            <button class="btn btn-secondary">Retry</button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- DEMO CONTROL WIDGET (For Review Purposes) -->
+  <div class="demo-controls">
+    <h5>Screen States</h5>
+    <button onclick="toggleState('view-data')">1. Data Loaded</button>
+    <button onclick="toggleState('view-loading')">2. Loading</button>
+    <button onclick="toggleState('view-empty')">3. Empty</button>
+    <button onclick="toggleState('view-error')">4. Error</button>
+  </div>
+
+  <script>
+    // Simple state toggling script for demonstration
+    function toggleState(stateId) {
+      // Hide all states
+      const states = ['view-data', 'view-loading', 'view-empty', 'view-error'];
+      states.forEach(id => {
+        const el = document.getElementById(id);
+        if (id === stateId) {
+          if (id === 'view-data') {
+            el.style.display = 'block'; // Table display
+          } else {
+            el.classList.add('is-visible');
+            el.style.display = 'flex'; // Flex for centered content
+          }
+        } else {
+          el.classList.remove('is-visible');
+          el.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

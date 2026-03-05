@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SidebarNavigation Component</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* =========================================
+       DESIGN SYSTEM TOKENS (Subset)
+       ========================================= */
+    :root {
+      /* Colors */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      
+      --color-bg-canvas: #f8fafc;
+      --color-bg-surface: #ffffff;
+      
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-800: #1e293b;
+      --color-gray-900: #0f172a;
+
+      /* Typography */
+      --font-primary: "Plus Jakarta Sans", sans-serif;
+      --font-secondary: "Inter", sans-serif;
+
+      /* Spacing */
+      --spacing-2: 8px;
+      --spacing-3: 12px;
+      --spacing-4: 16px;
+      --spacing-6: 24px;
+      --spacing-8: 32px;
+
+      /* Layout */
+      --sidebar-width: 260px;
+      --sidebar-width-collapsed: 72px;
+      --header-height: 64px;
+      
+      /* Effects */
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: var(--font-secondary);
+      background-color: var(--color-bg-canvas);
+      color: var(--color-gray-900);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* Icons */
+    .icon { width: 20px; height: 20px; stroke-width: 2; stroke: currentColor; fill: none; flex-shrink: 0; }
+
+    /* =========================================
+       COMPONENT: SIDEBAR NAVIGATION
+       ========================================= */
+    
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: var(--sidebar-width);
+      background-color: var(--color-bg-surface);
+      border-right: 1px solid var(--color-gray-200);
+      display: flex;
+      flex-direction: column;
+      transition: var(--transition-base);
+      z-index: 50;
+    }
+
+    /* Header Section */
+    .sidebar__header {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--spacing-4);
+      border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .sidebar__logo {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      font-family: var(--font-primary);
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--color-gray-900);
+      text-decoration: none;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .sidebar__logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--color-primary-600);
+      color: white;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar__toggle {
+      background: transparent;
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-md);
+      color: var(--color-gray-500);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar__toggle:hover {
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-900);
+    }
+
+    /* Content Section */
+    .sidebar__content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-6) var(--spacing-3);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-6);
+    }
+
+    .sidebar__group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar__group-title {
+      padding: 0 var(--spacing-3);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-gray-500);
+      margin-bottom: var(--spacing-2);
+      white-space: nowrap;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+
+    /* Nav Item */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      color: var(--color-gray-600);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .nav-item:hover {
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-900);
+    }
+
+    .nav-item:focus-visible {
+      outline: 2px solid var(--color-primary-500);
+      outline-offset: -2px;
+    }
+
+    .nav-item--active {
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-700);
+    }
+
+    .nav-item--active .icon {
+      color: var(--color-primary-600);
+    }
+
+    .nav-item__label {
+      white-space: nowrap;
+      overflow: hidden;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+
+    .nav-item__badge {
+      margin-left: auto;
+      background-color: var(--color-primary-100);
+      color: var(--color-primary-700);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 12px;
+      opacity: 1;
+    }
+
+    /* Footer Section */
+    .sidebar__footer {
+      padding: var(--spacing-4);
+      border-top: 1px solid var(--color-gray-200);
+    }
+
+    /* User Dropdown (Embedded from Molecules) */
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-2);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .user-profile:hover {
+      background-color: var(--color-gray-100);
+    }
+
+    .user-profile__avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: var(--color-gray-800);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .user-profile__info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+
+    .user-profile__name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-gray-900);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-profile__role {
+      font-size: 12px;
+      color: var(--color-gray-500);
+    }
+
+    .user-profile__chevron {
+      color: var(--color-gray-400);
+      opacity: 1;
+    }
+
+    /* =========================================
+       STATE: COLLAPSED (Desktop Only)
+       ========================================= */
+    .sidebar--collapsed {
+      width: var(--sidebar-width-collapsed);
+    }
+
+    .sidebar--collapsed .sidebar__logo span,
+    .sidebar--collapsed .sidebar__group-title,
+    .sidebar--collapsed .nav-item__label,
+    .sidebar--collapsed .nav-item__badge,
+    .sidebar--collapsed .user-profile__info,
+    .sidebar--collapsed .user-profile__chevron {
+      opacity: 0;
+      width: 0;
+      pointer-events: none;
+      display: none; /* Semantic fix for accessibility/layout */
+    }
+
+    .sidebar--collapsed .sidebar__header {
+      justify-content: center;
+      padding: 0;
+    }
+
+    .sidebar--collapsed .sidebar__logo-icon {
+      /* Keep icon visible */
+    }
+
+    .sidebar--collapsed .sidebar__toggle {
+      position: absolute;
+      top: 18px;
+      right: -14px;
+      background: var(--color-bg-surface);
+      box-shadow: var(--shadow-sm);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      z-index: 10;
+    }
+    
+    .sidebar--collapsed .sidebar__toggle svg {
+      transform: rotate(180deg);
+    }
+
+    .sidebar--collapsed .nav-item {
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .sidebar--collapsed .user-profile {
+      justify-content: center;
+      padding: var(--spacing-2) 0;
+    }
+
+    /* =========================================
+       STATE: MOBILE / RESPONSIVE
+       ========================================= */
+    .sidebar__overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 40;
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar {
+        transform: translateX(-100%);
+        width: 85%;
+        max-width: 300px;
+        box-shadow: 20px 0 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar__toggle {
+        display: none; /* Hide standard collapse toggle on mobile */
+      }
+
+      /* State: Mobile Open */
+      .sidebar-container--mobile-open .sidebar {
+        transform: translateX(0);
+      }
+
+      .sidebar-container--mobile-open .sidebar__overlay {
+        display: block;
+        opacity: 1;
+      }
+    }
+
+    /* =========================================
+       DEMO UTILITIES
+       ========================================= */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      padding: 40px;
+      transition: margin-left 0.3s ease;
+    }
+    
+    .sidebar--collapsed + .main-content {
+      margin-left: var(--sidebar-width-collapsed);
+    }
+
+    @media (max-width: 1024px) {
+      .main-content { margin-left: 0 !important; }
+    }
+
+    .showcase-controls {
+      margin-bottom: 40px;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid var(--color-gray-200);
+    }
+
+    .btn {
+      padding: 8px 16px;
+      background: var(--color-primary-600);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .btn:hover { background: var(--color-primary-700); }
+
+    .variant-section {
+      margin-top: 40px;
+      border-top: 1px solid var(--color-gray-200);
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body class="sidebar-container">
+
+  <!-- Mobile Overlay -->
+  <div class="sidebar__overlay" onclick="toggleMobileMenu()"></div>
+
+  <!-- COMPONENT: Sidebar -->
+  <nav class="sidebar" aria-label="Main Navigation">
+    <!-- Header -->
+    <div class="sidebar__header">
+      <a href="#" class="sidebar__logo">
+        <div class="sidebar__logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width: 18px; height: 18px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <span>Mediator</span>
+      </a>
+      <button class="sidebar__toggle" onclick="toggleCollapse()" aria-label="Toggle Sidebar">
+        <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="sidebar__content">
+      
+      <!-- VARIANT: ADMIN (Default shown) -->
+      <div id="nav-content-admin">
+        <div class="sidebar__group">
+          <div class="sidebar__group-title">Overview</div>
+          <a href="#" class="nav-item nav-item--active" aria-current="page">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span class="nav-item__label">Dashboard</span>
+          </a>
+          <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span class="nav-item__label">Activity Log</span>
+          </a>
+        </div>
+
+        <div class="sidebar__group">
+          <div class="sidebar__group-title">Management</div>
+          <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span class="nav-item__label">Clients</span>
+          </a>
+          <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 10a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v11H9V10z"/></svg>
+            <span class="nav-item__label">Vendors</span>
+            <span class="nav-item__badge">12</span>
+          </a>
+          <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            <span class="nav-item__label">Projects</span>
+          </a>
+        </div>
+
+        <div class="sidebar__group">
+          <div class="sidebar__group-title">Financials</div>
+          <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <span class="nav-item__label">Transactions</span>
+          </a>
+          <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            <span class="nav-item__label">Invoices</span>
+          </a>
+        </div>
+
+        <div class="sidebar__group">
+          <div class="sidebar__group-title">System</div>
+          <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span class="nav-item__label">Settings</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer / User -->
+    <div class="sidebar__footer">
+      <button class="user-profile" aria-haspopup="true" aria-expanded="false">
+        <div class="user-profile__avatar">
+          JD
+        </div>
+        <div class="user-profile__info">
+          <span class="user-profile__name">John Doe</span>
+          <span class="user-profile__role">System Admin</span>
+        </div>
+        <svg class="icon user-profile__chevron" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"></polyline></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Showcase Content Area -->
+  <main class="main-content">
+    <div class="showcase-controls">
+      <h2>Sidebar Showcase Controls</h2>
+      <p style="margin: 8px 0 16px; color: var(--color-gray-600);">Use these controls to test the responsive behaviors and variants of the sidebar component.</p>
+      
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button class="btn" onclick="toggleCollapse()">Toggle Collapse (Desktop)</button>
+        <button class="btn" onclick="toggleMobileMenu()">Toggle Drawer (Mobile)</button>
+      </div>
+    </div>
+
+    <div class="variant-section">
+      <h3>Variant: Finance Role</h3>
+      <p style="margin-bottom: 16px; color: var(--color-gray-600);">Example of how navigation groups change based on user role.</p>
+      
+      <!-- Static Mock of Finance Nav Group for Demo -->
+      <div style="width: 260px; background: white; border: 1px solid var(--color-gray-200); border-radius: 8px; overflow: hidden;">
+        <div class="sidebar__group" style="padding: 12px;">
+          <div class="sidebar__group-title" style="padding-left: 12px;">Financial Operations</div>
+          <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <span class="nav-item__label">Payout Approvals</span>
+            <span class="nav-item__badge" style="background: var(--color-error-bg); color: var(--color-error-text);">3</span>
+          </a>
+          <a href="#" class="nav-item">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span class="nav-item__label">Ledger</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function toggleCollapse() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('sidebar--collapsed');
+    }
+
+    function toggleMobileMenu() {
+      document.body.classList.toggle('sidebar-container--mobile-open');
+    }
+  </script>
+</body>
+</html>

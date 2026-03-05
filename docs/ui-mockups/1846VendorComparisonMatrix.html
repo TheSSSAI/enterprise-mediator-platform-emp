@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendor Comparison Matrix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* =========================================
+       DESIGN SYSTEM TOKENS
+       ========================================= */
+    :root {
+      /* Colors */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-700: #334155;
+      --color-gray-900: #0f172a;
+
+      --color-success-text: #15803d;
+      --color-warning-text: #b45309;
+      --color-error-text: #b91c1c;
+
+      /* Typography */
+      --font-primary: "Plus Jakarta Sans", sans-serif;
+      --font-secondary: "Inter", sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
+
+      /* Spacing */
+      --spacing-2: 8px;
+      --spacing-3: 12px;
+      --spacing-4: 16px;
+      --spacing-6: 24px;
+      --spacing-8: 32px;
+
+      /* Radius & Shadows */
+      --radius-md: 6px;
+      --radius-lg: 12px;
+      --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-secondary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      padding: var(--spacing-8);
+      line-height: 1.5;
+    }
+
+    /* Showcase Wrapper */
+    .showcase-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .showcase-title {
+      font-family: var(--font-primary);
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: var(--spacing-6);
+      color: var(--color-gray-900);
+    }
+
+    /* =========================================
+       MOLECULE: MATCH SCORE (Dependency)
+       ========================================= */
+    .match-score {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-3);
+    }
+    .match-score__ring {
+      position: relative;
+      width: 40px;
+      height: 40px;
+    }
+    .match-score__svg {
+      transform: rotate(-90deg);
+      width: 100%;
+      height: 100%;
+    }
+    .match-score__circle-bg {
+      fill: none;
+      stroke: var(--color-gray-200);
+      stroke-width: 4;
+    }
+    .match-score__circle-fg {
+      fill: none;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 100;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+    .match-score--high .match-score__circle-fg { stroke: var(--color-success-text); }
+    .match-score--medium .match-score__circle-fg { stroke: #eab308; }
+    .match-score--low .match-score__circle-fg { stroke: var(--color-error-text); }
+    .match-score__value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-gray-700);
+    }
+    .match-score__text {
+      display: flex;
+      flex-direction: column;
+    }
+    .match-score__label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--color-gray-500);
+      font-weight: 600;
+    }
+    .match-score__status {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-gray-900);
+    }
+
+    /* =========================================
+       ATOM: BUTTONS (Dependency)
+       ========================================= */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+    .btn--primary {
+      background: var(--color-primary-600);
+      color: var(--color-white);
+    }
+    .btn--primary:hover {
+      background: var(--color-primary-700);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn--secondary {
+      background: transparent;
+      border-color: var(--color-gray-300);
+      color: var(--color-gray-700);
+    }
+    .btn--secondary:hover {
+      background: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* =========================================
+       ORGANISM: VENDOR COMPARISON MATRIX
+       ========================================= */
+    
+    /* Config Variables */
+    .v-matrix-wrapper {
+      --col-min-width: 260px;
+      --row-header-width: 180px;
+      --header-bg: var(--color-white);
+      --sticky-bg: var(--color-gray-50);
+      --border-color: var(--color-gray-200);
+      --highlight-bg: var(--color-primary-50);
+    }
+
+    /* Container for the matrix (Card Style) */
+    .v-matrix-container {
+      background: var(--color-white);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* Contains the border radius */
+      position: relative;
+    }
+
+    /* Header for the matrix widget */
+    .v-matrix-header {
+      padding: var(--spacing-4) var(--spacing-6);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--color-white);
+    }
+    .v-matrix-header__title {
+      font-family: var(--font-primary);
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--color-gray-900);
+    }
+    .v-matrix-header__actions {
+      display: flex;
+      gap: var(--spacing-3);
+    }
+
+    /* Scrollable Area */
+    .v-matrix-scroll {
+      overflow: auto;
+      max-height: 70vh; /* Viewport constraint */
+      width: 100%;
+      /* Smooth scrolling */
+      -webkit-overflow-scrolling: touch; 
+      /* Styling Scrollbar */
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-gray-400) var(--color-gray-100);
+    }
+    .v-matrix-scroll::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    .v-matrix-scroll::-webkit-scrollbar-track {
+      background: var(--color-gray-100);
+    }
+    .v-matrix-scroll::-webkit-scrollbar-thumb {
+      background-color: var(--color-gray-400);
+      border-radius: 4px;
+    }
+
+    /* Table Reset & Layout */
+    .v-matrix {
+      width: 100%;
+      border-collapse: separate; /* Required for sticky */
+      border-spacing: 0;
+      text-align: left;
+    }
+
+    /* Sticky Headers */
+    .v-matrix thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--header-bg);
+      border-bottom: 2px solid var(--border-color);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.05); /* Subtle shadow for depth */
+    }
+
+    /* Sticky First Column */
+    .v-matrix tbody th,
+    .v-matrix thead th:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 20;
+      background: var(--sticky-bg);
+      border-right: 1px solid var(--border-color);
+    }
+
+    /* Top Left Intersection (Double Sticky) */
+    .v-matrix thead th:first-child {
+      z-index: 30; /* Highest z-index */
+      background: var(--sticky-bg);
+    }
+
+    /* Cell Base Styles */
+    .v-matrix th, 
+    .v-matrix td {
+      padding: var(--spacing-4) var(--spacing-6);
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: top;
+    }
+
+    /* Vendor Column Sizing */
+    .v-matrix td {
+      min-width: var(--col-min-width);
+      max-width: var(--col-min-width);
+      background: var(--color-white);
+      transition: background-color 0.2s ease;
+    }
+
+    /* Row Styles */
+    .v-matrix tbody tr:last-child th,
+    .v-matrix tbody tr:last-child td {
+      border-bottom: none; /* Remove bottom border on last row */
+    }
+    
+    /* Hover Effects */
+    .v-matrix tbody tr:hover td {
+      background-color: var(--color-gray-50);
+    }
+    .v-matrix tbody tr:hover th {
+      background-color: #f1f5f9; /* Slightly darker than gray-50 */
+    }
+
+    /* Content Styling: Row Headers */
+    .v-matrix__row-header {
+      font-family: var(--font-primary);
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--color-gray-700);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      width: var(--row-header-width);
+      min-width: var(--row-header-width);
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+
+    /* Content Styling: Column Headers (Vendors) */
+    .v-matrix__vendor-header {
+      padding-top: var(--spacing-6);
+      padding-bottom: var(--spacing-6);
+    }
+    .v-matrix__vendor-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--color-primary-100);
+      color: var(--color-primary-700);
+      margin-bottom: var(--spacing-2);
+    }
+    .v-matrix__vendor-name {
+      display: block;
+      font-family: var(--font-primary);
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--color-gray-900);
+      margin-bottom: 2px;
+    }
+    .v-matrix__vendor-meta {
+      font-size: 13px;
+      color: var(--color-gray-500);
+    }
+
+    /* Content Styling: Cells */
+    .v-cell-cost {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--color-gray-900);
+    }
+    .v-cell-text {
+      font-size: 14px;
+      color: var(--color-gray-700);
+      line-height: 1.5;
+    }
+    
+    /* Tags */
+    .v-tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .v-tag {
+      font-size: 12px;
+      padding: 4px 8px;
+      background: var(--color-gray-100);
+      color: var(--color-gray-700);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-gray-200);
+      font-weight: 500;
+    }
+
+    /* Avatar Component (Mini) */
+    .v-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--color-primary-100);
+      color: var(--color-primary-700);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 12px;
+      border: 2px solid var(--color-white);
+    }
+    .v-avatar-stack {
+      display: flex;
+      padding-left: 8px;
+    }
+    .v-avatar-stack .v-avatar {
+      margin-left: -8px;
+    }
+
+    /* VARIANT: Recommended Column Highlight */
+    .v-matrix--recommended td:nth-child(2), /* Specific to 2nd column (1st data col) */
+    .v-matrix--recommended th:nth-child(2) {
+      background-color: var(--highlight-bg);
+    }
+    /* Ensure hover doesn't totally override highlight, just tint it */
+    .v-matrix--recommended tbody tr:hover td:nth-child(2) {
+      background-color: #e5f7f5; /* Manual mix of highlight + hover */
+    }
+
+    /* Loading State Animation */
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 0.3; }
+      100% { opacity: 0.6; }
+    }
+    .skeleton-text {
+      height: 14px;
+      background: var(--color-gray-200);
+      border-radius: 4px;
+      margin-bottom: 8px;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+    .skeleton-text--short { width: 40%; }
+    .skeleton-text--long { width: 80%; }
+    
+    /* Utility */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .v-matrix-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-3);
+      }
+      .v-matrix-wrapper {
+        --row-header-width: 140px; /* Compress row header on mobile */
+      }
+      .v-matrix__row-header {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="showcase-container">
+    <h1 class="showcase-title">Vendor Comparison Matrix</h1>
+
+    <!-- COMPONENT START: Default State (Recommended Highlight) -->
+    <div class="v-matrix-container">
+      <div class="v-matrix-header">
+        <h2 class="v-matrix-header__title">Proposal Evaluation: Website Redesign</h2>
+        <div class="v-matrix-header__actions">
+          <button class="btn btn--secondary">Export CSV</button>
+          <button class="btn btn--secondary">Edit Filters</button>
+        </div>
+      </div>
+
+      <div class="v-matrix-scroll" tabindex="0" role="region" aria-label="Comparison Table">
+        <table class="v-matrix v-matrix--recommended" role="grid">
+          <thead>
+            <tr role="row">
+              <th scope="col" role="columnheader" aria-label="Comparison Criteria">
+                <!-- Empty intersection cell -->
+              </th>
+              <th scope="col" role="columnheader">
+                <div class="v-matrix__vendor-header">
+                  <span class="v-matrix__vendor-badge">Recommended</span>
+                  <span class="v-matrix__vendor-name">PixelPerfect Design</span>
+                  <span class="v-matrix__vendor-meta">San Francisco, CA</span>
+                </div>
+              </th>
+              <th scope="col" role="columnheader">
+                <div class="v-matrix__vendor-header">
+                  <span class="v-matrix__vendor-name">CodeCrafters LLC</span>
+                  <span class="v-matrix__vendor-meta">Austin, TX</span>
+                </div>
+              </th>
+              <th scope="col" role="columnheader">
+                <div class="v-matrix__vendor-header">
+                  <span class="v-matrix__vendor-name">Global Solutions</span>
+                  <span class="v-matrix__vendor-meta">London, UK</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Row 1: Match Score -->
+            <tr role="row">
+              <th scope="row" class="v-matrix__row-header">
+                AI Match Score
+              </th>
+              <td role="gridcell">
+                <div class="match-score match-score--high">
+                  <div class="match-score__ring">
+                    <svg class="match-score__svg" viewBox="0 0 36 36" aria-hidden="true">
+                      <path class="match-score__circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path class="match-score__circle-fg" stroke-dasharray="95, 100" stroke-dashoffset="0" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div class="match-score__value">95%</div>
+                  </div>
+                  <div class="match-score__text">
+                    <span class="match-score__status">Excellent</span>
+                  </div>
+                </div>
+              </td>
+              <td role="gridcell">
+                <div class="match-score match-score--medium">
+                  <div class="match-score__ring">
+                    <svg class="match-score__svg" viewBox="0 0 36 36" aria-hidden="true">
+                      <path class="match-score__circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path class="match-score__circle-fg" stroke-dasharray="78, 100" stroke-dashoffset="0" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div class="match-score__value">78%</div>
+                  </div>
+                  <div class="match-score__text">
+                    <span class="match-score__status">Good</span>
+                  </div>
+                </div>
+              </td>
+              <td role="gridcell">
+                <div class="match-score match-score--low">
+                  <div class="match-score__ring">
+                    <svg class="match-score__svg" viewBox="0 0 36 36" aria-hidden="true">
+                      <path class="match-score__circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path class="match-score__circle-fg" stroke-dasharray="45, 100" stroke-dashoffset="0" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div class="match-score__value">45%</div>
+                  </div>
+                  <div class="match-score__text">
+                    <span class="match-score__status">Low</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 2: Cost -->
+            <tr role="row">
+              <th scope="row" class="v-matrix__row-header">Total Cost</th>
+              <td role="gridcell"><span class="v-cell-cost">$45,000</span></td>
+              <td role="gridcell"><span class="v-cell-cost">$38,500</span></td>
+              <td role="gridcell"><span class="v-cell-cost">$52,000</span></td>
+            </tr>
+
+            <!-- Row 3: Timeline -->
+            <tr role="row">
+              <th scope="row" class="v-matrix__row-header">Estimated Timeline</th>
+              <td role="gridcell"><span class="v-cell-text">8 Weeks</span></td>
+              <td role="gridcell"><span class="v-cell-text">6 Weeks</span></td>
+              <td role="gridcell"><span class="v-cell-text">10 Weeks</span></td>
+            </tr>
+
+            <!-- Row 4: Skills -->
+            <tr role="row">
+              <th scope="row" class="v-matrix__row-header">Key Skills</th>
+              <td role="gridcell">
+                <div class="v-tag-list">
+                  <span class="v-tag">React</span>
+                  <span class="v-tag">UX Design</span>
+                  <span class="v-tag">Node.js</span>
+                </div>
+              </td>
+              <td role="gridcell">
+                <div class="v-tag-list">
+                  <span class="v-tag">React</span>
+                  <span class="v-tag">PHP</span>
+                </div>
+              </td>
+              <td role="gridcell">
+                <div class="v-tag-list">
+                  <span class="v-tag">Angular</span>
+                  <span class="v-tag">Enterprise</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 5: Team -->
+            <tr role="row">
+              <th scope="row" class="v-matrix__row-header">Proposed Team</th>
+              <td role="gridcell">
+                <div class="v-avatar-stack">
+                  <div class="v-avatar" title="Sarah J">SJ</div>
+                  <div class="v-avatar" title="Mike R" style="background: #e0e7ff; color: #4338ca;">MR</div>
+                  <div class="v-avatar" title="+2" style="background: var(--color-gray-100); color: var(--color-gray-700);">+2</div>
+                </div>
+              </td>
+              <td role="gridcell">
+                <div class="v-avatar-stack">
+                  <div class="v-avatar">DK</div>
+                  <div class="v-avatar" style="background: #e0e7ff; color: #4338ca;">AL</div>
+                </div>
+              </td>
+              <td role="gridcell">
+                <div class="v-avatar-stack">
+                  <div class="v-avatar">TM</div>
+                  <div class="v-avatar">+5</div>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 6: Actions (Sticky Footers optional, here inline) -->
+            <tr role="row">
+              <th scope="row" class="v-matrix__row-header">Actions</th>
+              <td role="gridcell">
+                <button class="btn btn--primary" style="width: 100%">Select Vendor</button>
+              </td>
+              <td role="gridcell">
+                <button class="btn btn--secondary" style="width: 100%">Select Vendor</button>
+              </td>
+              <td role="gridcell">
+                <button class="btn btn--secondary" style="width: 100%">Select Vendor</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- COMPONENT END -->
+
+    <br><br>
+
+    <!-- VARIATION: LOADING STATE -->
+    <div class="v-matrix-container">
+      <div class="v-matrix-header">
+        <h2 class="v-matrix-header__title">Loading Data...</h2>
+      </div>
+      <div class="v-matrix-scroll">
+        <table class="v-matrix v-matrix--loading">
+          <thead>
+            <tr>
+              <th></th>
+              <th>
+                <div class="skeleton-text skeleton-text--short"></div>
+                <div class="skeleton-text skeleton-text--long"></div>
+              </th>
+              <th>
+                <div class="skeleton-text skeleton-text--short"></div>
+                <div class="skeleton-text skeleton-text--long"></div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="v-matrix__row-header">Match Score</th>
+              <td><div class="skeleton-text"></div></td>
+              <td><div class="skeleton-text"></div></td>
+            </tr>
+            <tr>
+              <th class="v-matrix__row-header">Total Cost</th>
+              <td><div class="skeleton-text skeleton-text--short"></div></td>
+              <td><div class="skeleton-text skeleton-text--short"></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top: 40px; padding: 20px; background: white; border-radius: 8px;">
+    <h3>Usage Documentation</h3>
+    <p style="color: var(--color-gray-500); font-size: 14px; margin-top: 8px;">
+      <strong>Sticky Columns:</strong> The first column (Criteria) is sticky-positioned to the left. The header row is sticky-positioned to the top. The top-left cell uses a higher z-index to remain visible over both scrolls.
+    </p>
+    <p style="color: var(--color-gray-500); font-size: 14px; margin-top: 8px;">
+      <strong>Accessibility:</strong> The table uses <code>scope="col"</code> and <code>scope="row"</code> to ensure screen readers can associate data cells with their headers while navigating this 2D grid.
+    </p>
+  </div>
+
+</body>
+</html>

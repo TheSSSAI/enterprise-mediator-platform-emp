@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Enterprise Mediator Platform</title>
+  
+  <!-- Font Loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS 
+      Based on input JSON specification
+    */
+    :root {
+      /* Color Palette: Primary (Teal) */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-200: #99f6e4;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      --color-primary-900: #134e4a;
+
+      /* Color Palette: Neutrals */
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-800: #1e293b;
+      --color-gray-900: #0f172a;
+
+      /* Color Palette: Semantic */
+      --color-success-bg: #f0fdf4;
+      --color-success-text: #15803d;
+      --color-warning-bg: #fffbeb;
+      --color-warning-text: #b45309;
+      --color-error-bg: #fef2f2;
+      --color-error-text: #b91c1c;
+      --color-info-bg: #eff6ff;
+      --color-info-text: #1d4ed8;
+
+      /* Typography */
+      --font-primary: "Plus Jakarta Sans", sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
+
+      /* Spacing & Sizing */
+      --header-height: 64px;
+      --sidebar-width: 260px;
+      --sidebar-width-collapsed: 72px;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 12px;
+      --radius-full: 9999px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+      /* Transitions */
+      --transition-base: all 0.2s ease-in-out;
+    }
+
+    /* CSS RESET */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    /* UTILITIES */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 8px; }
+    .gap-4 { gap: 16px; }
+    .text-sm { font-size: 14px; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .text-gray-500 { color: var(--color-gray-500); }
+
+    /* LAYOUT STRUCTURE */
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR NAVIGATION */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--color-white);
+      border-right: 1px solid var(--color-gray-200);
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 50;
+      transition: width 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .brand-logo {
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--color-primary-600);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--color-primary-100);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--color-primary-600);
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 24px 16px;
+      overflow-y: auto;
+    }
+
+    .nav-group {
+      margin-bottom: 24px;
+    }
+
+    .nav-group-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-gray-500);
+      margin-bottom: 12px;
+      padding: 0 12px;
+      font-weight: 600;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      color: var(--color-gray-600);
+      border-radius: var(--radius-md);
+      transition: var(--transition-base);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .nav-item:hover {
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+    }
+
+    .nav-item.active {
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-700);
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--color-gray-200);
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: var(--color-primary-100);
+      color: var(--color-primary-700);
+      display: grid;
+      place-items: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* MAIN CONTENT AREA */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      min-width: 0; /* Prevent flex overflow */
+      transition: margin-left 0.3s ease;
+    }
+
+    /* HEADER */
+    .top-header {
+      height: var(--header-height);
+      background-color: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--color-gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-gray-900);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .search-bar {
+      position: relative;
+    }
+
+    .search-input {
+      padding: 8px 12px 8px 36px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      width: 240px;
+      background-color: var(--color-white);
+      transition: var(--transition-base);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 2px var(--color-primary-100);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-gray-400);
+      width: 16px;
+      height: 16px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      padding: 8px;
+      border-radius: var(--radius-md);
+      color: var(--color-gray-500);
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-700);
+    }
+
+    .badge-dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      background-color: var(--color-error-text);
+      border-radius: 50%;
+      border: 1.5px solid var(--color-white);
+    }
+
+    /* DASHBOARD CONTENT */
+    .dashboard-container {
+      padding: 32px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 24px;
+    }
+
+    /* METRIC CARDS */
+    .metrics-section {
+      grid-column: span 12;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition-base);
+    }
+
+    .metric-card:hover {
+      border-color: var(--color-primary-200);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .metric-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-gray-500);
+    }
+
+    .metric-icon {
+      padding: 8px;
+      border-radius: var(--radius-md);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-600);
+    }
+
+    .metric-icon.success { background: var(--color-success-bg); color: var(--color-success-text); }
+    .metric-icon.info { background: var(--color-info-bg); color: var(--color-info-text); }
+    .metric-icon.warning { background: var(--color-warning-bg); color: var(--color-warning-text); }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-gray-900);
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .metric-trend {
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .trend-up { color: var(--color-success-text); }
+    .trend-down { color: var(--color-error-text); }
+    .trend-neutral { color: var(--color-gray-500); }
+
+    /* CONTENT COLUMNS */
+    .content-left {
+      grid-column: span 8;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .content-right {
+      grid-column: span 4;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* CARD COMPONENT */
+    .card {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--color-gray-100);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-gray-900);
+    }
+
+    .card-action {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-primary-600);
+      cursor: pointer;
+    }
+
+    .card-body {
+      padding: 0;
+    }
+
+    /* ACTION REQUIRED LIST */
+    .action-list-item {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--color-gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background-color 0.2s;
+    }
+
+    .action-list-item:hover {
+      background-color: var(--color-gray-50);
+    }
+
+    .action-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .item-content {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .item-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .bg-blue-light { background-color: var(--color-info-bg); color: var(--color-info-text); }
+    .bg-yellow-light { background-color: var(--color-warning-bg); color: var(--color-warning-text); }
+    .bg-red-light { background-color: var(--color-error-bg); color: var(--color-error-text); }
+
+    .item-details h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-gray-900);
+      margin-bottom: 2px;
+    }
+
+    .item-details p {
+      font-size: 13px;
+      color: var(--color-gray-500);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-outline {
+      border: 1px solid var(--color-gray-300);
+      color: var(--color-gray-700);
+      background: transparent;
+    }
+
+    .btn-outline:hover {
+      background: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    /* ACTIVITY FEED */
+    .activity-feed {
+      padding: 24px;
+    }
+
+    .feed-item {
+      position: relative;
+      padding-left: 24px;
+      padding-bottom: 24px;
+      border-left: 2px solid var(--color-gray-200);
+    }
+
+    .feed-item:last-child {
+      border-left-color: transparent;
+      padding-bottom: 0;
+    }
+
+    .feed-dot {
+      position: absolute;
+      left: -6px;
+      top: 2px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--color-gray-300);
+      border: 2px solid var(--color-white);
+      box-sizing: content-box;
+    }
+
+    .feed-dot.active { background-color: var(--color-primary-500); }
+
+    .feed-content p {
+      font-size: 14px;
+      color: var(--color-gray-900);
+      margin-bottom: 4px;
+    }
+
+    .feed-meta {
+      font-size: 12px;
+      color: var(--color-gray-500);
+    }
+
+    /* STATUS BADGES */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-success { background: var(--color-success-bg); color: var(--color-success-text); }
+    .badge-warning { background: var(--color-warning-bg); color: var(--color-warning-text); }
+
+    /* LOADING SKELETONS */
+    .skeleton {
+      background: linear-gradient(90deg, var(--color-gray-100) 25%, var(--color-gray-200) 50%, var(--color-gray-100) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .h-4 { height: 16px; }
+    .h-8 { height: 32px; }
+    .w-1_2 { width: 50%; }
+    .w-3_4 { width: 75%; }
+    .mb-2 { margin-bottom: 8px; }
+
+    /* EMPTY STATE */
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--color-gray-100);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--color-gray-400);
+      margin-bottom: 16px;
+    }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-gray-900);
+      margin-bottom: 4px;
+    }
+
+    .empty-desc {
+      font-size: 14px;
+      color: var(--color-gray-500);
+      max-width: 240px;
+    }
+
+    /* RESPONSIVE MEDIA QUERIES */
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: var(--sidebar-width-collapsed);
+      }
+      .sidebar-footer .user-details, .nav-item span, .nav-group-title, .brand-logo span {
+        display: none;
+      }
+      .main-content {
+        margin-left: var(--sidebar-width-collapsed);
+      }
+      .sidebar-header {
+        justify-content: center;
+        padding: 0;
+      }
+      .nav-item {
+        justify-content: center;
+        padding: 12px;
+      }
+      .content-left {
+        grid-column: span 12;
+      }
+      .content-right {
+        grid-column: span 12;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .main-content {
+        margin-left: 0;
+      }
+      .mobile-menu-btn {
+        display: block;
+      }
+      .top-header {
+        padding: 0 16px;
+      }
+      .dashboard-container {
+        padding: 16px;
+      }
+      .metrics-section {
+        grid-template-columns: 1fr;
+      }
+      .search-bar {
+        display: none; /* Hide on mobile for simplicity in this template */
+      }
+    }
+
+    /* Demo Controls (Not part of design system, just for preview) */
+    .demo-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 1000;
+      font-size: 12px;
+      display: flex;
+      gap: 8px;
+    }
+    .demo-btn {
+      padding: 4px 8px;
+      background: #555;
+      border: none;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .demo-btn.active { background: var(--color-primary-500); }
+
+    /* State Visibility Handlers */
+    [data-state="loading"] .data-view, [data-state="empty"] .data-view { display: none; }
+    [data-state="data"] .loading-view, [data-state="empty"] .loading-view { display: none; }
+    [data-state="data"] .empty-view, [data-state="loading"] .empty-view { display: none; }
+
+  </style>
+</head>
+<body data-state="data">
+
+  <div class="app-shell">
+    
+    <!-- SIDEBAR -->
+    <nav class="sidebar" aria-label="Main Navigation">
+      <div class="sidebar-header">
+        <a href="#" class="brand-logo">
+          <div class="logo-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <span>Mediator</span>
+        </a>
+      </div>
+
+      <div class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-group-title">Overview</div>
+          <a href="#" class="nav-item active" aria-current="page">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" class="nav-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>Projects</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-title">Management</div>
+          <a href="#" class="nav-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span>Clients</span>
+          </a>
+          <a href="#" class="nav-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <span>Vendors</span>
+          </a>
+          <a href="#" class="nav-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <span>Finance</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-title">System</div>
+          <a href="#" class="nav-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+            <span>Audits</span>
+          </a>
+          <a href="#" class="nav-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span>Settings</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">AD</div>
+          <div class="user-details">
+            <div style="font-size: 14px; font-weight: 600; color: var(--color-gray-900);">Admin User</div>
+            <div style="font-size: 12px; color: var(--color-gray-500);">System Admin</div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      
+      <!-- HEADER -->
+      <header class="top-header">
+        <div class="header-left">
+          <h1>Dashboard</h1>
+        </div>
+        
+        <div class="header-actions">
+          <div class="search-bar">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" class="search-input" placeholder="Search projects, clients..." aria-label="Global search">
+          </div>
+          
+          <button class="icon-btn" aria-label="Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="badge-dot"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- DASHBOARD CONTENT CONTAINER -->
+      <div class="dashboard-container">
+        
+        <!-- === VIEW: DATA LOADED === -->
+        <div class="data-view dashboard-grid">
+          
+          <!-- Metrics Row -->
+          <section class="metrics-section" aria-label="Key Metrics">
+            
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Active Projects</span>
+                <div class="metric-icon info">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+              </div>
+              <div class="metric-value">12</div>
+              <div class="metric-trend trend-up">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                <span>+2 from last month</span>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Pending SOWs</span>
+                <div class="metric-icon warning">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                </div>
+              </div>
+              <div class="metric-value">3</div>
+              <div class="metric-trend trend-neutral">
+                <span>Waiting for AI processing</span>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Proposals Review</span>
+                <div class="metric-icon info">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+              </div>
+              <div class="metric-value">8</div>
+              <div class="metric-trend trend-up">
+                <span>3 due this week</span>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Revenue (MTD)</span>
+                <div class="metric-icon success">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                </div>
+              </div>
+              <div class="metric-value">$420k</div>
+              <div class="metric-trend trend-up">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                <span>+12.5% vs last month</span>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- Content Columns -->
+          <div class="content-left">
+            <!-- Action Required Widget -->
+            <section class="card" aria-labelledby="action-required-title">
+              <div class="card-header">
+                <h3 id="action-required-title" class="card-title">Action Required</h3>
+                <span class="badge badge-warning">4 pending</span>
+              </div>
+              <div class="card-body">
+                <div class="action-list-item">
+                  <div class="item-content">
+                    <div class="item-icon bg-red-light">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    </div>
+                    <div class="item-details">
+                      <h4>SOW Processing Failed</h4>
+                      <p>Project: Redesign Alpha • Error parsing PDF</p>
+                    </div>
+                  </div>
+                  <button class="btn-sm btn-outline">Review</button>
+                </div>
+
+                <div class="action-list-item">
+                  <div class="item-content">
+                    <div class="item-icon bg-blue-light">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    </div>
+                    <div class="item-details">
+                      <h4>SOW Review Pending</h4>
+                      <p>Project: Cloud Migration • AI Extraction Complete</p>
+                    </div>
+                  </div>
+                  <button class="btn-sm btn-outline">Review Data</button>
+                </div>
+
+                <div class="action-list-item">
+                  <div class="item-content">
+                    <div class="item-icon bg-yellow-light">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                    <div class="item-details">
+                      <h4>Payout Approval Required</h4>
+                      <p>Vendor: TechCorp • Amount: $15,000</p>
+                    </div>
+                  </div>
+                  <button class="btn-sm btn-outline">Approve</button>
+                </div>
+              </div>
+            </section>
+
+            <!-- Recent Projects Table (Simplified) -->
+            <section class="card" aria-labelledby="recent-projects-title">
+              <div class="card-header">
+                <h3 id="recent-projects-title" class="card-title">Recent Projects</h3>
+                <a href="#" class="card-action">View All</a>
+              </div>
+              <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                  <thead style="background: var(--color-gray-50); border-bottom: 1px solid var(--color-gray-200);">
+                    <tr>
+                      <th style="text-align: left; padding: 12px 24px; color: var(--color-gray-600); font-weight: 600; font-size: 12px; text-transform: uppercase;">Project Name</th>
+                      <th style="text-align: left; padding: 12px 24px; color: var(--color-gray-600); font-weight: 600; font-size: 12px; text-transform: uppercase;">Client</th>
+                      <th style="text-align: left; padding: 12px 24px; color: var(--color-gray-600); font-weight: 600; font-size: 12px; text-transform: uppercase;">Status</th>
+                      <th style="text-align: right; padding: 12px 24px; color: var(--color-gray-600); font-weight: 600; font-size: 12px; text-transform: uppercase;">Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom: 1px solid var(--color-gray-100);">
+                      <td style="padding: 16px 24px; font-weight: 500;">Cloud Migration Phase 1</td>
+                      <td style="padding: 16px 24px; color: var(--color-gray-600);">Acme Corp</td>
+                      <td style="padding: 16px 24px;"><span class="badge badge-success">Active</span></td>
+                      <td style="padding: 16px 24px; text-align: right;">$45,000</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid var(--color-gray-100);">
+                      <td style="padding: 16px 24px; font-weight: 500;">Mobile App Refactor</td>
+                      <td style="padding: 16px 24px; color: var(--color-gray-600);">Globex Inc</td>
+                      <td style="padding: 16px 24px;"><span style="background: var(--color-info-bg); color: var(--color-info-text);" class="badge">Proposed</span></td>
+                      <td style="padding: 16px 24px; text-align: right;">$22,500</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <div class="content-right">
+            <!-- Activity Feed -->
+            <section class="card" aria-labelledby="activity-feed-title">
+              <div class="card-header">
+                <h3 id="activity-feed-title" class="card-title">Recent Activity</h3>
+              </div>
+              <div class="activity-feed">
+                <div class="feed-item">
+                  <div class="feed-dot active"></div>
+                  <div class="feed-content">
+                    <p><strong>Sarah Jenkins</strong> paid invoice #INV-2023-001</p>
+                    <div class="feed-meta">2 minutes ago • Financials</div>
+                  </div>
+                </div>
+                <div class="feed-item">
+                  <div class="feed-dot"></div>
+                  <div class="feed-content">
+                    <p>New proposal submitted by <strong>DevStudio X</strong></p>
+                    <div class="feed-meta">1 hour ago • Project: Mobile App</div>
+                  </div>
+                </div>
+                <div class="feed-item">
+                  <div class="feed-dot"></div>
+                  <div class="feed-content">
+                    <p>Project <strong>Cloud Migration</strong> marked as Active</p>
+                    <div class="feed-meta">3 hours ago • System</div>
+                  </div>
+                </div>
+                <div class="feed-item">
+                  <div class="feed-dot"></div>
+                  <div class="feed-content">
+                    <p><strong>Tom Wilson</strong> updated Vendor Profile</p>
+                    <div class="feed-meta">5 hours ago • Vendor Management</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+        </div>
+
+        <!-- === VIEW: LOADING STATE === -->
+        <div class="loading-view dashboard-grid">
+          <section class="metrics-section">
+            <div class="metric-card"><div class="skeleton h-4 w-1_2 mb-2"></div><div class="skeleton h-8 w-3_4"></div></div>
+            <div class="metric-card"><div class="skeleton h-4 w-1_2 mb-2"></div><div class="skeleton h-8 w-3_4"></div></div>
+            <div class="metric-card"><div class="skeleton h-4 w-1_2 mb-2"></div><div class="skeleton h-8 w-3_4"></div></div>
+            <div class="metric-card"><div class="skeleton h-4 w-1_2 mb-2"></div><div class="skeleton h-8 w-3_4"></div></div>
+          </section>
+          <div class="content-left">
+            <div class="card" style="height: 300px; padding: 24px;">
+              <div class="skeleton h-4 w-1_4 mb-2"></div>
+              <div style="margin-top: 24px;">
+                <div class="skeleton h-8 w-full mb-2"></div>
+                <div class="skeleton h-8 w-full mb-2"></div>
+                <div class="skeleton h-8 w-full"></div>
+              </div>
+            </div>
+          </div>
+          <div class="content-right">
+            <div class="card" style="height: 300px; padding: 24px;">
+              <div class="skeleton h-4 w-1_2 mb-2"></div>
+              <div style="margin-top: 24px;">
+                <div class="skeleton h-8 w-full mb-2"></div>
+                <div class="skeleton h-8 w-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- === VIEW: EMPTY STATE === -->
+        <div class="empty-view">
+          <div class="card empty-state">
+            <div class="empty-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+            </div>
+            <h3 class="empty-title">Welcome to your Dashboard</h3>
+            <p class="empty-desc">There are no active projects or metrics to display yet. Get started by setting up your first client or project.</p>
+            <div style="margin-top: 24px; display: flex; gap: 12px;">
+              <button class="btn-sm" style="background: var(--color-primary-600); color: white; border: none; padding: 10px 20px;">Create Client</button>
+              <button class="btn-sm btn-outline" style="padding: 10px 20px;">View Guide</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Demo Controls Script -->
+  <div class="demo-controls">
+    <button class="demo-btn active" onclick="switchState('data', this)">Data</button>
+    <button class="demo-btn" onclick="switchState('loading', this)">Loading</button>
+    <button class="demo-btn" onclick="switchState('empty', this)">Empty</button>
+  </div>
+
+  <script>
+    function switchState(state, btn) {
+      document.body.setAttribute('data-state', state);
+      document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Ledger - Enterprise Mediator Platform</title>
+  <style>
+    /* 
+      DESIGN SYSTEM FOUNDATION 
+      Based on provided Design System.md
+    */
+    :root {
+      /* Color Palette - Primary (Teal) */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      --color-primary-900: #134e4a;
+
+      /* Color Palette - Neutrals */
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-800: #1e293b;
+      --color-gray-900: #0f172a;
+
+      /* Semantic Colors */
+      --color-success-bg: #f0fdf4;
+      --color-success-text: #15803d;
+      --color-success-border: #bbf7d0;
+      
+      --color-warning-bg: #fffbeb;
+      --color-warning-text: #b45309;
+      
+      --color-error-bg: #fef2f2;
+      --color-error-text: #b91c1c;
+
+      /* Typography */
+      --font-primary: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
+
+      /* Spacing & Layout */
+      --header-height: 64px;
+      --sidebar-width: 240px;
+      --sidebar-collapsed-width: 64px;
+      --radius-md: 6px;
+      --radius-lg: 12px;
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* CSS Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* 
+      LAYOUT ARCHITECTURE 
+    */
+    .app-shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-rows: var(--header-height) 1fr;
+      min-height: 100vh;
+      grid-template-areas: 
+        "sidebar header"
+        "sidebar main";
+    }
+
+    /* Header */
+    .app-header {
+      grid-area: header;
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-context {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--color-gray-500);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--color-primary-100);
+      color: var(--color-primary-700);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* Sidebar */
+    .app-sidebar {
+      grid-area: sidebar;
+      background: var(--color-gray-900);
+      color: var(--color-gray-400);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--color-gray-800);
+      position: fixed;
+      height: 100vh;
+      width: var(--sidebar-width);
+      z-index: 20;
+      transition: width 0.3s ease;
+    }
+
+    .logo-container {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      color: var(--color-white);
+      font-weight: 700;
+      font-size: 20px;
+      border-bottom: 1px solid var(--color-gray-800);
+    }
+
+    .nav-links {
+      padding: 24px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      color: var(--color-gray-400);
+      text-decoration: none;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .nav-item:hover {
+      background: var(--color-gray-800);
+      color: var(--color-gray-200);
+    }
+
+    .nav-item.active {
+      background: var(--color-primary-900);
+      color: var(--color-primary-100);
+      border-left: 3px solid var(--color-primary-500);
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      opacity: 0.8;
+    }
+
+    /* Main Content */
+    .main-content {
+      grid-area: main;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-gray-900);
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--color-gray-500);
+    }
+
+    /* 
+      COMPONENTS 
+    */
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: var(--color-primary-600);
+      color: var(--color-white);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-700);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-secondary {
+      background: var(--color-white);
+      border-color: var(--color-gray-300);
+      color: var(--color-gray-700);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    .btn-icon-only {
+      padding: 8px;
+    }
+
+    /* Metrics Cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .metric-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .metric-title {
+      font-size: 14px;
+      color: var(--color-gray-500);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-gray-900);
+      margin-bottom: 4px;
+    }
+
+    .metric-trend {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .trend-up { color: var(--color-success-text); }
+    .trend-neutral { color: var(--color-gray-500); }
+
+    /* Filters Toolbar */
+    .filter-toolbar {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .form-control {
+      position: relative;
+    }
+
+    .input-field {
+      padding: 9px 12px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--color-gray-900);
+      min-width: 200px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 2px var(--color-primary-100);
+    }
+
+    .input-with-icon {
+      padding-left: 36px;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-gray-400);
+      width: 16px;
+      height: 16px;
+    }
+
+    .select-field {
+      padding: 9px 32px 9px 12px;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+    }
+
+    /* Ledger Table */
+    .table-container {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .ledger-table {
+      width: 100%;
+      border-collapse: collapse;
+      white-space: nowrap;
+    }
+
+    .ledger-table th {
+      background: var(--color-gray-50);
+      color: var(--color-gray-600);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 12px 24px;
+      text-align: left;
+      border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .ledger-table td {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--color-gray-100);
+      color: var(--color-gray-700);
+      font-size: 14px;
+    }
+
+    .ledger-table tr:hover {
+      background: var(--color-gray-50);
+    }
+
+    .col-amount {
+      font-family: var(--font-mono);
+      text-align: right;
+      font-weight: 500;
+    }
+
+    .amount-positive { color: var(--color-gray-900); }
+    .amount-negative { color: var(--color-gray-500); }
+
+    /* Status Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .badge-success {
+      background: var(--color-success-bg);
+      color: var(--color-success-text);
+      border: 1px solid var(--color-success-border);
+    }
+
+    .badge-warning {
+      background: var(--color-warning-bg);
+      color: var(--color-warning-text);
+      border: 1px solid #fde68a;
+    }
+
+    .badge-neutral {
+      background: var(--color-gray-100);
+      color: var(--color-gray-600);
+      border: 1px solid var(--color-gray-200);
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-top: 1px solid var(--color-gray-200);
+    }
+
+    .pagination-info {
+      font-size: 14px;
+      color: var(--color-gray-500);
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 1024px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+        grid-template-areas: 
+          "header"
+          "main";
+      }
+
+      .app-sidebar {
+        display: none; /* In real app, toggle with JS/Hamburger */
+      }
+
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filter-group {
+        flex-direction: column;
+      }
+
+      .input-field {
+        width: 100%;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      
+      .main-content {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- Sidebar Navigation -->
+    <nav class="app-sidebar" aria-label="Main Navigation">
+      <div class="logo-container">
+        EMP
+      </div>
+      <div class="nav-links">
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+          Dashboard
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          Clients
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+          Vendors
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+          Projects
+        </a>
+        <a href="#" class="nav-item active" aria-current="page">
+          <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Financials
+        </a>
+      </div>
+    </nav>
+
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="header-context">
+        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+        <span>Finance Manager View</span>
+      </div>
+      <div class="user-menu">
+        <button class="btn btn-secondary btn-icon-only" aria-label="Notifications">
+          <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+        </button>
+        <div class="avatar">FM</div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Financial Ledger</h1>
+          <p class="page-subtitle">Track all income, payouts, and financial reconciliations.</p>
+        </div>
+        <button class="btn btn-primary">
+          <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          Export CSV
+        </button>
+      </div>
+
+      <!-- Metric Summaries -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-title">Total Revenue (YTD)</div>
+          <div class="metric-value">$2,450,900</div>
+          <div class="metric-trend trend-up">
+            <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            <span>+12.5% vs last year</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Pending Payouts</div>
+          <div class="metric-value">$142,350</div>
+          <div class="metric-trend trend-neutral">
+            <span>24 transactions pending</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Platform Fees Collected</div>
+          <div class="metric-value">$183,815</div>
+          <div class="metric-trend trend-up">
+            <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            <span>7.5% avg margin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Actions -->
+      <div class="filter-toolbar" role="search" aria-label="Transaction Filters">
+        <div class="filter-group">
+          <div class="form-control" style="flex: 2;">
+            <svg class="input-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input type="text" class="input-field input-with-icon" placeholder="Search by transaction ID, project, or entity..." aria-label="Search Transactions">
+          </div>
+          <div class="form-control" style="flex: 1;">
+            <select class="input-field select-field" aria-label="Filter by Type">
+              <option value="">All Types</option>
+              <option value="payment">Client Payment</option>
+              <option value="payout">Vendor Payout</option>
+              <option value="fee">Platform Fee</option>
+            </select>
+          </div>
+          <div class="form-control" style="flex: 1;">
+            <select class="input-field select-field" aria-label="Filter by Status">
+              <option value="">All Statuses</option>
+              <option value="completed">Completed</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+          <div class="form-control" style="flex: 1;">
+            <input type="date" class="input-field" aria-label="Start Date">
+          </div>
+        </div>
+        <button class="btn btn-secondary">Clear Filters</button>
+      </div>
+
+      <!-- Ledger Data Table -->
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="ledger-table">
+            <thead>
+              <tr>
+                <th scope="col">Transaction ID</th>
+                <th scope="col">Date</th>
+                <th scope="col">Type</th>
+                <th scope="col">Project / Entity</th>
+                <th scope="col">Status</th>
+                <th scope="col" style="text-align: right;">Amount</th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span style="font-family: var(--font-mono); color: var(--color-primary-700);">#TXN-8842</span></td>
+                <td>Oct 24, 2023</td>
+                <td>Payout</td>
+                <td>
+                  <div style="font-weight: 500;">Project Phoenix</div>
+                  <div style="font-size: 12px; color: var(--color-gray-500);">To: Innovate Solutions</div>
+                </td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td class="col-amount amount-negative">-$12,500.00</td>
+                <td>
+                  <button class="btn btn-secondary btn-icon-only" style="border:none;" aria-label="View Details">
+                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td><span style="font-family: var(--font-mono); color: var(--color-primary-700);">#TXN-8841</span></td>
+                <td>Oct 24, 2023</td>
+                <td>Fee</td>
+                <td>
+                  <div style="font-weight: 500;">Project Phoenix</div>
+                  <div style="font-size: 12px; color: var(--color-gray-500);">Platform Margin</div>
+                </td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td class="col-amount amount-positive">+$1,875.00</td>
+                <td>
+                  <button class="btn btn-secondary btn-icon-only" style="border:none;" aria-label="View Details">
+                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td><span style="font-family: var(--font-mono); color: var(--color-primary-700);">#TXN-8839</span></td>
+                <td>Oct 23, 2023</td>
+                <td>Payment</td>
+                <td>
+                  <div style="font-weight: 500;">Q4 Marketing Campaign</div>
+                  <div style="font-size: 12px; color: var(--color-gray-500);">From: Acme Corp</div>
+                </td>
+                <td><span class="badge badge-warning">Pending</span></td>
+                <td class="col-amount amount-positive">+$45,000.00</td>
+                <td>
+                  <button class="btn btn-secondary btn-icon-only" style="border:none;" aria-label="View Details">
+                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td><span style="font-family: var(--font-mono); color: var(--color-primary-700);">#TXN-8835</span></td>
+                <td>Oct 22, 2023</td>
+                <td>Payout</td>
+                <td>
+                  <div style="font-weight: 500;">Data Migration Alpha</div>
+                  <div style="font-size: 12px; color: var(--color-gray-500);">To: DataWiz LLC</div>
+                </td>
+                <td><span class="badge badge-neutral">Processing</span></td>
+                <td class="col-amount amount-negative">-$8,200.00</td>
+                <td>
+                  <button class="btn btn-secondary btn-icon-only" style="border:none;" aria-label="View Details">
+                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                  </button>
+                </td>
+              </tr>
+              <!-- More rows simulated -->
+              <tr>
+                <td><span style="font-family: var(--font-mono); color: var(--color-primary-700);">#TXN-8820</span></td>
+                <td>Oct 20, 2023</td>
+                <td>Refund</td>
+                <td>
+                  <div style="font-weight: 500;">Logo Redesign</div>
+                  <div style="font-size: 12px; color: var(--color-gray-500);">To: Stark Industries</div>
+                </td>
+                <td><span class="badge badge-success">Completed</span></td>
+                <td class="col-amount amount-negative">-$2,500.00</td>
+                <td>
+                  <button class="btn btn-secondary btn-icon-only" style="border:none;" aria-label="View Details">
+                    <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination">
+          <div class="pagination-info">Showing 1 to 5 of 1,284 entries</div>
+          <div class="pagination-controls">
+            <button class="btn btn-secondary btn-icon-only" disabled>
+              <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+            <button class="btn btn-secondary btn-icon-only" style="background: var(--color-gray-100); font-weight: 700;">1</button>
+            <button class="btn btn-secondary btn-icon-only">2</button>
+            <button class="btn btn-secondary btn-icon-only">3</button>
+            <button class="btn btn-secondary btn-icon-only">...</button>
+            <button class="btn btn-secondary btn-icon-only">
+              <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proposal Submission | Enterprise Mediator</title>
+  <style>
+    /* 
+      DESIGN SYSTEM FOUNDATION 
+      Based on input JSON specification
+    */
+    :root {
+      /* Color Palette - Primary */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      --color-primary-800: #115e59;
+
+      /* Color Palette - Neutrals */
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-800: #1e293b;
+      --color-gray-900: #0f172a;
+
+      /* Semantic Colors */
+      --color-success-bg: #f0fdf4;
+      --color-success-text: #15803d;
+      --color-success-border: #bbf7d0;
+      --color-error-bg: #fef2f2;
+      --color-error-text: #b91c1c;
+      --color-error-border: #fecaca;
+
+      /* Typography */
+      --font-primary: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
+
+      /* Spacing & Layout */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-2xl: 48px;
+      
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 12px;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* CSS Reset & Base Styles */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 
+      LAYOUT COMPONENTS 
+    */
+    .portal-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .portal-header {
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-gray-200);
+      height: 64px;
+      display: flex;
+      align-items: center;
+      padding: 0 var(--spacing-lg);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand-logo {
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--color-gray-900);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .brand-logo svg {
+      color: var(--color-primary-600);
+    }
+
+    /* Main Content Area */
+    .portal-content {
+      flex: 1;
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--spacing-xl) var(--spacing-lg);
+      display: grid;
+      grid-template-columns: 1fr 1.5fr; /* Desktop: Brief 40%, Form 60% */
+      gap: var(--spacing-2xl);
+      align-items: start;
+    }
+
+    /* 
+      PROJECT BRIEF CARD (Left Column)
+    */
+    .brief-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      position: sticky;
+      top: 88px; /* Header + spacing */
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brief-header {
+      margin-bottom: var(--spacing-lg);
+      padding-bottom: var(--spacing-lg);
+      border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .client-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-700);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .project-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-gray-900);
+      line-height: 1.3;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .project-meta {
+      font-size: 14px;
+      color: var(--color-gray-500);
+      display: flex;
+      gap: var(--spacing-md);
+    }
+
+    .brief-section {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .brief-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--color-gray-500);
+      letter-spacing: 0.05em;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .brief-text {
+      font-size: 16px;
+      color: var(--color-gray-700);
+    }
+
+    .skill-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+    }
+
+    .skill-tag {
+      background: var(--color-gray-100);
+      color: var(--color-gray-700);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* 
+      PROPOSAL FORM (Right Column)
+    */
+    .form-container {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-xl);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .form-header {
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .form-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--color-gray-900);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .form-subtitle {
+      color: var(--color-gray-500);
+      font-size: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-gray-700);
+      margin-bottom: 6px;
+    }
+
+    .form-label-required::after {
+      content: "*";
+      color: var(--color-error-text);
+      margin-left: 4px;
+    }
+
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      font-family: var(--font-primary);
+      font-size: 16px;
+      color: var(--color-gray-900);
+      background-color: var(--color-white);
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 3px var(--color-primary-100);
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .input-hint {
+      display: block;
+      font-size: 12px;
+      color: var(--color-gray-500);
+      margin-top: 6px;
+    }
+
+    /* File Upload Zone */
+    .file-upload-zone {
+      border: 2px dashed var(--color-gray-300);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-xl);
+      text-align: center;
+      background: var(--color-gray-50);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .file-upload-zone:hover, .file-upload-zone.drag-over {
+      border-color: var(--color-primary-500);
+      background: var(--color-primary-50);
+    }
+
+    .upload-icon {
+      width: 48px;
+      height: 48px;
+      color: var(--color-gray-400);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .upload-text-main {
+      font-weight: 600;
+      color: var(--color-gray-900);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .upload-text-sub {
+      font-size: 13px;
+      color: var(--color-gray-500);
+    }
+
+    .file-input-hidden {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    /* Actions */
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-xl);
+      padding-top: var(--spacing-lg);
+      border-top: 1px solid var(--color-gray-200);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 24px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary-600);
+      color: var(--color-white);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--color-primary-700);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:disabled {
+      background-color: var(--color-gray-200);
+      color: var(--color-gray-400);
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border: 1px solid var(--color-gray-300);
+      color: var(--color-gray-700);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    /* 
+      STATES & FEEDBACK 
+    */
+    .state-container {
+      display: none; /* Hidden by default, toggled via JS/CSS */
+      text-align: center;
+      padding: var(--spacing-2xl) 0;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .state-container.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .state-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .state-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-gray-900);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .state-message {
+      font-size: 16px;
+      color: var(--color-gray-600);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .success-icon { color: var(--color-success-text); }
+    .error-icon { color: var(--color-error-text); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 
+      RESPONSIVE DESIGN 
+    */
+    @media (max-width: 1024px) {
+      .portal-content {
+        grid-template-columns: 1fr; /* Stack vertically on tablet */
+        gap: var(--spacing-lg);
+      }
+
+      .brief-card {
+        position: static; /* Remove sticky on smaller screens */
+      }
+    }
+
+    @media (max-width: 640px) {
+      .portal-content {
+        padding: var(--spacing-md);
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr; /* Stack inputs on mobile */
+      }
+
+      .form-group.full-width {
+        grid-column: span 1;
+      }
+
+      .portal-header {
+        padding: 0 var(--spacing-md);
+      }
+
+      .form-actions {
+        flex-direction: column-reverse; /* Stack buttons, primary on top */
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="portal-container">
+    <!-- Header -->
+    <header class="portal-header">
+      <div class="brand-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <span>Enterprise Mediator</span>
+      </div>
+    </header>
+
+    <main class="portal-content">
+      
+      <!-- STATE: VALID TOKEN (Active View) -->
+      <!-- Left Column: Project Brief -->
+      <section class="brief-card" id="brief-section">
+        <div class="brief-header">
+          <span class="client-badge">Secure Invitation</span>
+          <h1 class="project-title">Cloud Infrastructure Migration & Optimization</h1>
+          <div class="project-meta">
+            <span>ID: PRJ-2024-089</span>
+            <span>•</span>
+            <span>Due: Oct 24, 2024</span>
+          </div>
+        </div>
+
+        <div class="brief-body">
+          <div class="brief-section">
+            <h4 class="brief-section-title">Scope Summary</h4>
+            <p class="brief-text">
+              We are seeking a qualified vendor to migrate our legacy on-premise infrastructure to AWS. The scope includes assessing current workloads, designing a cloud-native architecture, executing the migration with minimal downtime, and optimizing for cost and performance.
+            </p>
+          </div>
+
+          <div class="brief-section">
+            <h4 class="brief-section-title">Key Deliverables</h4>
+            <ul style="list-style-position: inside; color: var(--color-gray-700); margin-top: 8px;">
+              <li>Infrastructure Assessment Report</li>
+              <li>Target Architecture Design Document</li>
+              <li>Migration Execution Plan (Wave-based)</li>
+              <li>Post-Migration Performance Report</li>
+            </ul>
+          </div>
+
+          <div class="brief-section">
+            <h4 class="brief-section-title">Required Capabilities</h4>
+            <div class="skill-tags">
+              <span class="skill-tag">AWS Cloud</span>
+              <span class="skill-tag">DevOps</span>
+              <span class="skill-tag">Infrastructure as Code</span>
+              <span class="skill-tag">Kubernetes</span>
+              <span class="skill-tag">Security Compliance</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Submission Form -->
+      <section class="form-container" id="form-section">
+        <div class="form-header">
+          <h2 class="form-title">Submit Your Proposal</h2>
+          <p class="form-subtitle">Provide your estimates and approach for this opportunity.</p>
+        </div>
+
+        <form id="proposal-form" onsubmit="handleSubmit(event)">
+          <div class="form-grid">
+            <!-- Cost Input -->
+            <div class="form-group">
+              <label for="cost" class="form-label form-label-required">Estimated Cost (USD)</label>
+              <input type="number" id="cost" name="cost" class="form-input" placeholder="e.g. 50000" min="0" required aria-required="true">
+              <span class="input-hint">Total project value including all fees.</span>
+            </div>
+
+            <!-- Timeline Input -->
+            <div class="form-group">
+              <label for="timeline" class="form-label form-label-required">Estimated Timeline</label>
+              <input type="text" id="timeline" name="timeline" class="form-input" placeholder="e.g. 12 weeks" required aria-required="true">
+              <span class="input-hint">Duration from kickoff to handover.</span>
+            </div>
+
+            <!-- Personnel -->
+            <div class="form-group full-width">
+              <label for="personnel" class="form-label form-label-required">Key Personnel & Roles</label>
+              <textarea id="personnel" name="personnel" class="form-textarea" placeholder="List key team members and their roles..." required aria-required="true"></textarea>
+            </div>
+
+            <!-- Methodology -->
+            <div class="form-group full-width">
+              <label for="methodology" class="form-label">Approach / Methodology Summary</label>
+              <textarea id="methodology" name="methodology" class="form-textarea" placeholder="Briefly describe your approach..."></textarea>
+            </div>
+
+            <!-- File Upload -->
+            <div class="form-group full-width">
+              <label class="form-label form-label-required">Proposal Document</label>
+              <div class="file-upload-zone" id="drop-zone">
+                <input type="file" id="file-upload" class="file-input-hidden" accept=".pdf,.docx" required aria-required="true" onchange="handleFileSelect(this)">
+                <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <div class="upload-text-main">Click to upload or drag and drop</div>
+                <div class="upload-text-sub">PDF or DOCX (Max 10MB)</div>
+                <div id="file-name-display" style="margin-top: 8px; font-weight: 600; color: var(--color-primary-600);"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="submit-btn">Submit Proposal</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- STATE: SUCCESS (Hidden by default) -->
+      <div id="success-state" class="state-container">
+        <svg class="state-icon success-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h2 class="state-title">Proposal Submitted Successfully</h2>
+        <p class="state-message">Thank you for your submission. We have sent a confirmation email to <strong>contact@vendor.com</strong>. You will be notified once the review process is complete.</p>
+        <button class="btn btn-secondary" onclick="window.location.reload()">Return to Portal</button>
+      </div>
+
+      <!-- STATE: EXPIRED (Hidden by default) -->
+      <div id="expired-state" class="state-container">
+        <svg class="state-icon error-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h2 class="state-title">Link Expired</h2>
+        <p class="state-message">This secure invitation link has expired or is no longer valid. If you believe this is an error, please contact the project administrator.</p>
+        <button class="btn btn-primary">Contact Support</button>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    /* 
+      Interactive Demo Logic
+      Simulates file selection and form submission state changes.
+    */
+
+    // File Upload Visual Feedback
+    function handleFileSelect(input) {
+      const fileNameDisplay = document.getElementById('file-name-display');
+      if (input.files && input.files[0]) {
+        fileNameDisplay.textContent = input.files[0].name;
+        document.getElementById('drop-zone').style.borderColor = 'var(--color-primary-500)';
+        document.getElementById('drop-zone').style.backgroundColor = 'var(--color-primary-50)';
+      } else {
+        fileNameDisplay.textContent = '';
+      }
+    }
+
+    // Drag and Drop Effects
+    const dropZone = document.getElementById('drop-zone');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+      dropZone.classList.add('drag-over');
+    }
+
+    function unhighlight(e) {
+      dropZone.classList.remove('drag-over');
+    }
+
+    // Form Submission Simulation
+    function handleSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      
+      // Loading State
+      btn.disabled = true;
+      btn.innerHTML = `
+        <svg class="animate-spin" style="width: 16px; height: 16px; margin-right: 8px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Submitting...
+      `;
+
+      // Simulate API delay
+      setTimeout(() => {
+        // Hide Form
+        document.getElementById('brief-section').style.display = 'none';
+        document.getElementById('form-section').style.display = 'none';
+        
+        // Show Success
+        document.getElementById('success-state').classList.add('active');
+        
+        // Reset scrolling
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
