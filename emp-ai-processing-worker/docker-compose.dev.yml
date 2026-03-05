@@ -1,0 +1,35 @@
+version: '3.4'
+
+services:
+  enterprisemediator.aiworker:
+    image: enterprisemediatoraiworker
+    build:
+      context: .
+      dockerfile: src/EnterpriseMediator.AiWorker/Dockerfile
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - Ai__OpenAiEndpoint=https://sample-resource.openai.azure.com/
+      - Ai__OpenAiKey=sample-key
+      - Aws__Region=us-east-1
+      - Aws__S3BucketName=sample-bucket
+      - ConnectionStrings__Postgres=Host=db;Database=emp_dev;Username=postgres;Password=[REDACTED]
+      - RabbitMq__Host=rabbitmq
+      - RabbitMq__Username=guest
+      - RabbitMq__Password=guest
+    depends_on:
+      - rabbitmq
+      - db
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_PASSWORD=[REDACTED]
+      - POSTGRES_DB=emp_dev
+    ports:
+      - "5432:5432"

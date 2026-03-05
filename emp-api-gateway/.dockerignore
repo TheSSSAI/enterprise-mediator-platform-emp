@@ -1,0 +1,45 @@
+# Dependencies
+**/bin/
+**/obj/
+**/packages/
+**/root/
+
+# IDE and specific files
+.idea/
+.vscode/
+*.swp
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.launchSettings.json
+
+# Test results
+**/TestResults/
+**/coverage/
+**/coverage.xml
+**/coverage.json
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+pipeline.yaml
+
+# Local configuration
+appsettings.Local.json
+appsettings.Development.json
+*.env
+.env*
+
+# OS generated files
+.DS_Store
+Thumbs.db
