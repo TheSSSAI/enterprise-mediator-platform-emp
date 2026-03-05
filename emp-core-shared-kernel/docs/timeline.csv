@@ -1,0 +1,3 @@
+"scenario_name","team_size","estimated_duration_weeks","total_cost","risk_level","capacity_utilization","skill_constraints","critical_path_duration","parallel_work_percentage","resource_bottlenecks","mitigation_strategies","success_probability","quality_risk","timeline_buffer"
+"Baseline (Current 4-Person Team)","4","6","23205","High","45","Single points of failure in DevOps and AI; Polyglot stack friction","5","40","AI Engineer in Sprint 3 (SOW extraction + Embeddings)","Strict prioritization; Defer non-critical UI tasks","70","Medium","1"
+"Augmented (Add Full-Stack Python/React Dev)","5","5","31000","Medium","35","Onboarding overhead for polyglot environment","4","60","Integration testing coordination","New resource assists UI and AI integration tests","85","Low","2"
