@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","0","2","12","[""Financial Transaction Integrity"",""Data Privacy & Compliance (GDPR/SOC 2)"",""AI/Vector Search Performance Stability""]","[""Finalize Saga pattern design for Wise payouts before coding begins"",""Establish PII sanitization validation protocols for AI worker"",""Configure K6 performance tests for pgvector indexing strategy""]"

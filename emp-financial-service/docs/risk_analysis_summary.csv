@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","0","2","12.5","[""Financial Integrity & Ledger Consistency"",""AI Reliability & Data Accuracy"",""Scalability of Data Operations""]","[""Finalize Saga pattern design for Stripe/Wise integration"",""Define 'Human-in-the-Loop' workflow for AI extraction validation"",""Benchmark pgvector HNSW index performance with seed data""]"

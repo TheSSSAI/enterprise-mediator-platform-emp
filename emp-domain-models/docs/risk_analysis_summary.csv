@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","1","2","15.3","[""Data Compliance vs. Architecture Complexity"",""AI Reliability & Human Oversight"",""Financial Transaction Integrity""]","[""Define GDPR crypto-shredding architecture strategy immediately"",""Implement Saga pattern library for financial transactions"",""Finalize Human-in-the-Loop UI designs for AI data validation""]"

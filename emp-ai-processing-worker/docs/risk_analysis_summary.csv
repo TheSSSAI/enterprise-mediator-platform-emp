@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"7","0","3","12.4","[""Financial Transaction Integrity (Distributed Systems)"",""AI/ML Reliance & Data Privacy"",""Third-Party Dependency Management""]","[""Finalize Saga pattern design for financial workflows (WI-FIN-001)"",""Establish PII sanitization confidence thresholds with Legal/Compliance"",""Verify Stripe Connect and Wise account limitations immediately""]"

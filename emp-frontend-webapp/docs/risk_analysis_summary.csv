@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","1","2","14.1","[""AI/LLM Reliability & Privacy"",""Financial Transaction Consistency"",""Cloud Infrastructure Complexity""]","[""Finalize PII redaction strategy before processing real data"",""Implement idempotent webhook handling for financial services"",""Validate Terraform EKS autoscaling configurations""]"
