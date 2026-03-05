@@ -1,0 +1,40 @@
+name: Build and Pack Shared Kernel
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'src/EnterpriseMediator.Core.SharedKernel/**'
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'src/EnterpriseMediator.Core.SharedKernel/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore src/EnterpriseMediator.Core.SharedKernel/EnterpriseMediator.Core.SharedKernel.csproj
+
+    - name: Build
+      run: dotnet build src/EnterpriseMediator.Core.SharedKernel/EnterpriseMediator.Core.SharedKernel.csproj --no-restore --configuration Release
+
+    - name: Pack
+      if: github.ref == 'refs/heads/main'
+      run: dotnet pack src/EnterpriseMediator.Core.SharedKernel/EnterpriseMediator.Core.SharedKernel.csproj --no-build --configuration Release --output ./nupkgs
+
+    - name: Publish Artifacts
+      if: github.ref == 'refs/heads/main'
+      uses: actions/upload-artifact@v3
+      with:
+        name: nuget-packages
+        path: ./nupkgs
