@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>EnterpriseMediator.ProjectManagement.Domain</RootNamespace>
+    <AssemblyName>EnterpriseMediator.ProjectManagement.Domain</AssemblyName>
+  </PropertyGroup>
+
+  <!-- 
+    Domain layer has NO external dependencies to other projects.
+    It defines the core business entities, enums, exceptions, and interfaces.
+  -->
+
+</Project>
