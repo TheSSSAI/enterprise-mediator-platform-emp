@@ -1,0 +1,3 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","lead_time_days","responsible_team","coordination_required","risk_level","mitigation_plan","status","resolution_date","impact_if_delayed","escalation_required"
+"DEP-001","TASK-INFRA-001-02","TASK-BE-005-01","Technical","Database must exist before Schema/Migrations can run","true","1","DevOps","true","Low","Use local postgres container for dev","Active","2025-05-05","Backend development blocked",""
+"DEP-002","TASK-FIN-001-02","TASK-FIN-002-03","Technical","Invoicing data structures required for Payout Saga logic","true","2","Backend","","High","Define shared interfaces early","Active","2025-05-25","Payouts feature delayed to Sprint 4",""

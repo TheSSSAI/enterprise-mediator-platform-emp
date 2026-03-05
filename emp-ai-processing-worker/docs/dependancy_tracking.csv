@@ -1,0 +1,3 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","lead_time_days","responsible_team","coordination_required","risk_level","mitigation_plan","status","resolution_date","impact_if_delayed","escalation_required"
+"DEP-001","TSK-INFRA-001-02","TSK-SOW-001-03","Infrastructure","Database must be provisioned before Transactional State logic can be deployed","true","2","DevOps","true","Medium","Use local Docker Postgres for early dev","Active","2025-05-06","Blocks SOW Upload deployment",""
+"DEP-002","TSK-SOW-001-01","TSK-SOW-002-02","Technical","Worker needs S3 upload service pattern or access to S3 keys","true","1","Backend Team","","Low","Define S3 Key schema early","Active","2025-05-08","Delays text extraction work",""

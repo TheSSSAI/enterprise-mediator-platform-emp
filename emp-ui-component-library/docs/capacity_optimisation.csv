@@ -1,0 +1,3 @@
+"optimization_area","current_state","recommended_action","expected_benefit","implementation_cost","timeline","success_metrics","roi_calculation"
+"Cross-training","Siloed DevOps knowledge","Backend Dev 1 to complete 'Terraform for Developers' crash course","Create backup capacity for simple infra changes","20","2 weeks","Backend Dev 1 can merge infra PRs independently","Prevents 3-day blocker on infra tweaks ($3000 value)"
+"Role Balance","Backend Lead overloaded with 90% utilization","Shift code review load for non-critical features to Senior Dev","Frees up 10% capacity for architectural oversight","","Immediate","Backend Lead utilization drops to <85%","Reduces burnout risk and architectural debt"

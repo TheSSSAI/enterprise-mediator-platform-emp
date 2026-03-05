@@ -1,0 +1,96 @@
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as Login Component
+    participant Store as Zustand AuthStore
+    participant Cognito as AWS Cognito SDK
+    participant API as Backend API
+
+    note over Store: Initial State: { status: 'IDLE', user: null }
+
+    %% Login Flow
+    rect rgb(240, 248, 255)
+        User->>UI: Enters Email & Password
+        UI->>Store: login(email, password)
+        activate Store
+        Store->>Store: set({ status: 'LOADING' })
+        Store->>Cognito: initiateAuth(USERNAME, PASSWORD)
+        
+        alt Credentials Invalid
+            Cognito-->>Store: Error (NotAuthorized)
+            Store->>Store: set({ status: 'ERROR', error: 'Invalid credentials' })
+            Store-->>UI: Throw Error
+            UI-->>User: Display "Invalid email or password"
+        else Credentials Valid, MFA Required
+            Cognito-->>Store: Response { ChallengeName: 'SOFTWARE_TOKEN_MFA' }
+            Store->>Store: set({ status: 'MFA_REQUIRED', challenge: session })
+            Store-->>UI: Return 'MFA_REQUIRED'
+            UI-->>User: Display MFA Input Form
+        end
+        deactivate Store
+    end
+
+    %% MFA Flow
+    rect rgb(255, 250, 240)
+        User->>UI: Enters 6-digit MFA Code
+        UI->>Store: confirmMFA(code)
+        activate Store
+        Store->>Store: set({ status: 'LOADING' })
+        Store->>Cognito: respondToAuthChallenge(MFA_CODE, session)
+        
+        alt Code Invalid
+            Cognito-->>Store: Error (CodeMismatch)
+            Store->>Store: set({ status: 'MFA_REQUIRED', error: 'Invalid code' })
+            Store-->>UI: Throw Error
+            UI-->>User: Display "Invalid code, try again"
+        else Code Valid
+            Cognito-->>Store: Response { AuthenticationResult: { AccessToken, IdToken, RefreshToken } }
+            Store->>Store: set({ status: 'AUTHENTICATED', user: decode(IdToken), tokens: ... })
+            Store-->>UI: Return Success
+            UI-->>User: Redirect to Dashboard
+        end
+        deactivate Store
+    end
+
+    %% API Access & Token Refresh
+    rect rgb(240, 255, 240)
+        User->>UI: Accesses Protected Resource
+        UI->>API: GET /api/resource (Bearer AccessToken)
+        
+        alt Token Valid
+            API-->>UI: 200 OK (Data)
+        else Token Expired (401)
+            API-->>UI: 401 Unauthorized
+            UI->>Store: refreshSession()
+            activate Store
+            Store->>Cognito: initiateAuth(REFRESH_TOKEN_AUTH, RefreshToken)
+            
+            alt Refresh Successful
+                Cognito-->>Store: New AccessToken & IdToken
+                Store->>Store: set({ tokens: { newTokens } })
+                Store-->>UI: Return New Token
+                UI->>API: Retry GET /api/resource
+                API-->>UI: 200 OK (Data)
+            else Refresh Failed (Session Expired)
+                Cognito-->>Store: Error (NotAuthorized)
+                Store->>Store: logout() (Trigger cleanup)
+                Store-->>UI: Throw Error
+                UI-->>User: Redirect to Login
+            end
+            deactivate Store
+        end
+    end
+
+    %% Logout Flow
+    rect rgb(255, 240, 240)
+        User->>UI: Clicks Logout
+        UI->>Store: logout()
+        activate Store
+        Store->>Cognito: globalSignOut(AccessToken)
+        Cognito-->>Store: Success
+        Store->>Store: set({ status: 'IDLE', user: null, tokens: null })
+        Store->>Store: localStorage.clear()
+        Store-->>UI: Success
+        deactivate Store
+        UI-->>User: Redirect to Login Page
+    end

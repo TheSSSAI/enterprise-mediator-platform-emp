@@ -1,0 +1,4 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","lead_time_days","responsible_team","coordination_required","risk_level","mitigation_plan","status","resolution_date","impact_if_delayed","escalation_required"
+"DEP-001","TASK-INFRA-001.1","TASK-INFRA-001.2","Technical","EKS requires VPC networking","true","1","DevOps","","Low","Design VPC first","Active","2025-05-03","Cluster creation blocked",""
+"DEP-002","TASK-AI-002.1","TASK-AI-002.2","Code","Extractor needs worker scaffold","true","2","AI Team","","Low","Develop locally","Active","2025-05-05","AI pipeline delay",""
+"DEP-003","TASK-FIN-002.1","TASK-FIN-002.2","Code","Saga needs API Client","true","3","Backend Team","","Medium","Mock API client interface","Active","2025-05-07","Finance workflow blocked",""

@@ -1,0 +1,64 @@
+sequenceDiagram
+    autonumber
+    actor Client as Client Contact
+    participant SPA as Frontend SPA
+    participant API as Backend API
+    participant DB as PostgreSQL DB
+    participant SES as AWS SES
+
+    Note over Client, SPA: Triggered via Email Link
+
+    Client->>SPA: Click /approve/milestone/{token}
+    activate SPA
+    SPA->>SPA: Parse Token from URL
+    SPA->>API: GET /api/v1/milestone-approvals/{token}
+    activate API
+    
+    Note right of API: Security Checkpoint
+    API->>API: Validate Token (Sig, Expiry)
+    
+    alt Token Invalid / Expired / Used
+        API-->>SPA: 401/410 Error
+        SPA-->>Client: Display "Link Expired" Error Page
+    else Token Valid
+        API->>DB: SELECT Milestone Details WHERE Token = {token}
+        activate DB
+        DB-->>API: Return Milestone Data
+        deactivate DB
+        API-->>SPA: 200 OK (MilestoneDTO)
+        SPA-->>Client: Render Milestone Review Page
+    end
+    deactivate API
+
+    Note over Client, SPA: User Review Phase
+
+    Client->>SPA: Review Details & Click "Approve"
+    SPA->>API: POST /api/v1/milestone-approvals/{token}/approve
+    activate API
+    
+    API->>API: Re-validate Token & State
+
+    rect rgb(240, 248, 255)
+        note right of API: Atomic Transaction
+        API->>DB: BEGIN TRANSACTION
+        activate DB
+        API->>DB: UPDATE Milestones SET Status='Approved'
+        API->>DB: UPDATE ApprovalTokens SET UsedAt=NOW()
+        API->>DB: INSERT INTO AuditLog (Action='MilestoneApproved')
+        API->>DB: COMMIT TRANSACTION
+        DB-->>API: Transaction Success
+        deactivate DB
+    end
+
+    par Async Notification
+        API->>SES: SendEmail(Admin, 'Milestone Approved')
+        activate SES
+        SES-->>API: MessageQueued
+        deactivate SES
+    and API Response
+        API-->>SPA: 200 OK { success: true }
+    end
+    deactivate API
+
+    SPA-->>Client: Display Success/Thank You Message
+    deactivate SPA

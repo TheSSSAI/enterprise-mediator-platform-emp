@@ -1,0 +1,5 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","risk_level","mitigation_plan"
+"DEP-001","TASK-INF-001","TASK-INF-002","Technical","VPC must exist before EKS Cluster","true","Medium","Use validated Terraform modules"
+"DEP-002","TASK-SEC-001","TASK-SEC-002","Technical","Cognito Pool ID required for JWT Strategy","true","Low","Mock config for local dev"
+"DEP-003","TASK-AI-001","TASK-AI-002","Data","Raw text required for PII Redaction","true","High","Use sample text fixtures for testing redaction independently"
+"DEP-004","TASK-PAY-001","TASK-PAY-004","Technical","Saga State Machine design required before Coordinator implementation","true","High","Complete design in Sprint 2 or early Sprint 3"

@@ -1,0 +1,3 @@
+"optimization_area","current_state","recommended_action","expected_benefit","implementation_cost","timeline","success_metrics","roi_calculation"
+"Frontend Utilization","Frontend Dev underutilized (26.5%) in initial sprints","Pull forward future UI tasks or assign internal tooling UI","Accelerated UI development; Reduced pressure in later phases","","Sprint 1-2","Frontend utilization > 60%","Zero cost productivity gain"
+"QA Shift-Left","QA Engineer utilization low until Sprint 3","Involve QA in Sprint 1/2 for unit test review and automation framework setup","Reduced defect rate in Sprint 3; Faster regression testing","","Sprint 1-2","Test framework ready before Sprint 3 code complete","Avoidance of rework estimated at 20 hours"

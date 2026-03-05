@@ -1,0 +1,5 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","status"
+"DEP-001","TASK-INF-001-01","TASK-INF-001-02","Technical","VPC required for EKS Control Plane","true","Active"
+"DEP-002","TASK-INF-002-01","TASK-API-001-01","Technical","Cognito User Pool required for Auth Module","true","Active"
+"DEP-003","TASK-AI-001-02","TASK-AI-002-01","Technical","SQS Event Producer required for AI Worker","true","Active"
+"DEP-004","TASK-FIN-001-02","TASK-FIN-001-03","Technical","Webhook Handler required for Ledger Logic","true","Active"

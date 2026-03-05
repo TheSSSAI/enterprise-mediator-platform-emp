@@ -1,0 +1,4 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","lead_time_days","responsible_team","coordination_required","risk_level","mitigation_plan","status","resolution_date","impact_if_delayed","escalation_required"
+"DEP-001","TASK-INF-001","TASK-INF-002","Technical","VPC must exist before EKS cluster creation","true","","DevOps","","Medium","Execute in same Terraform state sequence","Active","2025-05-05","Blocks entire application runtime",""
+"DEP-002","TASK-AI-001","TASK-AI-002","Data","Raw text extraction needed before PII sanitization","true","1","Backend/AI","true","High","Mock text data for AI dev while parser is built","Active","2025-05-18","Delays AI pipeline delivery",""
+"DEP-003","TASK-FIN-001","TASK-FIN-002","Code","Invoice entity required for Payment Intent creation","true","","Backend","","Low","Define DTO interface early","Active","2025-06-04","Blocks payment integration",""

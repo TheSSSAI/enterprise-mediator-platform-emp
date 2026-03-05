@@ -1,0 +1,4 @@
+"dependency_id","from_task","to_task","dependency_type","description","critical_path","lead_time_days","responsible_team","coordination_required","risk_level","mitigation_plan","status","resolution_date","impact_if_delayed","escalation_required"
+"DEP-INF-001","TSK-INF-001","TSK-INF-002","Technical","EKS Cluster requires VPC Network","true","2","DevOps","","Low","Standard Terraform modules","Active","2025-05-05","Blocks all application deployment",""
+"DEP-AI-001","TSK-INF-006","WI-AI-002","Technical","Vector Search requires pgvector extension","true","1","Backend","true","Medium","Use standard Postgres search as fallback","Active","2025-05-08","Delays recommendation engine",""
+"DEP-FIN-001","TSK-FIN-001","TSK-FIN-002","Security","Webhook controller needs raw body middleware","true","2","Backend","","High","Pair programming on middleware","Active","2025-06-02","Cannot verify Stripe payments securely","true"

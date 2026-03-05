@@ -1,0 +1,6 @@
+"dependency_id","from_task","to_task","description","status","critical_path"
+"DEP-001","TASK-INF-001","TASK-INF-002","Cluster requires VPC","Planned","true"
+"DEP-002","TASK-INF-002","TASK-INF-003","Nodes require Control Plane","Planned","true"
+"DEP-003","TASK-AI-001","TASK-AI-002","Sanitization logic needs Worker Service shell","Planned","true"
+"DEP-004","TASK-AI-002","TASK-AI-003","Extraction needs sanitized text input","Planned","true"
+"DEP-005","TASK-FIN-002","TASK-FIN-003","Payment logic requires secure webhook endpoint","Planned","true"
