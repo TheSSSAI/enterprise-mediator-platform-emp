@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12.0</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Authors>Enterprise Mediator Team</Authors>
+    <Company>Enterprise Mediator</Company>
+    <Product>Project Management Service</Product>
+    <Copyright>Copyright © 2024</Copyright>
+  </PropertyGroup>
+</Project>
