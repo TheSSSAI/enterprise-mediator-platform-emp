@@ -1,0 +1,64 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnterpriseMediator.Financial.Domain", "src\EnterpriseMediator.Financial.Domain\EnterpriseMediator.Financial.Domain.csproj", "{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnterpriseMediator.Financial.Application", "src\EnterpriseMediator.Financial.Application\EnterpriseMediator.Financial.Application.csproj", "{2B3C4D5E-6F7A-8B9C-0D1E-2F3A4B5C6D7E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnterpriseMediator.Financial.Infrastructure", "src\EnterpriseMediator.Financial.Infrastructure\EnterpriseMediator.Financial.Infrastructure.csproj", "{3C4D5E6F-7A8B-9C0D-1E2F-3A4B5C6D7E8F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnterpriseMediator.Financial.Web.API", "src\EnterpriseMediator.Financial.Web.API\EnterpriseMediator.Financial.Web.API.csproj", "{4D5E6F7A-8B9C-0D1E-2F3A-4B5C6D7E8F9A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnterpriseMediator.Financial.UnitTests", "tests\EnterpriseMediator.Financial.UnitTests\EnterpriseMediator.Financial.UnitTests.csproj", "{5E6F7A8B-9C0D-1E2F-3A4B-5C6D7E8F9A0B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EnterpriseMediator.Financial.IntegrationTests", "tests\EnterpriseMediator.Financial.IntegrationTests\EnterpriseMediator.Financial.IntegrationTests.csproj", "{6F7A8B9C-0D1E-2F3A-4B5C-6D7E8F9A0B1C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7F8A9B0C-1D2E-3F4A-5B6C-7D8E9F0A1B2C}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+		Dockerfile = Dockerfile
+		nuget.config = nuget.config
+		global.json = global.json
+		.gitignore = .gitignore
+		.editorconfig = .editorconfig
+		.dockerignore = .dockerignore
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B3C4D5E-6F7A-8B9C-0D1E-2F3A4B5C6D7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B3C4D5E-6F7A-8B9C-0D1E-2F3A4B5C6D7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B3C4D5E-6F7A-8B9C-0D1E-2F3A4B5C6D7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B3C4D5E-6F7A-8B9C-0D1E-2F3A4B5C6D7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C4D5E6F-7A8B-9C0D-1E2F-3A4B5C6D7E8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C4D5E6F-7A8B-9C0D-1E2F-3A4B5C6D7E8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C4D5E6F-7A8B-9C0D-1E2F-3A4B5C6D7E8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C4D5E6F-7A8B-9C0D-1E2F-3A4B5C6D7E8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D5E6F7A-8B9C-0D1E-2F3A-4B5C6D7E8F9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D5E6F7A-8B9C-0D1E-2F3A-4B5C6D7E8F9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D5E6F7A-8B9C-0D1E-2F3A-4B5C6D7E8F9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D5E6F7A-8B9C-0D1E-2F3A-4B5C6D7E8F9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E6F7A8B-9C0D-1E2F-3A4B-5C6D7E8F9A0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E6F7A8B-9C0D-1E2F-3A4B-5C6D7E8F9A0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E6F7A8B-9C0D-1E2F-3A4B-5C6D7E8F9A0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E6F7A8B-9C0D-1E2F-3A4B-5C6D7E8F9A0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F7A8B9C-0D1E-2F3A-4B5C-6D7E8F9A0B1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F7A8B9C-0D1E-2F3A-4B5C-6D7E8F9A0B1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F7A8B9C-0D1E-2F3A-4B5C-6D7E8F9A0B1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F7A8B9C-0D1E-2F3A-4B5C-6D7E8F9A0B1C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+	EndGlobalSection
+EndGlobal
