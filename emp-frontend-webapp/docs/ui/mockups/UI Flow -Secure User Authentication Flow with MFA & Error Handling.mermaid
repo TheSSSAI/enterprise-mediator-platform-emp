@@ -1,0 +1,80 @@
+flowchart TD
+    %% Node Definitions
+    Start([User Visits Login Page])
+    InputCreds[User Enters Email & Password]
+    SubmitAction(User Clicks 'Login')
+    
+    %% Network Check Layer
+    CheckNetwork{Network Available?}
+    NetError[Display Error:\n'Connection Failed.\nPlease check internet.']
+    
+    %% Security & Rate Limiting Layer
+    CheckRateLimit{Rate Limit\nExceeded?}
+    LockoutState[Display Error:\n'Too many attempts.\nTry again later.']
+    
+    %% Credential Validation Layer
+    ValidateCreds{Credentials Valid?}
+    GenericAuthError[Display Generic Error:\n'Invalid email or password']
+    
+    %% MFA Decision Layer
+    CheckMFAEnabled{MFA Enabled?}
+    
+    %% MFA Flow
+    MFAChallenge[Display MFA Challenge Screen]
+    InputMFACode[/User Enters 6-digit TOTP/]
+    ValidateMFA{Validate Code}
+    
+    %% MFA Error Handling
+    CheckMFARetries{Retries Remaining?}
+    MFAInvalidError[Display Error:\n'Invalid Authentication Code']
+    MFALockout[Display Error:\n'Max attempts reached.\nSession reset.']
+    
+    %% Success State
+    GenSession[Generate Session Tokens\n(JWT)]
+    Dashboard([Redirect to Dashboard])
+
+    %% Flow Connections
+    Start --> InputCreds
+    InputCreds --> SubmitAction
+    SubmitAction --> CheckNetwork
+    
+    CheckNetwork -- No --> NetError
+    NetError --> InputCreds
+    
+    CheckNetwork -- Yes --> CheckRateLimit
+    CheckRateLimit -- Yes --> LockoutState
+    LockoutState --> InputCreds
+    
+    CheckRateLimit -- No --> ValidateCreds
+    ValidateCreds -- No --> GenericAuthError
+    GenericAuthError --> InputCreds
+    
+    ValidateCreds -- Yes --> CheckMFAEnabled
+    CheckMFAEnabled -- No --> GenSession
+    
+    CheckMFAEnabled -- Yes --> MFAChallenge
+    MFAChallenge --> InputMFACode
+    InputMFACode --> ValidateMFA
+    
+    ValidateMFA -- Invalid --> CheckMFARetries
+    CheckMFARetries -- Yes --> MFAInvalidError
+    MFAInvalidError --> InputMFACode
+    
+    CheckMFARetries -- No --> MFALockout
+    MFALockout --> InputCreds
+    
+    ValidateMFA -- Valid --> GenSession
+    GenSession --> Dashboard
+
+    %% Styling
+    classDef process fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#f57f17
+    classDef error fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#b71c1c
+    classDef success fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#1b5e20
+    classDef startend fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c
+
+    class InputCreds,SubmitAction,MFAChallenge,InputMFACode,GenSession process
+    class CheckNetwork,CheckRateLimit,ValidateCreds,CheckMFAEnabled,ValidateMFA,CheckMFARetries decision
+    class NetError,LockoutState,GenericAuthError,MFAInvalidError,MFALockout error
+    class Dashboard success
+    class Start startend

@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"7","0","2","11.8","[""Distributed Financial Consistency"",""AI Processing Reliability"",""Performance at Scale""]","[""Define Saga/Reconciliation pattern for Stripe integration"",""Prototype Node.js Worker Threads for SOW/CSV processing to verify non-blocking behavior"",""Establish Human-in-the-Loop validation UI for AI outputs""]"

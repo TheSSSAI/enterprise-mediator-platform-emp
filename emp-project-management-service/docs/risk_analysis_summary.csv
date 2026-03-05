@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","1","1","13.5","[""Financial Transaction Integrity"",""Data Privacy & Compliance (GDPR/PII)"",""System Performance & Scalability""]","[""Implement PII redaction layer prior to OpenAI integration (RISK-002)"",""Design Saga pattern architecture for payouts before coding (RISK-001)"",""Validate Terraform EKS blueprints to ensure infrastructure feasibility (RISK-006)""]"

@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","0","2","12.33","[""Financial Transaction Integrity"",""AI Reliability & Data Privacy"",""Third-Party Integration Stability""]","[""Design Saga pattern implementation for Payout Service (WI-FIN-003)"",""Define JSON schemas for OpenAI SOW extraction (WI-SOW-002)"",""Verify AWS Comprehend PII redaction capabilities against sample SOWs""]"

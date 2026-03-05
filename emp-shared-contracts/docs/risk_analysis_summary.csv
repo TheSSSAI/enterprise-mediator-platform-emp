@@ -1,0 +1,2 @@
+"total_risks_identified","critical_risks","high_priority_risks","average_risk_score","key_risk_themes","immediate_actions_required"
+"6","0","3","13.6","[""AI Reliability & Compliance"",""Financial Data Integrity"",""External API Dependencies""]","[""Implement Human-in-the-Loop UI validation for AI outputs"",""Configure AWS Macie for PII detection in S3"",""Establish Idempotency guards for Stripe Webhooks""]"
