@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendor Proposal Portal - Enterprise Mediator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS 
+      Based on "2040" aesthetic: Teal Primary, Clean Grays, Rounded Geometry 
+    */
+    :root {
+      /* Color Palette - Primary (Teal) */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      
+      /* Color Palette - Neutrals */
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-900: #0f172a;
+
+      /* Semantic Colors */
+      --color-success: #22c55e;
+      --color-success-bg: #f0fdf4;
+      --color-error: #ef4444;
+      --color-error-bg: #fef2f2;
+      --color-warning: #f59e0b;
+      --color-warning-bg: #fffbeb;
+
+      /* Typography */
+      --font-primary: 'Plus Jakarta Sans', sans-serif;
+      --font-secondary: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Spacing & Layout */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-2xl: 48px;
+      
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+
+      /* Effects */
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      
+      --transition-base: all 0.2s ease-in-out;
+    }
+
+    /* RESET & BASE STYLES */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-secondary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-700);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-primary);
+      color: var(--color-gray-900);
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    a {
+      color: var(--color-primary-600);
+      text-decoration: none;
+      transition: var(--transition-base);
+    }
+
+    a:hover {
+      color: var(--color-primary-700);
+    }
+
+    /* UTILITIES */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 var(--spacing-lg);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-primary);
+    }
+
+    .badge--primary {
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-700);
+      border: 1px solid var(--color-primary-100);
+    }
+
+    .badge--neutral {
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-600);
+      border: 1px solid var(--color-gray-200);
+    }
+
+    .text-sm { font-size: 14px; }
+    .text-xs { font-size: 12px; }
+    .font-mono { font-family: var(--font-mono); }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* HEADER */
+    .portal-header {
+      background-color: var(--color-white);
+      border-bottom: 1px solid var(--color-gray-200);
+      padding: var(--spacing-md) 0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .portal-header__content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .portal-header__logo {
+      font-family: var(--font-primary);
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--color-primary-600);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .portal-header__status {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    /* MAIN LAYOUT */
+    .portal-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-lg);
+      padding: var(--spacing-xl) 0;
+    }
+
+    @media (min-width: 1024px) {
+      .portal-layout {
+        grid-template-columns: 380px 1fr;
+        align-items: start;
+      }
+    }
+
+    /* PROJECT BRIEF (SIDEBAR) */
+    .brief-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    @media (min-width: 1024px) {
+      .brief-card {
+        position: sticky;
+        top: 100px;
+        max-height: calc(100vh - 140px);
+        overflow-y: auto;
+      }
+    }
+
+    .brief-card__header {
+      margin-bottom: var(--spacing-lg);
+      padding-bottom: var(--spacing-md);
+      border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .brief-card__meta {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+      margin-top: var(--spacing-sm);
+    }
+
+    .brief-section {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .brief-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .brief-section__title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-gray-500);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .skill-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+    }
+
+    /* PROPOSAL FORM AREA */
+    .proposal-area {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-lg);
+    }
+
+    .card {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card__header {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    /* FORM ELEMENTS */
+    .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-primary);
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--color-gray-700);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      font-family: var(--font-secondary);
+      font-size: 16px;
+      color: var(--color-gray-900);
+      transition: var(--transition-base);
+      background-color: var(--color-white);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 2px var(--color-primary-100);
+    }
+
+    .form-input::placeholder {
+      color: var(--color-gray-400);
+    }
+
+    .form-input--textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-md);
+    }
+
+    @media (min-width: 640px) {
+      .form-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .input-group {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-gray-400);
+    }
+
+    .form-input.has-icon {
+      padding-left: 36px;
+    }
+
+    /* FILE UPLOAD */
+    .file-upload {
+      border: 2px dashed var(--color-gray-300);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-xl);
+      text-align: center;
+      transition: var(--transition-base);
+      cursor: pointer;
+      background-color: var(--color-gray-50);
+    }
+
+    .file-upload:hover, .file-upload.drag-over {
+      border-color: var(--color-primary-500);
+      background-color: var(--color-primary-50);
+    }
+
+    .file-upload__icon {
+      width: 48px;
+      height: 48px;
+      color: var(--color-gray-400);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .file-upload__text {
+      color: var(--color-gray-600);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .file-upload__hint {
+      color: var(--color-gray-400);
+      font-size: 12px;
+    }
+
+    /* Q&A SECTION */
+    .qa-container {
+      margin-top: var(--spacing-xl);
+    }
+
+    .qa-item {
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      margin-bottom: var(--spacing-md);
+      background-color: var(--color-gray-50);
+    }
+
+    .qa-item__q {
+      font-weight: 600;
+      color: var(--color-gray-800);
+      margin-bottom: var(--spacing-xs);
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .qa-item__q::before {
+      content: 'Q';
+      color: var(--color-primary-600);
+    }
+
+    .qa-item__a {
+      color: var(--color-gray-600);
+      display: flex;
+      gap: var(--spacing-sm);
+      margin-top: var(--spacing-sm);
+      padding-top: var(--spacing-sm);
+      border-top: 1px solid var(--color-gray-200);
+    }
+
+    .qa-item__a::before {
+      content: 'A';
+      color: var(--color-gray-400);
+      font-weight: 600;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-primary);
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: var(--transition-base);
+      border: none;
+      gap: var(--spacing-sm);
+    }
+
+    .btn--primary {
+      background-color: var(--color-primary-600);
+      color: var(--color-white);
+    }
+
+    .btn--primary:hover {
+      background-color: var(--color-primary-700);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn--primary:disabled {
+      background-color: var(--color-gray-200);
+      color: var(--color-gray-400);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn--secondary {
+      background-color: transparent;
+      border: 1px solid var(--color-gray-300);
+      color: var(--color-gray-700);
+    }
+
+    .btn--secondary:hover {
+      background-color: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    .btn--full {
+      width: 100%;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: none; /* Hidden by default */
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.is-active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal {
+      background: var(--color-white);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-xl);
+      max-width: 480px;
+      width: 90%;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      text-align: center;
+    }
+
+    .modal-overlay.is-active .modal {
+      transform: translateY(0);
+    }
+
+    .modal__icon {
+      width: 64px;
+      height: 64px;
+      background: var(--color-success-bg);
+      color: var(--color-success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--spacing-lg);
+    }
+
+    /* ERROR STATE STYLES */
+    .form-input.is-invalid {
+      border-color: var(--color-error);
+      background-color: var(--color-error-bg);
+    }
+
+    .error-message {
+      color: var(--color-error);
+      font-size: 12px;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* PROGRESS BAR */
+    .upload-progress {
+      margin-top: var(--spacing-md);
+      display: none;
+    }
+    
+    .upload-progress.is-active {
+      display: block;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background-color: var(--color-gray-200);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--color-primary-500);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .file-chip {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--color-primary-50);
+      border: 1px solid var(--color-primary-100);
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      margin-top: var(--spacing-md);
+    }
+    
+    .file-chip.is-visible {
+      display: flex;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="portal-header">
+    <div class="container portal-header__content">
+      <div class="portal-header__logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        <span>Enterprise Mediator</span>
+      </div>
+      <div class="portal-header__status">
+        <span class="text-sm text-gray-500">Submitting as:</span>
+        <span class="badge badge--neutral">Innovate Tech Ltd</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="container portal-layout">
+    
+    <!-- LEFT COLUMN: PROJECT BRIEF -->
+    <aside class="brief-column">
+      <div class="brief-card">
+        <div class="brief-card__header">
+          <span class="badge badge--primary">Accepting Proposals</span>
+          <h1 class="h3" style="margin-top: var(--spacing-sm);">Cloud Infrastructure Migration</h1>
+          <div class="brief-card__meta">
+            <span class="text-sm text-gray-500">Client: <strong>Global Logistics Corp</strong></span>
+            <span class="text-sm text-gray-500">ID: <strong>PRJ-2024-884</strong></span>
+          </div>
+        </div>
+
+        <div class="brief-card__content">
+          <div class="brief-section">
+            <div class="brief-section__title">Deadline</div>
+            <div style="font-family: var(--font-mono); font-weight: 500; color: var(--color-error);">
+              Ends in 2 days, 4 hours
+            </div>
+          </div>
+
+          <div class="brief-section">
+            <div class="brief-section__title">Scope Summary</div>
+            <p class="text-sm text-gray-600">
+              We require a comprehensive migration of our legacy on-premise servers to AWS. The project involves assessment, planning, and execution of the migration for 50+ applications with minimal downtime.
+            </p>
+          </div>
+
+          <div class="brief-section">
+            <div class="brief-section__title">Key Deliverables</div>
+            <ul style="padding-left: 20px; font-size: 14px; color: var(--color-gray-600);">
+              <li>Infrastructure Audit Report</li>
+              <li>AWS Architecture Diagram</li>
+              <li>Migration Execution Plan</li>
+              <li>Post-Migration Performance Report</li>
+            </ul>
+          </div>
+
+          <div class="brief-section">
+            <div class="brief-section__title">Required Skills</div>
+            <div class="skill-tags">
+              <span class="badge badge--neutral">AWS</span>
+              <span class="badge badge--neutral">Terraform</span>
+              <span class="badge badge--neutral">Docker</span>
+              <span class="badge badge--neutral">Kubernetes</span>
+              <span class="badge badge--neutral">CI/CD</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT COLUMN: SUBMISSION FORM & Q&A -->
+    <section class="proposal-area">
+      
+      <!-- PROPOSAL FORM CARD -->
+      <form id="proposalForm" class="card" novalidate>
+        <div class="card__header">
+          <h2>Submit Proposal</h2>
+          <p class="text-sm text-gray-500">Fill out the details below to submit your bid for this project.</p>
+        </div>
+
+        <!-- Cost & Currency -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cost" class="form-label">Estimated Cost <span style="color:var(--color-error)">*</span></label>
+            <div class="input-group">
+              <span class="input-icon">$</span>
+              <input type="number" id="cost" name="cost" class="form-input has-icon" placeholder="0.00" required aria-required="true">
+            </div>
+            <div class="error-message" id="cost-error" aria-live="polite"></div>
+          </div>
+          <div class="form-group">
+            <label for="currency" class="form-label">Currency</label>
+            <select id="currency" name="currency" class="form-input" disabled>
+              <option value="USD" selected>USD - US Dollar</option>
+            </select>
+            <p class="text-xs text-gray-500" style="margin-top:4px">Currency is fixed by the project settings.</p>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startDate" class="form-label">Estimated Start Date <span style="color:var(--color-error)">*</span></label>
+            <input type="date" id="startDate" name="startDate" class="form-input" required aria-required="true">
+            <div class="error-message" id="start-error"></div>
+          </div>
+          <div class="form-group">
+            <label for="duration" class="form-label">Duration (Weeks) <span style="color:var(--color-error)">*</span></label>
+            <input type="number" id="duration" name="duration" class="form-input" placeholder="e.g. 12" required aria-required="true">
+            <div class="error-message" id="duration-error"></div>
+          </div>
+        </div>
+
+        <!-- Key Personnel -->
+        <div class="form-group">
+          <label for="personnel" class="form-label">Key Personnel & Approach <span style="color:var(--color-error)">*</span></label>
+          <textarea id="personnel" name="personnel" class="form-input form-input--textarea" placeholder="List key team members and a brief summary of your approach..." required aria-required="true"></textarea>
+          <div class="error-message" id="personnel-error"></div>
+        </div>
+
+        <!-- File Upload -->
+        <div class="form-group">
+          <label class="form-label">Detailed Proposal Document</label>
+          <div id="dropZone" class="file-upload" tabindex="0" role="button" aria-label="Upload proposal document">
+            <input type="file" id="fileInput" class="visually-hidden" accept=".pdf,.docx">
+            <svg class="file-upload__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            <div class="file-upload__text"><strong>Click to upload</strong> or drag and drop</div>
+            <div class="file-upload__hint">PDF or DOCX up to 10MB</div>
+          </div>
+          
+          <!-- Upload Progress State -->
+          <div id="uploadProgress" class="upload-progress">
+            <div class="text-xs text-gray-500" style="margin-bottom: 4px; display: flex; justify-content: space-between;">
+              <span>Uploading proposal_v1.pdf...</span>
+              <span id="uploadPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div id="progressFill" class="progress-fill"></div>
+            </div>
+          </div>
+
+          <!-- File Selected State -->
+          <div id="fileChip" class="file-chip">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              <span class="text-sm font-medium" id="fileName">filename.pdf</span>
+            </div>
+            <button type="button" id="removeFile" style="background:none; border:none; color:var(--color-gray-500); cursor:pointer;" aria-label="Remove file">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top: var(--spacing-xl);">
+          <button type="submit" class="btn btn--primary btn--full" id="submitBtn">
+            Submit Proposal
+          </button>
+          <p class="text-xs text-gray-500" style="text-align: center; margin-top: var(--spacing-sm);">
+            By submitting, you agree to our Terms of Service.
+          </p>
+        </div>
+      </form>
+
+      <!-- Q&A SECTION -->
+      <div class="card qa-container">
+        <div class="card__header">
+          <h3>Project Q&A</h3>
+          <p class="text-sm text-gray-500">Anonymous questions asked by vendors and answered by the client.</p>
+        </div>
+
+        <div class="qa-list">
+          <!-- Existing Q&A Item -->
+          <div class="qa-item">
+            <div class="qa-item__q">Is the migration deadline hard fixed?</div>
+            <div class="qa-item__a">
+              Yes, the deadline is driven by our data center lease expiration.
+            </div>
+          </div>
+          
+          <!-- Existing Q&A Item -->
+          <div class="qa-item">
+            <div class="qa-item__q">Do you have existing Terraform scripts?</div>
+            <div class="qa-item__a">
+              We have some basic scripts, but they will likely need significant refactoring.
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-gray-200);">
+          <label for="newQuestion" class="form-label">Ask a Question</label>
+          <textarea id="newQuestion" class="form-input" rows="2" placeholder="Type your question here... (It will be posted anonymously)"></textarea>
+          <div style="text-align: right; margin-top: var(--spacing-sm);">
+            <button type="button" class="btn btn--secondary btn--sm">Submit Question</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- SUCCESS MODAL -->
+  <div class="modal-overlay" id="successModal" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal__icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h3>Proposal Submitted!</h3>
+      <p class="text-gray-600" style="margin: var(--spacing-md) 0;">
+        Your proposal for <strong>Cloud Infrastructure Migration</strong> has been successfully received. We will notify you via email regarding next steps.
+      </p>
+      <div style="display: flex; gap: var(--spacing-sm); justify-content: center;">
+        <button class="btn btn--secondary" onclick="window.location.reload()">View Submission</button>
+        <button class="btn btn--primary" onclick="window.close()">Close Portal</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- BASIC INTERACTION LOGIC (Prototype) ---
+
+    // Elements
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileChip = document.getElementById('fileChip');
+    const fileName = document.getElementById('fileName');
+    const removeFile = document.getElementById('removeFile');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('progressFill');
+    const uploadPercent = document.getElementById('uploadPercent');
+    const form = document.getElementById('proposalForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const successModal = document.getElementById('successModal');
+
+    // File Upload Interactions
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      if (e.dataTransfer.files.length) {
+        handleFiles(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) {
+        handleFiles(fileInput.files[0]);
+      }
+    });
+
+    function handleFiles(file) {
+      // Simulate upload process
+      dropZone.style.display = 'none';
+      uploadProgress.classList.add('is-active');
+      
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        progressFill.style.width = `${progress}%`;
+        uploadPercent.textContent = `${progress}%`;
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            uploadProgress.classList.remove('is-active');
+            fileChip.classList.add('is-visible');
+            fileName.textContent = file.name;
+          }, 300);
+        }
+      }, 100);
+    }
+
+    removeFile.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.value = '';
+      fileChip.classList.remove('is-visible');
+      dropZone.style.display = 'block';
+    });
+
+    // Form Submission & Validation
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      let isValid = true;
+      const requiredInputs = form.querySelectorAll('input[required], textarea[required]');
+      
+      // Simple validation loop
+      requiredInputs.forEach(input => {
+        const errorDiv = document.getElementById(`${input.id}-error`);
+        if (!input.value.trim()) {
+          isValid = false;
+          input.classList.add('is-invalid');
+          if (errorDiv) {
+            errorDiv.innerHTML = `
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              This field is required
+            `;
+          }
+        } else {
+          input.classList.remove('is-invalid');
+          if (errorDiv) errorDiv.textContent = '';
+        }
+      });
+
+      if (isValid) {
+        submitBtn.innerHTML = 'Submitting...';
+        submitBtn.disabled = true;
+        
+        // Simulate API delay
+        setTimeout(() => {
+          successModal.classList.add('is-active');
+          submitBtn.innerHTML = 'Submit Proposal';
+          submitBtn.disabled = false;
+        }, 1500);
+      }
+    });
+
+    // Input focus clearing error state
+    form.querySelectorAll('input, textarea').forEach(input => {
+      input.addEventListener('input', () => {
+        input.classList.remove('is-invalid');
+        const errorDiv = document.getElementById(`${input.id}-error`);
+        if (errorDiv) errorDiv.textContent = '';
+      });
+    });
+
+  </script>
+</body>
+</html>

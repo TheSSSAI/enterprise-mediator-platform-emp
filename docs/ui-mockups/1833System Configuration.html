@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Configuration - Enterprise Mediator Platform</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS & CSS RESET 
+    */
+    :root {
+      /* Colors - Primary (Teal) */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-200: #99f6e4;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      --color-primary-900: #134e4a;
+
+      /* Colors - Neutrals */
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-800: #1e293b;
+      --color-gray-900: #0f172a;
+
+      /* Colors - Semantic */
+      --color-success-bg: #f0fdf4;
+      --color-success-text: #166534;
+      --color-error-bg: #fef2f2;
+      --color-error-text: #991b1b;
+      --color-error-border: #f87171;
+
+      /* Typography */
+      --font-primary: 'Plus Jakarta Sans', sans-serif;
+      --font-secondary: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Spacing & Layout */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      
+      --header-height: 64px;
+      --sidebar-width: 260px;
+      
+      /* UI Elements */
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 12px;
+      
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      
+      --transition-base: all 0.2s ease-in-out;
+    }
+
+    /* Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-secondary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 
+      LAYOUT STRUCTURE 
+    */
+    .app-layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-rows: var(--header-height) 1fr;
+      height: 100vh;
+    }
+
+    /* Header */
+    .app-header {
+      grid-column: 1 / -1;
+      background-color: var(--color-white);
+      border-bottom: 1px solid var(--color-gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--spacing-lg);
+      z-index: 10;
+    }
+
+    .logo-area {
+      font-family: var(--font-primary);
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--color-primary-700);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      background-color: var(--color-primary-100);
+      color: var(--color-primary-700);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* Navigation Sidebar */
+    .settings-nav {
+      background-color: var(--color-white);
+      border-right: 1px solid var(--color-gray-200);
+      padding: var(--spacing-lg) var(--spacing-md);
+      overflow-y: auto;
+    }
+
+    .nav-group-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--color-gray-500);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--spacing-sm);
+      padding-left: var(--spacing-sm);
+    }
+
+    .nav-list {
+      list-style: none;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .nav-item {
+      margin-bottom: 2px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-sm) var(--spacing-md);
+      color: var(--color-gray-600);
+      text-decoration: none;
+      border-radius: var(--radius-md);
+      transition: var(--transition-base);
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-link:hover {
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+    }
+
+    .nav-link.active {
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-700);
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Main Content Area */
+    .content-area {
+      background-color: var(--color-gray-50);
+      padding: var(--spacing-xl);
+      overflow-y: auto;
+    }
+
+    .content-header {
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .page-title {
+      font-family: var(--font-primary);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-gray-900);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .page-description {
+      color: var(--color-gray-500);
+      font-size: 16px;
+    }
+
+    /* 
+      COMPONENTS 
+    */
+
+    /* Cards */
+    .card {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-lg);
+      padding-bottom: var(--spacing-md);
+      border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .card-title {
+      font-family: var(--font-primary);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-gray-900);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: var(--transition-base);
+      border: 1px solid transparent;
+      line-height: 1;
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary-600);
+      color: var(--color-white);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--color-primary-700);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-secondary {
+      background-color: var(--color-white);
+      border-color: var(--color-gray-300);
+      color: var(--color-gray-700);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    .btn-icon-only {
+      padding: 8px;
+      color: var(--color-gray-500);
+      background: transparent;
+    }
+    
+    .btn-icon-only:hover {
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-900);
+    }
+
+    /* Form Inputs */
+    .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-gray-700);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      background-color: var(--color-white);
+      color: var(--color-gray-900);
+      font-family: var(--font-secondary);
+      font-size: 14px;
+      transition: var(--transition-base);
+    }
+
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 2px var(--color-primary-100);
+    }
+
+    .input-hint {
+      display: block;
+      margin-top: var(--spacing-xs);
+      font-size: 12px;
+      color: var(--color-gray-500);
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--color-gray-300);
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--color-primary-600);
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px var(--color-primary-600);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Checkbox Group */
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: var(--spacing-sm);
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-sm);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+    }
+    
+    .checkbox-item:hover {
+      background-color: var(--color-gray-50);
+    }
+
+    /* 
+      USER ROLE MATRIX COMPONENT 
+    */
+    .matrix-container {
+      overflow-x: auto;
+    }
+
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .matrix-table th {
+      text-align: center;
+      padding: var(--spacing-md);
+      background-color: var(--color-gray-50);
+      border-bottom: 2px solid var(--color-gray-200);
+      color: var(--color-gray-600);
+      font-weight: 600;
+      min-width: 100px;
+    }
+
+    .matrix-table th:first-child {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background-color: var(--color-gray-50);
+      z-index: 2;
+      border-right: 1px solid var(--color-gray-200);
+    }
+
+    .matrix-table td {
+      text-align: center;
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .matrix-table td:first-child {
+      text-align: left;
+      font-weight: 500;
+      position: sticky;
+      left: 0;
+      background-color: var(--color-white);
+      z-index: 1;
+      border-right: 1px solid var(--color-gray-200);
+    }
+
+    .matrix-table tr:hover td {
+      background-color: var(--color-primary-50);
+    }
+    
+    .matrix-table tr:hover td:first-child {
+      background-color: var(--color-primary-50);
+    }
+
+    /* 
+      AUDIT LOG VIEWER COMPONENT 
+    */
+    .audit-filters {
+      display: flex;
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-lg);
+      flex-wrap: wrap;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: var(--spacing-md);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-600);
+      font-weight: 600;
+      border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .data-table td {
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--color-gray-100);
+      color: var(--color-gray-700);
+    }
+    
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-success {
+      background-color: var(--color-success-bg);
+      color: var(--color-success-text);
+    }
+
+    .badge-gray {
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-700);
+    }
+
+    .code-snippet {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background-color: var(--color-gray-100);
+      padding: 2px 4px;
+      border-radius: 4px;
+      color: var(--color-gray-800);
+    }
+
+    /* Tabs Logic (Hidden Checkboxes) */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 
+      RESPONSIVE 
+    */
+    @media (max-width: 1024px) {
+      .app-layout {
+        grid-template-columns: 64px 1fr;
+      }
+      
+      .settings-nav {
+        padding: var(--spacing-md) var(--spacing-xs);
+        text-align: center;
+      }
+      
+      .nav-group-title, .nav-text {
+        display: none;
+      }
+      
+      .nav-link {
+        justify-content: center;
+        padding: var(--spacing-md) 0;
+      }
+      
+      .nav-link svg {
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: 64px auto 1fr;
+      }
+      
+      .settings-nav {
+        display: flex;
+        overflow-x: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--color-gray-200);
+        padding: var(--spacing-sm);
+        white-space: nowrap;
+      }
+      
+      .nav-list {
+        display: flex;
+        margin-bottom: 0;
+        gap: var(--spacing-sm);
+      }
+      
+      .nav-link {
+        width: auto;
+        padding: 8px 16px;
+        border-radius: 99px;
+      }
+      
+      .nav-text {
+        display: inline;
+      }
+      
+      .nav-link svg {
+        width: 18px;
+        height: 18px;
+      }
+      
+      .content-area {
+        padding: var(--spacing-md);
+      }
+      
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+      }
+      
+      .audit-filters {
+        flex-direction: column;
+      }
+      
+      .audit-filters > * {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+        </svg>
+        <span>Mediator<span style="color: var(--color-gray-400)">Admin</span></span>
+      </div>
+      <div class="user-area">
+        <button class="btn btn-icon-only" aria-label="Notifications">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        </button>
+        <div class="user-avatar">SA</div>
+      </div>
+    </header>
+
+    <!-- Sidebar Nav -->
+    <nav class="settings-nav" aria-label="Settings Navigation">
+      <div class="nav-group-title">Configuration</div>
+      <ul class="nav-list">
+        <li class="nav-item">
+          <button class="nav-link" onclick="switchTab('users')" id="nav-users">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span class="nav-text">Users & Roles</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link active" onclick="switchTab('webhooks')" id="nav-webhooks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            <span class="nav-text">Webhooks</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" onclick="switchTab('audit')" id="nav-audit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span class="nav-text">Audit Log</span>
+          </button>
+        </li>
+      </ul>
+      
+      <div class="nav-group-title">System</div>
+      <ul class="nav-list">
+        <li class="nav-item">
+          <button class="nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 5 9.4a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span class="nav-text">General</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content-area">
+      
+      <!-- USERS & ROLES TAB -->
+      <section id="tab-users" class="tab-content">
+        <header class="content-header">
+          <h1 class="page-title">Users & Roles</h1>
+          <p class="page-description">Manage internal user access and define role-based permissions.</p>
+        </header>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Permission Matrix</h2>
+            <button class="btn btn-primary">Save Changes</button>
+          </div>
+          
+          <div class="matrix-container">
+            <table class="matrix-table">
+              <thead>
+                <tr>
+                  <th scope="col">Permission</th>
+                  <th scope="col">Sys Admin</th>
+                  <th scope="col">Finance Mgr</th>
+                  <th scope="col">Project Mgr</th>
+                  <th scope="col">Auditor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Create Project</th>
+                  <td><input type="checkbox" checked disabled></td>
+                  <td><input type="checkbox"></td>
+                  <td><input type="checkbox" checked></td>
+                  <td><input type="checkbox"></td>
+                </tr>
+                <tr>
+                  <th scope="row">Archive Project</th>
+                  <td><input type="checkbox" checked disabled></td>
+                  <td><input type="checkbox"></td>
+                  <td><input type="checkbox"></td>
+                  <td><input type="checkbox"></td>
+                </tr>
+                <tr>
+                  <th scope="row">Manage Users</th>
+                  <td><input type="checkbox" checked disabled></td>
+                  <td><input type="checkbox"></td>
+                  <td><input type="checkbox"></td>
+                  <td><input type="checkbox"></td>
+                </tr>
+                <tr>
+                  <th scope="row">Approve Invoices</th>
+                  <td><input type="checkbox" checked disabled></td>
+                  <td><input type="checkbox" checked></td>
+                  <td><input type="checkbox"></td>
+                  <td><input type="checkbox"></td>
+                </tr>
+                <tr>
+                  <th scope="row">Process Payouts</th>
+                  <td><input type="checkbox" checked disabled></td>
+                  <td><input type="checkbox" checked></td>
+                  <td><input type="checkbox"></td>
+                  <td><input type="checkbox"></td>
+                </tr>
+                <tr>
+                  <th scope="row">View Audit Logs</th>
+                  <td><input type="checkbox" checked disabled></td>
+                  <td><input type="checkbox" checked></td>
+                  <td><input type="checkbox"></td>
+                  <td><input type="checkbox" checked></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- WEBHOOKS TAB (ACTIVE) -->
+      <section id="tab-webhooks" class="tab-content active">
+        <header class="content-header">
+          <h1 class="page-title">Webhooks</h1>
+          <p class="page-description">Configure outgoing webhooks to notify external systems of platform events.</p>
+        </header>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Add New Webhook</h2>
+          </div>
+          
+          <form id="webhook-form" onsubmit="event.preventDefault(); alert('Webhook saved!');">
+            <div class="form-group">
+              <label for="webhook-name" class="form-label">Name</label>
+              <input type="text" id="webhook-name" class="form-input" placeholder="e.g. Slack Notifications" required>
+            </div>
+
+            <div class="form-group">
+              <label for="webhook-url" class="form-label">Payload URL</label>
+              <input type="url" id="webhook-url" class="form-input" placeholder="https://api.example.com/webhooks/" required>
+              <span class="input-hint">The endpoint must accept POST requests with JSON payload.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="webhook-secret" class="form-label">Secret Key</label>
+              <input type="password" id="webhook-secret" class="form-input" value="sk_test_123456789" readonly>
+              <span class="input-hint">Use this secret to validate the signature of incoming payloads.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Trigger Events</label>
+              <div class="checkbox-group">
+                <label class="checkbox-item">
+                  <input type="checkbox" name="events" value="project.created" checked>
+                  <span>project.created</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="events" value="project.updated">
+                  <span>project.updated</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="events" value="invoice.paid" checked>
+                  <span>invoice.paid</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="events" value="user.registered">
+                  <span>user.registered</span>
+                </label>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="events" value="payout.failed" checked>
+                  <span>payout.failed</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <label class="form-label" style="margin-bottom: 0;">Active Status</label>
+                  <span class="input-hint" style="margin-top: 2px;">Disable to temporarily stop sending events.</span>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-lg);">
+              <button type="submit" class="btn btn-primary">Save Webhook</button>
+              <button type="button" class="btn btn-secondary">Test Connection</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Configured Webhooks</h2>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>URL</th>
+                <th>Events</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Slack Notifications</td>
+                <td><span class="code-snippet">https://hooks.slack.com/...</span></td>
+                <td>3 events</td>
+                <td><span class="badge badge-success">Active</span></td>
+                <td>
+                  <button class="btn btn-icon-only" aria-label="Edit">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="btn btn-icon-only" aria-label="Delete">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>Legacy ERP Sync</td>
+                <td><span class="code-snippet">https://erp.internal/api/...</span></td>
+                <td>All events</td>
+                <td><span class="badge badge-gray">Disabled</span></td>
+                <td>
+                  <button class="btn btn-icon-only" aria-label="Edit">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="btn btn-icon-only" aria-label="Delete">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- AUDIT LOG TAB -->
+      <section id="tab-audit" class="tab-content">
+        <header class="content-header">
+          <h1 class="page-title">Audit Log</h1>
+          <p class="page-description">View immutable records of system activity and security events.</p>
+        </header>
+
+        <div class="card">
+          <div class="audit-filters">
+            <div style="flex: 2;">
+              <label class="form-label">Search</label>
+              <input type="text" class="form-input" placeholder="Search by user, IP, or entity ID...">
+            </div>
+            <div style="flex: 1;">
+              <label class="form-label">Date Range</label>
+              <select class="form-select">
+                <option>Last 24 Hours</option>
+                <option>Last 7 Days</option>
+                <option>Last 30 Days</option>
+                <option>Custom Range</option>
+              </select>
+            </div>
+            <div style="flex: 1;">
+              <label class="form-label">Action Type</label>
+              <select class="form-select">
+                <option>All Actions</option>
+                <option>User Login</option>
+                <option>Config Change</option>
+                <option>Data Export</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+              <button class="btn btn-secondary">Export CSV</button>
+            </div>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Actor</th>
+                <th>Action</th>
+                <th>Entity</th>
+                <th>IP Address</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="code-snippet">2023-10-24 14:23:01</span></td>
+                <td>admin@mediator.com</td>
+                <td><strong>UPDATE_ROLE</strong></td>
+                <td>User: user_8723</td>
+                <td>192.168.1.42</td>
+              </tr>
+              <tr>
+                <td><span class="code-snippet">2023-10-24 13:10:45</span></td>
+                <td>finance@mediator.com</td>
+                <td><strong>APPROVE_PAYOUT</strong></td>
+                <td>Tx: tx_99823</td>
+                <td>10.0.0.55</td>
+              </tr>
+              <tr>
+                <td><span class="code-snippet">2023-10-24 09:15:22</span></td>
+                <td>system</td>
+                <td><strong>SYNC_VENDORS</strong></td>
+                <td>Job: job_112</td>
+                <td>internal</td>
+              </tr>
+              <tr>
+                <td><span class="code-snippet">2023-10-24 09:00:05</span></td>
+                <td>admin@mediator.com</td>
+                <td><strong>LOGIN_SUCCESS</strong></td>
+                <td>Session: sess_443</td>
+                <td>192.168.1.42</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // Simple tab switching logic for demonstration purposes
+    function switchTab(tabId) {
+      // Remove active class from all contents
+      document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.remove('active');
+      });
+      
+      // Remove active class from all links
+      document.querySelectorAll('.nav-link').forEach(el => {
+        el.classList.remove('active');
+      });
+      
+      // Add active class to selected content
+      document.getElementById('tab-' + tabId).classList.add('active');
+      
+      // Add active class to selected link
+      document.getElementById('nav-' + tabId).classList.add('active');
+    }
+  </script>
+</body>
+</html>

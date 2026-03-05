@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Enterprise Mediator Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* 
+      DESIGN SYSTEM FOUNDATION 
+      Based on '2040' aesthetic: Clean, Modern, Teal/Purple accents
+    */
+    :root {
+      /* Colors: Primary (Teal) */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      --color-primary-900: #134e4a;
+
+      /* Colors: Secondary (Purple) */
+      --color-secondary-50: #f5f3ff;
+      --color-secondary-500: #8b5cf6;
+      --color-secondary-700: #6d28d9;
+
+      /* Colors: Semantic */
+      --color-success-bg: #f0fdf4;
+      --color-success-text: #15803d;
+      --color-warning-bg: #fffbeb;
+      --color-warning-text: #b45309;
+      --color-error-bg: #fef2f2;
+      --color-error-text: #b91c1c;
+      --color-info-bg: #eff6ff;
+      --color-info-text: #1d4ed8;
+
+      /* Colors: Neutrals */
+      --color-bg-body: #f8fafc; /* gray-50 */
+      --color-bg-surface: #ffffff;
+      --color-border: #e2e8f0; /* gray-200 */
+      --color-text-primary: #0f172a; /* gray-900 */
+      --color-text-secondary: #64748b; /* gray-500 */
+      --color-text-tertiary: #94a3b8; /* gray-400 */
+
+      /* Typography */
+      --font-primary: 'Plus Jakarta Sans', sans-serif;
+      --font-secondary: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Spacing & Layout */
+      --header-height: 64px;
+      --sidebar-width: 260px;
+      --sidebar-width-collapsed: 72px;
+      --container-max-width: 1440px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      
+      /* Transitions */
+      --transition-base: 200ms ease-in-out;
+    }
+
+    /* DARK MODE OVERRIDES (Simulated support) */
+    @media (prefers-color-scheme: dark) {
+      :root.dark-mode {
+        --color-bg-body: #0f172a;
+        --color-bg-surface: #1e293b;
+        --color-border: #334155;
+        --color-text-primary: #f8fafc;
+        --color-text-secondary: #94a3b8;
+        --color-text-tertiary: #64748b;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+      }
+    }
+
+    /* RESET & BASE */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--color-bg-body);
+      color: var(--color-text-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      overflow: hidden; /* App-like feel */
+    }
+
+    a { text-decoration: none; color: inherit; }
+    button { background: none; border: none; font: inherit; cursor: pointer; }
+    ul { list-style: none; }
+
+    /* UTILITIES */
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-4 { gap: 1rem; }
+    
+    .text-sm { font-size: 0.875rem; }
+    .text-xs { font-size: 0.75rem; }
+    .font-semibold { font-weight: 600; }
+    .text-secondary { color: var(--color-text-secondary); }
+    
+    /* LAYOUT STRUCTURE */
+    .app-layout {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* SIDEBAR COMPONENT */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--color-bg-surface);
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      transition: width var(--transition-base), transform var(--transition-base);
+      z-index: 50;
+    }
+
+    .sidebar-header {
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--color-primary-600);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 1.5rem 1rem;
+      overflow-y: auto;
+    }
+
+    .nav-group {
+      margin-bottom: 2rem;
+    }
+
+    .nav-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-tertiary);
+      margin-bottom: 0.75rem;
+      padding-left: 0.75rem;
+      font-weight: 600;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border-radius: var(--radius-md);
+      color: var(--color-text-secondary);
+      transition: all 150ms;
+      margin-bottom: 0.25rem;
+    }
+
+    .nav-item:hover {
+      background-color: var(--color-bg-body);
+      color: var(--color-primary-700);
+    }
+
+    .nav-item.active {
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-700);
+      font-weight: 600;
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .sidebar-footer {
+      padding: 1rem;
+      border-top: 1px solid var(--color-border);
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background-color: var(--color-bg-body);
+    }
+
+    /* HEADER COMPONENT */
+    .dashboard-header {
+      height: var(--header-height);
+      background-color: var(--color-bg-surface);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .mobile-menu-toggle {
+      display: none;
+      padding: 0.5rem;
+      color: var(--color-text-secondary);
+    }
+
+    .page-title h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .search-bar {
+      position: relative;
+      width: 280px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.5rem 1rem 0.5rem 2.25rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-secondary);
+      font-size: 0.875rem;
+      color: var(--color-text-primary);
+      background-color: var(--color-bg-body);
+      transition: border-color var(--transition-base);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 2px var(--color-primary-100);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-text-tertiary);
+      width: 16px;
+      height: 16px;
+    }
+
+    .icon-btn {
+      position: relative;
+      padding: 0.5rem;
+      border-radius: 50%;
+      color: var(--color-text-secondary);
+      transition: background-color 150ms;
+    }
+
+    .icon-btn:hover {
+      background-color: var(--color-bg-body);
+      color: var(--color-primary-600);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 8px;
+      height: 8px;
+      background-color: var(--color-error-text);
+      border-radius: 50%;
+      border: 2px solid var(--color-bg-surface);
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      background-color: var(--color-primary-100);
+      color: var(--color-primary-700);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    /* DASHBOARD CONTENT */
+    .dashboard-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+    }
+
+    .dashboard-container {
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* METRIC CARDS */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+
+    .metric-card {
+      background-color: var(--color-bg-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: transform 150ms, box-shadow 150ms;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .metric-icon {
+      padding: 0.5rem;
+      border-radius: var(--radius-md);
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-600);
+    }
+
+    .metric-icon.secondary { background-color: var(--color-secondary-50); color: var(--color-secondary-700); }
+    .metric-icon.success { background-color: var(--color-success-bg); color: var(--color-success-text); }
+    .metric-icon.info { background-color: var(--color-info-bg); color: var(--color-info-text); }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-label {
+      color: var(--color-text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .metric-trend {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .trend-up { color: var(--color-success-text); }
+    .trend-down { color: var(--color-error-text); }
+    .trend-neutral { color: var(--color-text-tertiary); }
+
+    /* WIDGET GRID */
+    .widget-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr; /* 2/3 and 1/3 layout */
+      gap: 1.5rem;
+    }
+
+    .dashboard-card {
+      background-color: var(--color-bg-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .card-action {
+      font-size: 0.875rem;
+      color: var(--color-primary-600);
+      font-weight: 500;
+    }
+
+    .card-action:hover {
+      text-decoration: underline;
+    }
+
+    /* ACTION REQUIRED WIDGET */
+    .action-list {
+      padding: 0.5rem 0;
+    }
+
+    .action-item {
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--color-bg-body);
+      transition: background-color 150ms;
+    }
+
+    .action-item:last-child { border-bottom: none; }
+    .action-item:hover { background-color: var(--color-bg-body); }
+
+    .action-info {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .action-details h4 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: 0.125rem;
+    }
+
+    .action-details p {
+      font-size: 0.75rem;
+      color: var(--color-text-secondary);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-warning { background-color: var(--color-warning-bg); color: var(--color-warning-text); }
+    .status-info { background-color: var(--color-info-bg); color: var(--color-info-text); }
+
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      transition: all 150ms;
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary-600);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--color-primary-700);
+    }
+
+    .btn-outline {
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--color-text-tertiary);
+      background-color: var(--color-bg-body);
+    }
+
+    /* ACTIVITY FEED */
+    .activity-list {
+      padding: 1.5rem;
+    }
+
+    .activity-item {
+      position: relative;
+      padding-left: 2rem;
+      padding-bottom: 1.5rem;
+      border-left: 2px solid var(--color-border);
+    }
+
+    .activity-item:last-child {
+      border-left-color: transparent;
+      padding-bottom: 0;
+    }
+
+    .activity-dot {
+      position: absolute;
+      left: -0.4375rem; /* center on 2px border */
+      top: 0.125rem;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: var(--color-border);
+      border: 2px solid var(--color-bg-surface);
+    }
+
+    .activity-item.high-priority .activity-dot { background-color: var(--color-primary-500); }
+
+    .activity-content p {
+      font-size: 0.875rem;
+      color: var(--color-text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .activity-meta {
+      font-size: 0.75rem;
+      color: var(--color-text-tertiary);
+    }
+
+    /* STATE MANAGEMENT (Loading/Empty) */
+    .hidden { display: none !important; }
+    
+    .skeleton {
+      background: linear-gradient(90deg, var(--color-bg-body) 25%, var(--color-border) 50%, var(--color-bg-body) 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 4px;
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--color-text-secondary);
+    }
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      color: var(--color-text-tertiary);
+      margin-bottom: 1rem;
+    }
+
+    /* RESPONSIVE ADAPTATIONS */
+    @media (max-width: 1024px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .widget-grid {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        width: var(--sidebar-width-collapsed);
+      }
+      .nav-label, .nav-text, .logo span {
+        display: none;
+      }
+      .sidebar-header { justify-content: center; padding: 0; }
+      .nav-item { justify-content: center; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        height: 100%;
+        width: var(--sidebar-width);
+        transform: translateX(0);
+      }
+      .sidebar.open {
+        left: 0;
+        box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      }
+      .nav-label, .nav-text, .logo span {
+        display: block; /* Restore text in drawer */
+      }
+      .nav-item { justify-content: flex-start; }
+      .sidebar-header { justify-content: flex-start; padding: 0 1.5rem; }
+      
+      .mobile-menu-toggle { display: block; }
+      .dashboard-header { padding: 0 1rem; }
+      .search-bar { display: none; } /* Simplified header */
+      
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      .action-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .action-actions {
+        width: 100%;
+        display: flex;
+        gap: 0.5rem;
+      }
+      .btn-sm { flex: 1; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    <!-- SKIP LINK -->
+    <a href="#main-content" class="visually-hidden">Skip to main content</a>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <nav class="sidebar" id="sidebar" aria-label="Main Navigation">
+      <div class="sidebar-header">
+        <a href="#" class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary-600">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <span>EMP Admin</span>
+        </a>
+      </div>
+
+      <div class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-label">Overview</div>
+          <ul>
+            <li>
+              <a href="#" class="nav-item active" aria-current="page">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span class="nav-text">Dashboard</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                <span class="nav-text">Projects</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span class="nav-text">SOWs</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">Entities</div>
+          <ul>
+            <li>
+              <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span class="nav-text">Clients</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M17 21v-8H7v8"/><path d="M9 10a2 2 0 1 1-4 0v4a2 2 0 0 1 4 0z"/><path d="M19 10a2 2 0 1 1-4 0v4a2 2 0 0 1 4 0z"/></svg>
+                <span class="nav-text">Vendors</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">System</div>
+          <ul>
+            <li>
+              <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <span class="nav-text">Financials</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span class="nav-text">Settings</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="nav-item w-full">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          <span class="nav-text">Logout</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content" id="main-content">
+      
+      <!-- DASHBOARD HEADER -->
+      <header class="dashboard-header">
+        <div class="header-left">
+          <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Navigation">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <div class="page-title">
+            <h1>Dashboard</h1>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="search-bar">
+            <label for="global-search" class="visually-hidden">Search projects or users</label>
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="global-search" class="search-input" placeholder="Search...">
+          </div>
+
+          <button class="icon-btn" aria-label="Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="notification-badge"></span>
+          </button>
+
+          <div class="user-profile" aria-label="User Profile" role="button" tabindex="0">
+            <div class="avatar">AD</div>
+            <span class="text-sm font-semibold hidden md:block">Admin User</span>
+            <svg class="hidden md:block text-tertiary" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+        </div>
+      </header>
+
+      <!-- SCROLLABLE DASHBOARD CONTENT -->
+      <div class="dashboard-scroll">
+        <div class="dashboard-container">
+          
+          <!-- STATE TOGGLER (FOR DEMO PURPOSE) -->
+          <div style="margin-bottom: 1rem; display: flex; gap: 10px;">
+            <button onclick="setDashboardState('default')" class="btn-sm btn-outline">Show Default</button>
+            <button onclick="setDashboardState('loading')" class="btn-sm btn-outline">Show Loading</button>
+            <button onclick="setDashboardState('empty')" class="btn-sm btn-outline">Show Empty</button>
+          </div>
+
+          <!-- SECTION 1: METRICS -->
+          <section aria-labelledby="metrics-heading" id="metrics-section">
+            <h2 id="metrics-heading" class="visually-hidden">Key Financial Metrics</h2>
+            
+            <div class="metrics-grid">
+              <!-- Metric 1 -->
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Active Projects</span>
+                  <div class="metric-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg></div>
+                </div>
+                <div class="metric-value">24</div>
+                <div class="metric-trend trend-up">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                  <span>+12% vs last month</span>
+                </div>
+              </div>
+
+              <!-- Metric 2 -->
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Pending SOWs</span>
+                  <div class="metric-icon secondary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                </div>
+                <div class="metric-value">7</div>
+                <div class="metric-trend trend-neutral">
+                  <span>Needs review</span>
+                </div>
+              </div>
+
+              <!-- Metric 3 -->
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Total Revenue</span>
+                  <div class="metric-icon success"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                </div>
+                <div class="metric-value">$428k</div>
+                <div class="metric-trend trend-up">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                  <span>+8.2% vs last month</span>
+                </div>
+              </div>
+
+              <!-- Metric 4 -->
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Net Profit</span>
+                  <div class="metric-icon info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
+                </div>
+                <div class="metric-value">$85.4k</div>
+                <div class="metric-trend trend-up">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                  <span>+4% vs last month</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION 2: WIDGET GRID -->
+          <div class="widget-grid">
+            
+            <!-- ACTION REQUIRED WIDGET -->
+            <div class="dashboard-card" id="actions-widget">
+              <div class="card-header">
+                <h3 class="card-title">Pending Actions</h3>
+                <a href="#" class="card-action">View all</a>
+              </div>
+              <div class="action-list">
+                <!-- Action Item 1 -->
+                <div class="action-item">
+                  <div class="action-info">
+                    <div class="status-badge status-warning">Review SOW</div>
+                    <div class="action-details">
+                      <h4>Project Phoenix Rebrand</h4>
+                      <p>Client: Acme Corp • Submitted 2 hrs ago</p>
+                    </div>
+                  </div>
+                  <div class="action-actions">
+                    <button class="btn-sm btn-primary">Review Brief</button>
+                  </div>
+                </div>
+
+                <!-- Action Item 2 -->
+                <div class="action-item">
+                  <div class="action-info">
+                    <div class="status-badge status-info">Proposal Decision</div>
+                    <div class="action-details">
+                      <h4>Cloud Migration Phase 2</h4>
+                      <p>Client: TechFlow • 3 Proposals Received</p>
+                    </div>
+                  </div>
+                  <div class="action-actions">
+                    <button class="btn-sm btn-primary">Compare Proposals</button>
+                  </div>
+                </div>
+
+                <!-- Action Item 3 -->
+                <div class="action-item">
+                  <div class="action-info">
+                    <div class="status-badge status-warning">SOW Failed</div>
+                    <div class="action-details">
+                      <h4>Mobile App V2</h4>
+                      <p>Error in PII Sanitization • Requires manual check</p>
+                    </div>
+                  </div>
+                  <div class="action-actions">
+                    <button class="btn-sm btn-outline">Inspect</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ACTIVITY FEED -->
+            <div class="dashboard-card" id="activity-widget">
+              <div class="card-header">
+                <h3 class="card-title">Recent Activity</h3>
+              </div>
+              <div class="activity-list">
+                <div class="activity-item high-priority">
+                  <div class="activity-dot"></div>
+                  <div class="activity-content">
+                    <p>New Vendor <strong>Quantum Logic</strong> registered.</p>
+                    <span class="activity-meta">15 mins ago</span>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot"></div>
+                  <div class="activity-content">
+                    <p>Payment received for <strong>Project Alpha</strong>.</p>
+                    <span class="activity-meta">1 hour ago</span>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot"></div>
+                  <div class="activity-content">
+                    <p>Proposal submitted by <strong>DevStudio</strong>.</p>
+                    <span class="activity-meta">3 hours ago</span>
+                  </div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-dot"></div>
+                  <div class="activity-content">
+                    <p>Admin <strong>Sarah J.</strong> updated settings.</p>
+                    <span class="activity-meta">Yesterday</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- End Widget Grid -->
+
+          <!-- LOADING STATE (Hidden by default) -->
+          <div id="loading-state" class="hidden">
+            <div class="metrics-grid">
+              <div class="metric-card"><div class="skeleton" style="height: 80px;"></div></div>
+              <div class="metric-card"><div class="skeleton" style="height: 80px;"></div></div>
+              <div class="metric-card"><div class="skeleton" style="height: 80px;"></div></div>
+              <div class="metric-card"><div class="skeleton" style="height: 80px;"></div></div>
+            </div>
+            <div class="widget-grid" style="margin-top: 2rem;">
+              <div class="dashboard-card" style="height: 300px;"><div class="skeleton" style="height: 100%;"></div></div>
+              <div class="dashboard-card" style="height: 300px;"><div class="skeleton" style="height: 100%;"></div></div>
+            </div>
+          </div>
+
+          <!-- EMPTY STATE (Hidden by default) -->
+          <div id="empty-state" class="hidden">
+            <div class="metrics-grid">
+              <div class="metric-card"><div class="metric-value">0</div><div class="metric-label">Active Projects</div></div>
+              <div class="metric-card"><div class="metric-value">0</div><div class="metric-label">Pending SOWs</div></div>
+              <div class="metric-card"><div class="metric-value">$0.00</div><div class="metric-label">Revenue</div></div>
+              <div class="metric-card"><div class="metric-value">$0.00</div><div class="metric-label">Net Profit</div></div>
+            </div>
+            <div class="dashboard-card empty-state" style="margin-top: 2rem;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              <h3>Welcome to your new Dashboard</h3>
+              <p>No activity yet. Start by creating a project or inviting users.</p>
+              <button class="btn-sm btn-primary" style="margin-top: 1rem;">Create Project</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Simple state management for demonstration
+    function setDashboardState(state) {
+      const metricsSection = document.getElementById('metrics-section');
+      const actionsWidget = document.getElementById('actions-widget');
+      const activityWidget = document.getElementById('activity-widget');
+      const loadingState = document.getElementById('loading-state');
+      const emptyState = document.getElementById('empty-state');
+
+      // Hide all first
+      metricsSection.classList.add('hidden');
+      actionsWidget.classList.add('hidden');
+      activityWidget.classList.add('hidden');
+      loadingState.classList.add('hidden');
+      emptyState.classList.add('hidden');
+
+      if (state === 'default') {
+        metricsSection.classList.remove('hidden');
+        actionsWidget.classList.remove('hidden');
+        activityWidget.classList.remove('hidden');
+      } else if (state === 'loading') {
+        loadingState.classList.remove('hidden');
+      } else if (state === 'empty') {
+        emptyState.classList.remove('hidden');
+      }
+    }
+
+    // Mobile Sidebar Toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+    });
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('open') && 
+          !sidebar.contains(e.target) && 
+          !menuToggle.contains(e.target)) {
+        sidebar.classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>

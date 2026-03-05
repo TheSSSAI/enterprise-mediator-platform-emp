@@ -1,0 +1,352 @@
+
+{
+  "component_inventory": {
+    "atomic_components": [
+      {
+        "component_name": "StatusBadge",
+        "category": "feedback",
+        "variants": ["success", "warning", "error", "info", "neutral", "outline"],
+        "states": ["active", "pending", "processing", "inactive", "deactivated", "completed", "failed", "draft"],
+        "responsive_needs": "scale text size on mobile",
+        "dependencies": ["typography", "colors"],
+        "complexity_level": "low",
+        "implementation_priority": 1,
+        "estimated_effort": "2 hours"
+      },
+      {
+        "component_name": "IconWrapper",
+        "category": "visual",
+        "variants": ["default", "button_icon", "status_icon"],
+        "states": ["default", "hover", "disabled"],
+        "responsive_needs": "fixed sizing (16px, 20px, 24px)",
+        "dependencies": ["lucide-react"],
+        "complexity_level": "low",
+        "implementation_priority": 1,
+        "estimated_effort": "2 hours"
+      },
+      {
+        "component_name": "Avatar",
+        "category": "data_display",
+        "variants": ["circle", "rounded", "group"],
+        "states": ["image_loaded", "fallback_text", "fallback_icon"],
+        "responsive_needs": "size scaling",
+        "dependencies": ["@radix-ui/react-avatar"],
+        "complexity_level": "low",
+        "implementation_priority": 2,
+        "estimated_effort": "3 hours"
+      },
+      {
+        "component_name": "Separator",
+        "category": "layout",
+        "variants": ["horizontal", "vertical"],
+        "states": ["default"],
+        "responsive_needs": "hide/show based on layout",
+        "dependencies": ["@radix-ui/react-separator"],
+        "complexity_level": "low",
+        "implementation_priority": 2,
+        "estimated_effort": "1 hour"
+      },
+      {
+        "component_name": "ProgressBar",
+        "category": "feedback",
+        "variants": ["linear", "circular", "indeterminate"],
+        "states": ["in_progress", "complete", "error"],
+        "responsive_needs": "width adaptation",
+        "dependencies": ["@radix-ui/react-progress"],
+        "complexity_level": "low",
+        "implementation_priority": 2,
+        "estimated_effort": "3 hours"
+      },
+      {
+        "component_name": "TagInput",
+        "category": "form_controls",
+        "variants": ["default", "removable"],
+        "states": ["default", "focus", "error", "disabled"],
+        "responsive_needs": "wrap tags on small screens",
+        "dependencies": ["input", "badge", "icon"],
+        "complexity_level": "medium",
+        "implementation_priority": 3,
+        "estimated_effort": "6 hours"
+      },
+      {
+        "component_name": "ToggleSwitch",
+        "category": "form_controls",
+        "variants": ["default", "small"],
+        "states": ["on", "off", "disabled"],
+        "responsive_needs": "touch target sizing",
+        "dependencies": ["@radix-ui/react-switch"],
+        "complexity_level": "low",
+        "implementation_priority": 2,
+        "estimated_effort": "3 hours"
+      },
+      {
+        "component_name": "OTPInput",
+        "category": "form_controls",
+        "variants": ["6_digit"],
+        "states": ["empty", "focused", "filled", "error"],
+        "responsive_needs": "numeric keypad on mobile",
+        "dependencies": ["input"],
+        "complexity_level": "medium",
+        "implementation_priority": 2,
+        "estimated_effort": "5 hours"
+      }
+    ],
+    "molecular_components": [
+      {
+        "component_name": "FormField",
+        "category": "form_groups",
+        "variants": ["vertical", "horizontal"],
+        "states": ["default", "error", "required", "optional"],
+        "responsive_needs": "label placement adaptation",
+        "dependencies": ["label", "input", "error_message", "tooltip"],
+        "complexity_level": "low",
+        "implementation_priority": 1,
+        "estimated_effort": "4 hours"
+      },
+      {
+        "component_name": "SearchInput",
+        "category": "navigation",
+        "variants": ["global", "table_filter", "mobile_expanded"],
+        "states": ["idle", "loading", "filled", "focused"],
+        "responsive_needs": "expand on focus (mobile)",
+        "dependencies": ["input", "icon_wrapper", "button"],
+        "complexity_level": "medium",
+        "implementation_priority": 2,
+        "estimated_effort": "4 hours"
+      },
+      {
+        "component_name": "MetricCard",
+        "category": "data_display",
+        "variants": ["default", "trend_up", "trend_down", "neutral"],
+        "states": ["loading", "data", "error"],
+        "responsive_needs": "fluid width",
+        "dependencies": ["card", "typography", "icon_wrapper"],
+        "complexity_level": "medium",
+        "implementation_priority": 2,
+        "estimated_effort": "5 hours"
+      },
+      {
+        "component_name": "UserDropdown",
+        "category": "navigation",
+        "variants": ["sidebar_bottom", "header_right"],
+        "states": ["closed", "open"],
+        "responsive_needs": "sheet vs popover behavior",
+        "dependencies": ["avatar", "dropdown_menu", "typography"],
+        "complexity_level": "medium",
+        "implementation_priority": 2,
+        "estimated_effort": "4 hours"
+      },
+      {
+        "component_name": "FilterGroup",
+        "category": "data_manipulation",
+        "variants": ["inline", "stacked", "mobile_drawer"],
+        "states": ["default", "active_filters"],
+        "responsive_needs": "collapse to button on mobile",
+        "dependencies": ["select", "popover", "button", "badge"],
+        "complexity_level": "high",
+        "implementation_priority": 3,
+        "estimated_effort": "8 hours"
+      },
+      {
+        "component_name": "FileUploadZone",
+        "category": "form_controls",
+        "variants": ["sow", "proposal", "generic"],
+        "states": ["idle", "drag_over", "uploading", "error", "success"],
+        "responsive_needs": "touch target area",
+        "dependencies": ["icon_wrapper", "progress_bar", "typography"],
+        "complexity_level": "medium",
+        "implementation_priority": 2,
+        "estimated_effort": "6 hours"
+      },
+      {
+        "component_name": "MatchScoreIndicator",
+        "category": "data_display",
+        "variants": ["radial", "linear", "badge"],
+        "states": ["high", "medium", "low"],
+        "responsive_needs": "compact view",
+        "dependencies": ["typography", "colors"],
+        "complexity_level": "low",
+        "implementation_priority": 3,
+        "estimated_effort": "3 hours"
+      }
+    ],
+    "organism_components": [
+      {
+        "component_name": "SidebarNavigation",
+        "category": "layout",
+        "variants": ["admin", "finance", "client", "vendor"],
+        "states": ["expanded", "collapsed", "mobile_hidden"],
+        "responsive_needs": "transform to drawer on mobile",
+        "dependencies": ["logo", "nav_item", "user_dropdown", "separator"],
+        "complexity_level": "high",
+        "implementation_priority": 1,
+        "estimated_effort": "12 hours"
+      },
+      {
+        "component_name": "DataTable",
+        "category": "data_display",
+        "variants": ["clients", "vendors", "projects", "transactions"],
+        "states": ["loading", "empty", "populated", "error", "filtered"],
+        "responsive_needs": "horizontal scroll or card view transformation",
+        "dependencies": ["table", "pagination", "search_input", "filter_group", "status_badge", "skeleton"],
+        "complexity_level": "high",
+        "implementation_priority": 2,
+        "estimated_effort": "20 hours"
+      },
+      {
+        "component_name": "SOWReviewPanel",
+        "category": "business_logic",
+        "variants": ["review_mode", "read_only"],
+        "states": ["loading", "analysis_complete", "editing"],
+        "responsive_needs": "stack panels vertically on tablet/mobile",
+        "dependencies": ["rich_text_viewer", "tag_input", "smart_input", "form_field"],
+        "complexity_level": "high",
+        "implementation_priority": 3,
+        "estimated_effort": "16 hours"
+      },
+      {
+        "component_name": "VendorComparisonMatrix",
+        "category": "business_logic",
+        "variants": ["default"],
+        "states": ["loading", "comparing"],
+        "responsive_needs": "sticky columns, horizontal scroll",
+        "dependencies": ["table", "match_score_indicator", "avatar", "button"],
+        "complexity_level": "high",
+        "implementation_priority": 3,
+        "estimated_effort": "12 hours"
+      },
+      {
+        "component_name": "PaymentMethodForm",
+        "category": "financial",
+        "variants": ["credit_card", "bank_transfer"],
+        "states": ["default", "processing", "success", "error"],
+        "responsive_needs": "stack inputs",
+        "dependencies": ["stripe_elements", "button", "alert"],
+        "complexity_level": "medium",
+        "implementation_priority": 3,
+        "estimated_effort": "10 hours"
+      }
+    ]
+  },
+  "screen_inventory": [
+    {
+      "screen_name": "Auth Layout Template",
+      "screen_type": "template",
+      "variants": ["login", "register", "mfa", "forgot_password"],
+      "states": ["default"],
+      "required_components": ["logo", "card", "typography", "footer"],
+      "platform_optimizations": "centered content on mobile",
+      "implementation_priority": 1,
+      "estimated_effort": "6 hours",
+      "user_flow_criticality": "critical"
+    },
+    {
+      "screen_name": "Admin Dashboard Template",
+      "screen_type": "template",
+      "variants": ["admin_view"],
+      "states": ["loading", "data", "empty"],
+      "required_components": ["sidebar_navigation", "header", "metric_card", "activity_feed"],
+      "platform_optimizations": "collapsible sidebar, stacked widgets",
+      "implementation_priority": 1,
+      "estimated_effort": "8 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "Entity List Template",
+      "screen_type": "template",
+      "variants": ["clients", "vendors", "projects"],
+      "states": ["loading", "data", "empty", "error"],
+      "required_components": ["dashboard_layout", "data_table", "page_header", "action_bar"],
+      "platform_optimizations": "card view for list items on mobile",
+      "implementation_priority": 2,
+      "estimated_effort": "8 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "Entity Detail Template",
+      "screen_type": "template",
+      "variants": ["client_detail", "vendor_detail", "project_workspace"],
+      "states": ["loading", "view", "edit"],
+      "required_components": ["tabs", "info_card", "activity_timeline", "status_badge", "action_menu"],
+      "platform_optimizations": "stack tabs or use dropdown nav on mobile",
+      "implementation_priority": 2,
+      "estimated_effort": "10 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "SOW Processing Workspace",
+      "screen_type": "feature_screen",
+      "variants": ["upload", "processing", "review"],
+      "states": ["idle", "uploading", "analyzing", "review_ready", "error"],
+      "required_components": ["file_upload_zone", "progress_stepper", "sow_review_panel"],
+      "platform_optimizations": "read-only view for mobile",
+      "implementation_priority": 3,
+      "estimated_effort": "12 hours",
+      "user_flow_criticality": "medium"
+    },
+    {
+      "screen_name": "Public Proposal Portal",
+      "screen_type": "external_screen",
+      "variants": ["brief_view", "submission_form", "success"],
+      "states": ["valid_token", "expired_token", "submitted"],
+      "required_components": ["public_header", "project_brief_card", "proposal_form", "file_upload_zone"],
+      "platform_optimizations": "fully responsive form layout",
+      "implementation_priority": 3,
+      "estimated_effort": "10 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "Financial Ledger View",
+      "screen_type": "feature_screen",
+      "variants": ["transactions", "payouts"],
+      "states": ["default", "filtered"],
+      "required_components": ["data_table", "date_range_picker", "export_button", "summary_metrics"],
+      "platform_optimizations": "horizontal scroll for ledger table",
+      "implementation_priority": 4,
+      "estimated_effort": "8 hours",
+      "user_flow_criticality": "medium"
+    }
+  ],
+  "implementation_plan": {
+    "phase_1_foundation": {
+      "components": ["typography", "colors", "button", "input", "icon_wrapper", "status_badge", "auth_layout_template"],
+      "rationale": "Establishes visual language and enables the construction of authentication screens immediately.",
+      "estimated_duration": "3 days"
+    },
+    "phase_2_core_navigation_layout": {
+      "components": ["sidebar_navigation", "header", "user_dropdown", "dashboard_layout_template", "metric_card"],
+      "rationale": "Builds the shell of the application allowing page routing and dashboard construction.",
+      "estimated_duration": "4 days"
+    },
+    "phase_3_data_management": {
+      "components": ["data_table", "filter_group", "search_input", "pagination", "entity_list_template", "entity_detail_template"],
+      "rationale": "Enables the CRUD interface for Clients, Vendors, and Users, which are prerequisites for Projects.",
+      "estimated_duration": "5 days"
+    },
+    "phase_4_project_sow_workflow": {
+      "components": ["file_upload_zone", "progress_bar", "tag_input", "sow_review_panel", "match_score_indicator"],
+      "rationale": "Implements the complex, custom UI required for the AI-driven project lifecycle.",
+      "estimated_duration": "5 days"
+    },
+    "phase_5_external_financial": {
+      "components": ["public_proposal_portal", "vendor_comparison_matrix", "payment_method_form", "otp_input"],
+      "rationale": "Completes the workflow with external facing components and sensitive financial inputs.",
+      "estimated_duration": "4 days"
+    }
+  },
+  "platform_implementation_strategy": {
+    "target_platform": "Responsive Web Application (React 18)",
+    "implementation_approach": "mobile_first",
+    "responsive_strategy": "Tailwind breakpoints (sm, md, lg, xl). Complex tables (DataTable) use CSS grid for desktop and stack/card layout for mobile. Sidebar uses a Sheet drawer pattern on mobile.",
+    "progressive_enhancement": "Core forms functional without JS (HTML5 validation); enhanced with Zod/React Hook Form on client load. SOW Drag-and-drop falls back to standard file input.",
+    "browser_support": "Chrome (latest 2), Firefox (latest 2), Safari (latest 2), Edge (latest 2)",
+    "accessibility_integration": "Radix UI primitives for all interactive components. Full keyboard navigation support. Axe-core integration in Storybook."
+  },
+  "quality_assurance_plan": {
+    "component_testing": "Storybook for visual regression testing of all Atoms and Molecules.",
+    "integration_testing": "Vitest/React Testing Library for complex Organisms (e.g., DataTable filtering logic).",
+    "responsive_testing": "Playwright tests configured for Mobile (375px), Tablet (768px), and Desktop (1440px) viewports.",
+    "accessibility_testing": "Automated a11y addon in Storybook + Manual keyboard navigation audit for SOW Review and DataTable.",
+    "performance_testing": "Bundle size analysis for the UI library package. Render cycle optimization for large DataTables."
+  }
+}

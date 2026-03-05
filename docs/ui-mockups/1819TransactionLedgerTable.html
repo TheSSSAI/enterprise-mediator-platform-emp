@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction Ledger Table</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    /* =========================================
+       DESIGN TOKENS & RESET
+       ========================================= */
+    :root {
+      /* Colors: Primary (Teal) */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      
+      /* Colors: Neutrals (Slate) */
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-900: #0f172a;
+
+      /* Colors: Semantic */
+      --color-success-bg: #f0fdf4;
+      --color-success-text: #15803d;
+      --color-success-border: #bbf7d0;
+      
+      --color-warning-bg: #fffbeb;
+      --color-warning-text: #b45309;
+      --color-warning-border: #fde68a;
+      
+      --color-error-bg: #fef2f2;
+      --color-error-text: #b91c1c;
+      --color-error-border: #fecaca;
+
+      --color-info-bg: #eff6ff;
+      --color-info-text: #1d4ed8;
+      --color-info-border: #bfdbfe;
+
+      /* Typography */
+      --font-primary: 'Plus Jakarta Sans', sans-serif;
+      --font-secondary: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Spacing & Sizing */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      
+      --radius-md: 6px;
+      --radius-lg: 12px;
+      --radius-full: 9999px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --focus-ring: 0 0 0 2px var(--color-white), 0 0 0 4px var(--color-primary-100);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: var(--font-secondary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* =========================================
+       MOLECULAR DEPENDENCIES (Simulated)
+       ========================================= */
+    /* Filter Toolbar Styles (Borrowed from Molecular specs) */
+    .filter-toolbar {
+      display: flex;
+      gap: 12px;
+      background: var(--color-white);
+      padding: 16px;
+      border: 1px solid var(--color-gray-200);
+      border-bottom: none; /* Merged with table container */
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .filter-search { position: relative; flex: 1; min-width: 240px; }
+    .filter-search__icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--color-gray-400); width: 16px; height: 16px;
+    }
+    .filter-input {
+      width: 100%; padding: 8px 12px 8px 36px;
+      border: 1px solid var(--color-gray-300); border-radius: var(--radius-md);
+      font-size: 0.875rem; color: var(--color-gray-900);
+    }
+    .filter-group { display: flex; gap: 8px; }
+    .filter-select {
+      padding: 8px 32px 8px 12px;
+      border: 1px solid var(--color-gray-300); border-radius: var(--radius-md);
+      background-color: var(--color-white); font-size: 0.875rem; color: var(--color-gray-700);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2364748B' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+    }
+    .filter-btn {
+      padding: 8px 12px; background: var(--color-white);
+      border: 1px solid var(--color-gray-300); border-radius: var(--radius-md);
+      color: var(--color-gray-700); font-size: 0.875rem; font-weight: 500; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* =========================================
+       ORGANISM: TRANSACTION LEDGER TABLE
+       ========================================= */
+    .ledger-wrapper {
+      box-shadow: var(--shadow-sm);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+    }
+
+    /* Table Base */
+    .ledger-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    .ledger-table thead {
+      background-color: var(--color-gray-50);
+      border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .ledger-table th {
+      padding: 12px 24px;
+      font-weight: 600;
+      color: var(--color-gray-600);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.025em;
+      white-space: nowrap;
+    }
+
+    .ledger-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .ledger-table th.sortable:hover {
+      color: var(--color-gray-900);
+      background-color: var(--color-gray-100);
+    }
+
+    .ledger-table th.text-right { text-align: right; }
+    
+    .ledger-table tbody tr {
+      border-bottom: 1px solid var(--color-gray-100);
+      transition: background-color 0.2s ease;
+    }
+
+    .ledger-table tbody tr:last-child { border-bottom: none; }
+    
+    .ledger-table tbody tr:hover {
+      background-color: var(--color-gray-50);
+    }
+
+    .ledger-table td {
+      padding: 16px 24px;
+      color: var(--color-gray-700);
+      vertical-align: middle;
+    }
+
+    /* Column Specifics */
+    .col-id {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--color-gray-500);
+    }
+
+    .col-project {
+      font-weight: 500;
+      color: var(--color-gray-900);
+    }
+    
+    .col-entity {
+      font-size: 0.8125rem;
+    }
+    
+    .entity-label {
+      display: block;
+      color: var(--color-gray-500);
+      font-size: 0.75rem;
+      margin-bottom: 2px;
+    }
+
+    .col-amount {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      text-align: right;
+      color: var(--color-gray-900);
+    }
+
+    .amount--negative { color: var(--color-gray-900); }
+    .amount--positive { color: var(--color-success-text); }
+
+    /* Status Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 500;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+
+    .status-badge--completed {
+      background-color: var(--color-success-bg);
+      color: var(--color-success-text);
+      border: 1px solid var(--color-success-border);
+    }
+
+    .status-badge--pending {
+      background-color: var(--color-warning-bg);
+      color: var(--color-warning-text);
+      border: 1px solid var(--color-warning-border);
+    }
+
+    .status-badge--failed {
+      background-color: var(--color-error-bg);
+      color: var(--color-error-text);
+      border: 1px solid var(--color-error-border);
+    }
+    
+    .status-badge--processing {
+      background-color: var(--color-info-bg);
+      color: var(--color-info-text);
+      border: 1px solid var(--color-info-border);
+    }
+
+    /* Actions */
+    .action-btn {
+      padding: 6px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      color: var(--color-gray-400);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-900);
+    }
+
+    /* Footer / Pagination */
+    .ledger-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      background-color: var(--color-white);
+      border-top: 1px solid var(--color-gray-200);
+    }
+
+    .pagination-info {
+      font-size: 0.875rem;
+      color: var(--color-gray-500);
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* =========================================
+       STATES: LOADING & EMPTY
+       ========================================= */
+    /* Loading Skeleton */
+    .skeleton {
+      background-color: var(--color-gray-100);
+      border-radius: var(--radius-md);
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    .skeleton-text { height: 16px; width: 80%; }
+    .skeleton-badge { height: 20px; width: 80px; border-radius: 99px; }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .5; }
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--color-gray-500);
+    }
+    .empty-icon {
+      width: 48px; height: 48px;
+      margin-bottom: 16px;
+      color: var(--color-gray-300);
+    }
+
+    /* =========================================
+       RESPONSIVE: CARD VIEW (Mobile < 768px)
+       ========================================= */
+    @media (max-width: 768px) {
+      .filter-toolbar {
+        border-radius: var(--radius-lg);
+        border-bottom: 1px solid var(--color-gray-200);
+        margin-bottom: 16px;
+      }
+
+      .ledger-wrapper {
+        background: transparent;
+        box-shadow: none;
+        border: none;
+      }
+
+      .ledger-table, 
+      .ledger-table tbody, 
+      .ledger-table tr, 
+      .ledger-table td {
+        display: block;
+        width: 100%;
+      }
+
+      .ledger-table thead { display: none; } /* Hide headers */
+
+      .ledger-table tbody tr {
+        background: var(--color-white);
+        margin-bottom: 12px;
+        border: 1px solid var(--color-gray-200);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: 16px;
+        position: relative;
+      }
+
+      .ledger-table tbody tr:hover { transform: none; }
+
+      .ledger-table td {
+        padding: 4px 0;
+        text-align: right; /* Values right aligned */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: none;
+      }
+
+      /* Add Labels via Data Attribute */
+      .ledger-table td::before {
+        content: attr(data-label);
+        float: left;
+        font-weight: 600;
+        color: var(--color-gray-500);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+      }
+
+      /* Specific Card Styling overrides */
+      .col-project {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--color-primary-600);
+        width: 100%;
+        display: block;
+        text-align: left;
+      }
+      /* Hide label for project title row to make it header-like */
+      .ledger-table td.col-project-cell::before { content: none; }
+      .ledger-table td.col-project-cell { text-align: left; padding-bottom: 12px; border-bottom: 1px solid var(--color-gray-100); margin-bottom: 8px; }
+
+      .col-amount { font-size: 1.125rem; }
+      
+      /* Actions positioning */
+      .ledger-table td:last-child {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed var(--color-gray-200);
+        justify-content: flex-end;
+      }
+      
+      .ledger-footer {
+        flex-direction: column;
+        gap: 16px;
+        background: transparent;
+        border: none;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- VARIANT 1: FULL TABLE VIEW (Desktop Default) -->
+    <div class="component-demo">
+      <h2 style="margin: 40px 0 20px; font-family: var(--font-primary);">Transaction Ledger (Full View)</h2>
+      
+      <!-- Filter Molecule Integration -->
+      <div class="filter-toolbar">
+        <div class="filter-search">
+          <svg class="filter-search__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <input type="text" class="filter-input" placeholder="Search transactions...">
+        </div>
+        <div class="filter-group">
+          <select class="filter-select" aria-label="Filter by Type">
+            <option value="">Type: All</option>
+            <option value="payment">Payment</option>
+            <option value="payout">Payout</option>
+          </select>
+          <select class="filter-select" aria-label="Filter by Status">
+            <option value="">Status: All</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+          </select>
+          <button class="filter-btn">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Ledger Table Organism -->
+      <div class="ledger-wrapper">
+        <table class="ledger-table" aria-label="Financial Transactions">
+          <thead>
+            <tr>
+              <th class="sortable" aria-sort="descending">Date ↓</th>
+              <th>Transaction ID</th>
+              <th>Project / Entity</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th class="text-right sortable">Amount</th>
+              <th></th> <!-- Actions -->
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Row 1: Completed Payment -->
+            <tr>
+              <td data-label="Date">Oct 24, 2023<div class="col-id">10:42 AM</div></td>
+              <td data-label="ID"><span class="col-id">TXN-883920</span></td>
+              <td data-label="Project" class="col-project-cell">
+                <div class="col-project">E-commerce Redesign</div>
+                <div class="entity-label">Client: Acme Corp</div>
+              </td>
+              <td data-label="Type">Payment</td>
+              <td data-label="Status"><span class="status-badge status-badge--completed">Completed</span></td>
+              <td data-label="Amount" class="col-amount amount--positive">+$12,500.00</td>
+              <td data-label="Actions" style="text-align: right;">
+                <button class="action-btn" aria-label="View Details">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                </button>
+              </td>
+            </tr>
+
+            <!-- Row 2: Pending Payout -->
+            <tr>
+              <td data-label="Date">Oct 23, 2023<div class="col-id">04:15 PM</div></td>
+              <td data-label="ID"><span class="col-id">TXN-883919</span></td>
+              <td data-label="Project" class="col-project-cell">
+                <div class="col-project">Mobile App Phase 1</div>
+                <div class="entity-label">Vendor: DevStudio Inc</div>
+              </td>
+              <td data-label="Type">Payout</td>
+              <td data-label="Status"><span class="status-badge status-badge--pending">Pending Approval</span></td>
+              <td data-label="Amount" class="col-amount amount--negative">-$4,200.00</td>
+              <td data-label="Actions" style="text-align: right;">
+                <button class="action-btn" aria-label="View Details">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                </button>
+              </td>
+            </tr>
+
+            <!-- Row 3: Processing -->
+            <tr>
+              <td data-label="Date">Oct 22, 2023<div class="col-id">09:00 AM</div></td>
+              <td data-label="ID"><span class="col-id">TXN-883915</span></td>
+              <td data-label="Project" class="col-project-cell">
+                <div class="col-project">Marketing Audit</div>
+                <div class="entity-label">Client: Global Tech</div>
+              </td>
+              <td data-label="Type">Refund</td>
+              <td data-label="Status"><span class="status-badge status-badge--processing">Processing</span></td>
+              <td data-label="Amount" class="col-amount amount--negative">-$500.00</td>
+              <td data-label="Actions" style="text-align: right;">
+                <button class="action-btn" aria-label="View Details">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                </button>
+              </td>
+            </tr>
+             <!-- Row 4: Failed -->
+             <tr>
+              <td data-label="Date">Oct 20, 2023<div class="col-id">11:30 AM</div></td>
+              <td data-label="ID"><span class="col-id">TXN-883890</span></td>
+              <td data-label="Project" class="col-project-cell">
+                <div class="col-project">SEO Optimization</div>
+                <div class="entity-label">Vendor: SEO Wizards</div>
+              </td>
+              <td data-label="Type">Payout</td>
+              <td data-label="Status"><span class="status-badge status-badge--failed">Failed</span></td>
+              <td data-label="Amount" class="col-amount amount--negative">-$1,200.00</td>
+              <td data-label="Actions" style="text-align: right;">
+                <button class="action-btn" aria-label="View Details">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="ledger-footer">
+          <div class="pagination-info">Showing <strong>1-4</strong> of <strong>128</strong> transactions</div>
+          <div class="pagination-controls">
+            <button class="filter-btn" disabled>Previous</button>
+            <button class="filter-btn">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VARIANT 2: LOADING STATE -->
+    <div class="component-demo">
+      <h2 style="margin: 40px 0 20px; font-family: var(--font-primary);">Loading State</h2>
+      <div class="ledger-wrapper">
+        <table class="ledger-table" aria-busy="true" aria-label="Loading Transactions">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Transaction ID</th>
+              <th>Project</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th class="text-right">Amount</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="skeleton skeleton-text" style="width: 80px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 100px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 150px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 60px;"></div></td>
+              <td><div class="skeleton skeleton-badge"></div></td>
+              <td class="text-right"><div class="skeleton skeleton-text" style="width: 80px; margin-left: auto;"></div></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><div class="skeleton skeleton-text" style="width: 80px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 100px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 130px;"></div></td>
+              <td><div class="skeleton skeleton-text" style="width: 60px;"></div></td>
+              <td><div class="skeleton skeleton-badge"></div></td>
+              <td class="text-right"><div class="skeleton skeleton-text" style="width: 80px; margin-left: auto;"></div></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VARIANT 3: EMPTY STATE -->
+    <div class="component-demo">
+      <h2 style="margin: 40px 0 20px; font-family: var(--font-primary);">Empty State</h2>
+      <div class="ledger-wrapper">
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Transaction ID</th>
+              <th>Project</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th class="text-right">Amount</th>
+              <th></th>
+            </tr>
+          </thead>
+        </table>
+        <div class="empty-state">
+          <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <h3>No transactions found</h3>
+          <p>Adjust your filters or search terms to find what you're looking for.</p>
+          <button class="filter-btn" style="margin: 16px auto;">Clear Filters</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

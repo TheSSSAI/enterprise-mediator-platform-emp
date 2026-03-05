@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authentication & Onboarding | Enterprise Mediator</title>
+  
+  <!-- Typography: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* 
+     * DESIGN SYSTEM TOKENS 
+     * Derived from provided context
+     */
+    :root {
+      /* Colors: Primary (Teal) */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      --color-primary-800: #115e59;
+
+      /* Colors: Neutrals */
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-900: #0f172a;
+
+      /* Colors: Semantic */
+      --color-error-bg: #fef2f2;
+      --color-error-border: #fca5a5;
+      --color-error-text: #b91c1c;
+      --color-success-bg: #f0fdf4;
+      --color-success-text: #15803d;
+
+      /* Typography */
+      --font-primary: 'Plus Jakarta Sans', sans-serif;
+      --font-secondary: 'Inter', sans-serif;
+
+      /* Spacing & Sizing */
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 12px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+      /* Animation */
+      --transition-base: all 0.2s ease-in-out;
+    }
+
+    /* 
+     * CSS RESET & BASE STYLES 
+     */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-secondary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-primary);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: var(--color-gray-900);
+    }
+
+    a {
+      color: var(--color-primary-600);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition-base);
+    }
+
+    a:hover {
+      color: var(--color-primary-800);
+      text-decoration: underline;
+    }
+
+    /* 
+     * LAYOUT COMPONENTS 
+     */
+    .auth-container {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background-image: radial-gradient(var(--color-primary-100) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .auth-card {
+      background: var(--color-white);
+      width: 100%;
+      max-width: 440px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: 40px;
+      border: 1px solid var(--color-gray-100);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Brand Header */
+    .auth-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      background: var(--color-primary-50);
+      color: var(--color-primary-600);
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .auth-title {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .auth-subtitle {
+      color: var(--color-gray-500);
+      font-size: 14px;
+    }
+
+    /* 
+     * FORM COMPONENTS 
+     */
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-gray-700);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--color-gray-900);
+      background-color: var(--color-white);
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      transition: var(--transition-base);
+      font-family: var(--font-secondary);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 3px var(--color-primary-100);
+    }
+
+    .form-control::placeholder {
+      color: var(--color-gray-400);
+    }
+
+    .form-control[aria-invalid="true"] {
+      border-color: var(--color-error-border);
+      background-color: var(--color-white);
+    }
+
+    .form-control[aria-invalid="true"]:focus {
+      box-shadow: 0 0 0 3px var(--color-error-bg);
+    }
+
+    /* Input with Icon */
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon-right {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-gray-400);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon-right:hover {
+      color: var(--color-gray-600);
+    }
+
+    /* Validation Message */
+    .validation-message {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--color-error-text);
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .form-group.has-error .validation-message {
+      opacity: 1;
+      height: auto;
+    }
+
+    .form-group.has-error .form-control {
+      border-color: var(--color-error-border);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: var(--transition-base);
+      font-family: var(--font-primary);
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary-600);
+      color: var(--color-white);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--color-primary-700);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary:disabled {
+      background-color: var(--color-gray-200);
+      color: var(--color-gray-400);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border-color: var(--color-gray-300);
+      color: var(--color-gray-700);
+      margin-top: 12px;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    /* Links & Utility */
+    .form-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--color-gray-600);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 24px 0;
+      color: var(--color-gray-500);
+      font-size: 13px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .divider::before { margin-right: 12px; }
+    .divider::after { margin-left: 12px; }
+
+    /* 
+     * VIEW SPECIFIC: MFA INPUT 
+     */
+    .mfa-container {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 24px 0;
+    }
+
+    .mfa-digit {
+      width: 48px;
+      height: 56px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+    }
+
+    .mfa-digit:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 3px var(--color-primary-100);
+    }
+
+    /* 
+     * VIEW SPECIFIC: PASSWORD STRENGTH 
+     */
+    .password-strength {
+      margin-top: 8px;
+      background: var(--color-gray-50);
+      padding: 12px;
+      border-radius: var(--radius-md);
+      display: none; /* Shown via JS */
+    }
+
+    .requirement-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--color-gray-500);
+      margin-bottom: 4px;
+    }
+
+    .requirement-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .requirement-item.valid {
+      color: var(--color-success-text);
+    }
+
+    .requirement-icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* 
+     * NOTIFICATIONS 
+     */
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .alert-error {
+      background-color: var(--color-error-bg);
+      border: 1px solid var(--color-error-border);
+      color: var(--color-error-text);
+    }
+
+    .alert-success {
+      background-color: var(--color-success-bg);
+      border: 1px solid var(--color-success-text);
+      color: var(--color-success-text);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* 
+     * RESPONSIVE ADJUSTMENTS 
+     */
+    @media (max-width: 480px) {
+      .auth-container {
+        padding: 16px;
+        background: var(--color-white);
+        align-items: flex-start;
+      }
+      
+      .auth-card {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+      }
+
+      .mfa-digit {
+        width: 40px;
+        height: 48px;
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container">
+    <main class="auth-card" role="main">
+      
+      <!-- Global Alert Area -->
+      <div id="global-alert" class="alert alert-error hidden" role="alert" aria-live="assertive">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="global-alert-text">An error occurred. Please try again.</span>
+      </div>
+
+      <!-- VIEW 1: LOGIN (Default) -->
+      <div id="view-login" class="auth-view">
+        <div class="auth-header">
+          <div class="brand-logo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <h1 class="auth-title">Welcome back</h1>
+          <p class="auth-subtitle">Please enter your details to sign in.</p>
+        </div>
+
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="login-email" class="form-label">Email address</label>
+            <input type="email" id="login-email" class="form-control" placeholder="Enter your email" autocomplete="username" required>
+            <div class="validation-message">Please enter a valid email address.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="login-password" class="form-label">Password</label>
+            <div class="input-wrapper">
+              <input type="password" id="login-password" class="form-control" placeholder="Enter your password" autocomplete="current-password" required>
+              <button type="button" class="input-icon-right toggle-password" aria-label="Show password">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="validation-message">Password is required.</div>
+          </div>
+
+          <div class="form-footer">
+            <label class="remember-me">
+              <input type="checkbox" id="remember">
+              Remember me
+            </label>
+            <a href="#" class="forgot-password-link" onclick="switchView('view-forgot-password'); return false;">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="login-btn">
+            <span class="btn-text">Sign in</span>
+          </button>
+
+          <div class="divider">OR</div>
+
+          <button type="button" class="btn btn-secondary">
+            <svg style="margin-right: 8px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.83a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+            Sign in with SSO
+          </button>
+
+          <p class="auth-subtitle" style="margin-top: 24px; text-align: center;">
+            Don't have an account? <a href="#" onclick="switchView('view-register'); return false;">Sign up</a>
+          </p>
+        </form>
+      </div>
+
+      <!-- VIEW 2: REGISTER -->
+      <div id="view-register" class="auth-view hidden">
+        <div class="auth-header">
+          <div class="brand-logo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          </div>
+          <h1 class="auth-title">Create an account</h1>
+          <p class="auth-subtitle">Join the Enterprise Mediator Platform today.</p>
+        </div>
+
+        <form id="register-form" novalidate>
+          <div class="form-group">
+            <label for="reg-name" class="form-label">Full Name</label>
+            <input type="text" id="reg-name" class="form-control" placeholder="e.g. Jane Doe" autocomplete="name" required>
+            <div class="validation-message">Name is required.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-email" class="form-label">Email address</label>
+            <input type="email" id="reg-email" class="form-control" placeholder="e.g. jane@company.com" autocomplete="email" required>
+            <div class="validation-message">Please enter a valid work email.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-password" class="form-label">Password</label>
+            <div class="input-wrapper">
+              <input type="password" id="reg-password" class="form-control" placeholder="Create a password" autocomplete="new-password" required minlength="8">
+              <button type="button" class="input-icon-right toggle-password" aria-label="Show password">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            
+            <!-- Password Strength Indicator -->
+            <div class="password-strength" id="password-strength">
+              <div class="requirement-item" id="req-length">
+                <svg class="requirement-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                At least 8 characters
+              </div>
+              <div class="requirement-item" id="req-number">
+                <svg class="requirement-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Contains a number
+              </div>
+              <div class="requirement-item" id="req-special">
+                <svg class="requirement-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Contains a special character
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Create account</button>
+
+          <p class="auth-subtitle" style="margin-top: 24px; text-align: center;">
+            Already have an account? <a href="#" onclick="switchView('view-login'); return false;">Log in</a>
+          </p>
+        </form>
+      </div>
+
+      <!-- VIEW 3: FORGOT PASSWORD -->
+      <div id="view-forgot-password" class="auth-view hidden">
+        <div class="auth-header">
+          <div class="brand-logo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h1 class="auth-title">Reset password</h1>
+          <p class="auth-subtitle">Enter your email and we'll send you a reset link.</p>
+        </div>
+
+        <form id="forgot-form" novalidate>
+          <div class="form-group">
+            <label for="reset-email" class="form-label">Email address</label>
+            <input type="email" id="reset-email" class="form-control" placeholder="Enter your email" required>
+            <div class="validation-message">Please enter a valid email address.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Send reset link</button>
+
+          <button type="button" class="btn btn-secondary" onclick="switchView('view-login')">
+            Back to login
+          </button>
+        </form>
+      </div>
+
+      <!-- VIEW 4: MFA CHALLENGE -->
+      <div id="view-mfa" class="auth-view hidden">
+        <div class="auth-header">
+          <div class="brand-logo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h1 class="auth-title">Two-step verification</h1>
+          <p class="auth-subtitle">Enter the 6-digit code from your authenticator app.</p>
+        </div>
+
+        <form id="mfa-form" novalidate>
+          <div class="mfa-container" role="group" aria-label="6-digit verification code">
+            <input type="text" class="mfa-digit" maxlength="1" pattern="\d*" inputmode="numeric" aria-label="Digit 1" required>
+            <input type="text" class="mfa-digit" maxlength="1" pattern="\d*" inputmode="numeric" aria-label="Digit 2" required>
+            <input type="text" class="mfa-digit" maxlength="1" pattern="\d*" inputmode="numeric" aria-label="Digit 3" required>
+            <input type="text" class="mfa-digit" maxlength="1" pattern="\d*" inputmode="numeric" aria-label="Digit 4" required>
+            <input type="text" class="mfa-digit" maxlength="1" pattern="\d*" inputmode="numeric" aria-label="Digit 5" required>
+            <input type="text" class="mfa-digit" maxlength="1" pattern="\d*" inputmode="numeric" aria-label="Digit 6" required>
+          </div>
+          
+          <div class="form-group has-error hidden" id="mfa-error">
+             <div class="validation-message" style="text-align: center; justify-content: center;">Invalid code. Please try again.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="margin-top: 24px;">Verify</button>
+
+          <p class="auth-subtitle" style="margin-top: 24px; text-align: center;">
+            Lost your device? <a href="#">Use recovery code</a>
+          </p>
+        </form>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    /* 
+     * JAVASCRIPT FOR INTERACTION SIMULATION 
+     */
+
+    // View Switching Logic
+    function switchView(viewId) {
+      // Hide all views
+      document.querySelectorAll('.auth-view').forEach(el => {
+        el.classList.add('hidden');
+        el.setAttribute('aria-hidden', 'true');
+      });
+      
+      // Reset alerts
+      const alert = document.getElementById('global-alert');
+      alert.classList.add('hidden');
+
+      // Show target view
+      const target = document.getElementById(viewId);
+      target.classList.remove('hidden');
+      target.setAttribute('aria-hidden', 'false');
+      
+      // Manage focus for accessibility
+      const firstInput = target.querySelector('input');
+      if (firstInput) firstInput.focus();
+    }
+
+    // Password Visibility Toggle
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const input = this.previousElementSibling;
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+        
+        // Update icon visual (simplified for this demo)
+        this.style.color = type === 'text' ? 'var(--color-primary-600)' : 'var(--color-gray-400)';
+      });
+    });
+
+    // Password Strength Logic
+    const regPassword = [REDACTED]'reg-password');
+    const strengthIndicator = document.getElementById('password-strength');
+    
+    if (regPassword) {
+      regPassword.addEventListener('focus', () => {
+        strengthIndicator.style.display = 'block';
+      });
+
+      regPassword.addEventListener('input', function() {
+        const val = this.value;
+        const length = val.length >= 8;
+        const number = /\d/.test(val);
+        const special = /[!@#$%^&*(),.?":{}|<>]/.test(val);
+
+        updateRequirement('req-length', length);
+        updateRequirement('req-number', number);
+        updateRequirement('req-special', special);
+      });
+    }
+
+    function updateRequirement(id, isValid) {
+      const el = document.getElementById(id);
+      if (isValid) {
+        el.classList.add('valid');
+        el.querySelector('svg').innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
+      } else {
+        el.classList.remove('valid');
+        el.querySelector('svg').innerHTML = '<circle cx="12" cy="12" r="10"/>';
+      }
+    }
+
+    // MFA Input Logic (Auto-focus next)
+    const mfaInputs = document.querySelectorAll('.mfa-digit');
+    mfaInputs.forEach((input, index) => {
+      input.addEventListener('input', (e) => {
+        if (e.target.value.length === 1 && index < mfaInputs.length - 1) {
+          mfaInputs[index + 1].focus();
+        }
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+          mfaInputs[index - 1].focus();
+        }
+      });
+    });
+
+    // Form Submission Simulation
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      const originalText = btn.innerHTML;
+      
+      // Basic validation
+      const email = document.getElementById('login-email');
+      const pass = document.getElementById('login-password');
+      let valid = true;
+
+      if (!email.value || !email.value.includes('@')) {
+        email.closest('.form-group').classList.add('has-error');
+        valid = false;
+      } else {
+        email.closest('.form-group').classList.remove('has-error');
+      }
+
+      if (!pass.value) {
+        pass.closest('.form-group').classList.add('has-error');
+        valid = false;
+      } else {
+        pass.closest('.form-group').classList.remove('has-error');
+      }
+
+      if (!valid) return;
+
+      // Simulate API loading state
+      btn.disabled = true;
+      btn.innerHTML = 'Signing in...';
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        
+        // Simulate Success -> Transition to MFA
+        switchView('view-mfa');
+      }, 1000);
+    });
+
+    document.getElementById('mfa-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      // Simulate verification
+      const alert = document.getElementById('global-alert');
+      alert.classList.remove('hidden', 'alert-error');
+      alert.classList.add('alert-success');
+      alert.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>Authentication successful! Redirecting...</span>
+      `;
+    });
+
+  </script>
+</body>
+</html>

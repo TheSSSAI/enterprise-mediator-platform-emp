@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Workspace - Enterprise Mediator Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* 
+      DESIGN SYSTEM TOKENS & RESET 
+    */
+    :root {
+      /* Colors: Primary (Teal) */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      --color-primary-900: #134e4a;
+
+      /* Colors: Neutrals */
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-900: #0f172a;
+
+      /* Colors: Semantic */
+      --color-success-bg: #f0fdf4;
+      --color-success-text: #166534;
+      --color-success-border: #bbf7d0;
+      
+      --color-warning-bg: #fffbeb;
+      --color-warning-text: #92400e;
+      --color-warning-border: #fde68a;
+
+      --color-info-bg: #eff6ff;
+      --color-info-text: #1e40af;
+
+      /* Typography */
+      --font-primary: 'Plus Jakarta Sans', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Spacing & Layout */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      
+      --max-width: 1440px;
+      --header-height: 64px;
+    }
+
+    /* Reset & Base Styles */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-primary);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--color-gray-900);
+    }
+
+    a {
+      color: var(--color-primary-600);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    a:hover {
+      color: var(--color-primary-700);
+    }
+
+    /* UTILITIES */
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 var(--spacing-lg);
+    }
+
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-sm { gap: var(--spacing-sm); }
+    .gap-md { gap: var(--spacing-md); }
+    .gap-lg { gap: var(--spacing-lg); }
+
+    .hidden-mobile { display: none; }
+    @media (min-width: 768px) {
+      .hidden-mobile { display: block; }
+    }
+
+    /* COMPONENTS */
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-primary);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary-600);
+      color: var(--color-white);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--color-primary-700);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-secondary {
+      background-color: var(--color-white);
+      border-color: var(--color-gray-300);
+      color: var(--color-gray-700);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    .btn-sm {
+      padding: 4px 12px;
+      font-size: 12px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-md);
+      padding-bottom: var(--spacing-md);
+      border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .badge-success {
+      background-color: var(--color-success-bg);
+      color: var(--color-success-text);
+      border: 1px solid var(--color-success-border);
+    }
+
+    .badge-warning {
+      background-color: var(--color-warning-bg);
+      color: var(--color-warning-text);
+      border: 1px solid var(--color-warning-border);
+    }
+
+    .badge-info {
+      background-color: var(--color-info-bg);
+      color: var(--color-info-text);
+    }
+
+    /* Icons (CSS Shapes for demo) */
+    .icon {
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      background-color: currentColor;
+      -webkit-mask-size: cover;
+      mask-size: cover;
+    }
+
+    /* 
+      LAYOUT: Project Workspace 
+    */
+    .workspace-layout {
+      padding-top: var(--spacing-lg);
+      padding-bottom: var(--spacing-xl);
+      display: grid;
+      gap: var(--spacing-lg);
+    }
+
+    /* Breadcrumbs */
+    .breadcrumbs {
+      display: flex;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--color-gray-500);
+      margin-bottom: var(--spacing-sm);
+    }
+    
+    .breadcrumbs span { color: var(--color-gray-300); }
+
+    /* Header Area */
+    .project-header {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .project-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+    }
+
+    .project-title h1 {
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+
+    .client-meta {
+      font-size: 14px;
+      color: var(--color-gray-500);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Financial Stats Row */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: var(--spacing-md);
+    }
+
+    .stat-card {
+      padding: var(--spacing-md);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--color-gray-500);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: var(--font-primary);
+      color: var(--color-gray-900);
+    }
+
+    .stat-trend {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .trend-up { color: var(--color-success-text); }
+
+    /* Main Content Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-lg);
+      margin-top: var(--spacing-md);
+    }
+
+    /* SOW Panel Specifics */
+    .sow-panel {
+      border-left: 4px solid var(--color-primary-500);
+    }
+
+    .sow-content-grid {
+      display: grid;
+      gap: var(--spacing-lg);
+    }
+
+    .data-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-gray-500);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .skill-tag {
+      background: var(--color-gray-100);
+      border: 1px solid var(--color-gray-200);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 13px;
+      color: var(--color-gray-700);
+      font-family: var(--font-mono);
+    }
+
+    .ai-confidence {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--color-primary-50);
+      color: var(--color-primary-700);
+      padding: 4px 8px;
+      border-radius: 4px;
+      width: fit-content;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    /* Vendor List Specifics */
+    .vendor-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .vendor-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-md);
+      transition: border-color 0.2s;
+    }
+
+    .vendor-item:hover {
+      border-color: var(--color-primary-300);
+      background-color: var(--color-gray-50);
+    }
+
+    .vendor-info h4 {
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+
+    .vendor-info p {
+      font-size: 13px;
+      color: var(--color-gray-500);
+    }
+
+    .match-score {
+      text-align: right;
+    }
+
+    .score-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-primary-600);
+    }
+
+    .score-label {
+      font-size: 11px;
+      color: var(--color-gray-500);
+    }
+
+    /* Proposal Table */
+    .proposal-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .proposal-table th {
+      text-align: left;
+      padding: 12px 16px;
+      background: var(--color-gray-50);
+      color: var(--color-gray-600);
+      font-weight: 600;
+      border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .proposal-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--color-gray-100);
+      color: var(--color-gray-700);
+    }
+
+    .proposal-table tr:hover td {
+      background-color: var(--color-gray-50);
+    }
+
+    /* Responsive Queries */
+    @media (min-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      
+      .project-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 8fr 4fr; /* 2/3 Main, 1/3 Sidebar */
+      }
+      
+      .sow-content-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .full-width-col {
+        grid-column: span 2;
+      }
+    }
+
+    /* Utility: Visually Hidden for A11y */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Screen Container -->
+  <div class="container workspace-layout">
+    
+    <!-- 1. Navigation Breadcrumbs -->
+    <nav aria-label="Breadcrumb">
+      <div class="breadcrumbs">
+        <a href="#">Projects</a> <span>/</span>
+        <a href="#">Active</a> <span>/</span>
+        <span aria-current="page" style="color: var(--color-gray-700); font-weight: 500;">Phoenix Initiative Q4</span>
+      </div>
+    </nav>
+
+    <!-- 2. Project Header -->
+    <header class="project-header">
+      <div class="project-header-top">
+        <div class="project-title">
+          <h1>Phoenix Initiative Q4</h1>
+          <div class="client-meta">
+            <span>Client: <strong>Acme Corp</strong></span>
+            <span style="color: var(--color-gray-300)">|</span>
+            <span class="badge badge-info">Proposed</span>
+          </div>
+        </div>
+        
+        <div class="header-actions flex gap-sm">
+          <button class="btn btn-secondary">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            Export
+          </button>
+          <button class="btn btn-secondary">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Project
+          </button>
+          <button class="btn btn-primary">
+            Distribute Brief
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 3. Financial Summary -->
+    <section class="stats-grid" aria-label="Project Financial Summary">
+      <div class="card stat-card">
+        <span class="stat-label">Estimated Budget</span>
+        <span class="stat-value">$150,000</span>
+        <span class="stat-trend trend-up">
+          <svg class="icon" style="width: 12px; height: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          On Track
+        </span>
+      </div>
+      <div class="card stat-card">
+        <span class="stat-label">Proposals Received</span>
+        <span class="stat-value">3</span>
+        <span class="stat-trend" style="color: var(--color-gray-500)">
+          2 Pending Review
+        </span>
+      </div>
+      <div class="card stat-card">
+        <span class="stat-label">Projected Margin</span>
+        <span class="stat-value">18.5%</span>
+        <span class="stat-trend" style="color: var(--color-gray-500)">
+          Target: 15%
+        </span>
+      </div>
+    </section>
+
+    <!-- 4. Main Content Area -->
+    <div class="main-grid">
+      
+      <!-- Left Column: SOW & Workflow -->
+      <div class="flex-col gap-lg">
+        
+        <!-- SOW Analysis Panel (High Importance) -->
+        <section class="card sow-panel" aria-labelledby="sow-heading">
+          <div class="card-header" style="border: none; padding-bottom: 0;">
+            <div>
+              <div class="ai-confidence">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+                AI Processing Complete • 98% Confidence
+              </div>
+              <h2 id="sow-heading" class="card-title">SOW Data Extraction</h2>
+            </div>
+            <button class="btn btn-sm btn-secondary">View Original PDF</button>
+          </div>
+
+          <div class="sow-content-grid">
+            <div class="data-group full-width-col">
+              <label>Scope Summary</label>
+              <p class="body-text" style="color: var(--color-gray-700); font-size: 15px;">
+                Design and development of a scalable React-based e-commerce frontend for the legacy inventory system. Includes integration with Stripe API, user authentication via Auth0, and a mobile-first responsive design overhaul.
+              </p>
+            </div>
+
+            <div class="data-group">
+              <label>Required Skills</label>
+              <div class="tag-container">
+                <span class="skill-tag">React.js</span>
+                <span class="skill-tag">TypeScript</span>
+                <span class="skill-tag">Node.js</span>
+                <span class="skill-tag">Stripe API</span>
+                <span class="skill-tag">UI/UX Design</span>
+              </div>
+            </div>
+
+            <div class="data-group">
+              <label>Key Deliverables</label>
+              <ul style="padding-left: 20px; font-size: 14px; color: var(--color-gray-700);">
+                <li>High-fidelity Figma prototypes</li>
+                <li>Responsive React Application</li>
+                <li>API Integration Documentation</li>
+                <li>Unit Test Suite (>80% coverage)</li>
+              </ul>
+            </div>
+
+            <div class="data-group">
+              <label>Timeline</label>
+              <div style="font-family: var(--font-mono); font-size: 14px; color: var(--color-gray-900);">
+                Start: 2023-11-01 <br>
+                End:   2024-02-28 (16 Weeks)
+              </div>
+            </div>
+          </div>
+          
+          <div style="margin-top: var(--spacing-lg); padding-top: var(--spacing-md); border-top: 1px solid var(--color-gray-100); display: flex; gap: 12px;">
+            <button class="btn btn-secondary">Edit Data</button>
+            <button class="btn btn-secondary">Re-Process</button>
+          </div>
+        </section>
+
+        <!-- Proposals List -->
+        <section class="card" aria-labelledby="proposals-heading">
+          <div class="card-header">
+            <h2 id="proposals-heading" class="card-title">Proposals</h2>
+            <div class="flex gap-sm">
+              <span class="badge badge-warning">Action Required</span>
+            </div>
+          </div>
+          
+          <div style="overflow-x: auto;">
+            <table class="proposal-table">
+              <thead>
+                <tr>
+                  <th scope="col">Vendor</th>
+                  <th scope="col">Date</th>
+                  <th scope="col">Est. Cost</th>
+                  <th scope="col">Timeline</th>
+                  <th scope="col">Status</th>
+                  <th scope="col"><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>DevSquadron</strong></td>
+                  <td>Oct 24</td>
+                  <td>$145,000</td>
+                  <td>14 Weeks</td>
+                  <td><span class="badge badge-info">Submitted</span></td>
+                  <td><a href="#" style="font-size: 13px; font-weight: 500;">Review</a></td>
+                </tr>
+                <tr>
+                  <td><strong>PixelPerfect</strong></td>
+                  <td>Oct 25</td>
+                  <td>$160,000</td>
+                  <td>16 Weeks</td>
+                  <td><span class="badge badge-success">Shortlisted</span></td>
+                  <td><a href="#" style="font-size: 13px; font-weight: 500;">Review</a></td>
+                </tr>
+                <tr>
+                  <td><strong>CodeArtisans</strong></td>
+                  <td>Oct 26</td>
+                  <td>$138,500</td>
+                  <td>12 Weeks</td>
+                  <td><span class="badge badge-info">Submitted</span></td>
+                  <td><a href="#" style="font-size: 13px; font-weight: 500;">Review</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top: 16px; text-align: center;">
+            <button class="btn btn-sm btn-secondary">View All Proposals</button>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Right Column: Sidebar -->
+      <aside class="flex-col gap-lg">
+        
+        <!-- Vendor Matching (AI) -->
+        <section class="card" style="background-color: var(--color-primary-50); border-color: var(--color-primary-100);" aria-labelledby="matching-heading">
+          <div class="card-header" style="border-bottom-color: var(--color-primary-200);">
+            <h2 id="matching-heading" class="card-title" style="color: var(--color-primary-900);">AI Matches</h2>
+            <span class="badge badge-success">5 New</span>
+          </div>
+          
+          <ul class="vendor-list">
+            <li class="vendor-item" style="background: white;">
+              <div class="vendor-info">
+                <h4>TechForge Systems</h4>
+                <p>Specializes in React & Fintech</p>
+              </div>
+              <div class="match-score">
+                <div class="score-val">98%</div>
+                <div class="score-label">Match</div>
+              </div>
+            </li>
+            <li class="vendor-item" style="background: white;">
+              <div class="vendor-info">
+                <h4>WebWizards Inc.</h4>
+                <p>Strong UI/UX Portfolio</p>
+              </div>
+              <div class="match-score">
+                <div class="score-val">94%</div>
+                <div class="score-label">Match</div>
+              </div>
+            </li>
+            <li class="vendor-item" style="background: white;">
+              <div class="vendor-info">
+                <h4>RapidDevs</h4>
+                <p>Available Immediately</p>
+              </div>
+              <div class="match-score">
+                <div class="score-val">89%</div>
+                <div class="score-label">Match</div>
+              </div>
+            </li>
+          </ul>
+          
+          <button class="btn btn-primary" style="width: 100%; margin-top: 16px;">
+            Review Recommendations
+          </button>
+        </section>
+
+        <!-- Project Timeline / Activity -->
+        <section class="card" aria-labelledby="activity-heading">
+          <h2 id="activity-heading" class="card-title" style="margin-bottom: 16px;">Project Activity</h2>
+          
+          <div style="display: flex; flex-direction: column; gap: 16px; position: relative;">
+            <!-- Timeline Line -->
+            <div style="position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: var(--color-gray-200);"></div>
+
+            <!-- Item 1 -->
+            <div style="display: flex; gap: 12px; position: relative;">
+              <div style="width: 16px; height: 16px; border-radius: 50%; background: var(--color-primary-500); border: 2px solid white; box-shadow: 0 0 0 1px var(--color-primary-500); z-index: 1;"></div>
+              <div>
+                <p style="font-size: 13px; font-weight: 500; color: var(--color-gray-900);">Brief Distributed</p>
+                <p style="font-size: 12px; color: var(--color-gray-500);">Today, 10:00 AM by You</p>
+              </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div style="display: flex; gap: 12px; position: relative;">
+              <div style="width: 16px; height: 16px; border-radius: 50%; background: var(--color-white); border: 2px solid var(--color-gray-300); z-index: 1;"></div>
+              <div>
+                <p style="font-size: 13px; font-weight: 500; color: var(--color-gray-900);">SOW Approved</p>
+                <p style="font-size: 12px; color: var(--color-gray-500);">Yesterday, 4:30 PM by Sarah J.</p>
+              </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div style="display: flex; gap: 12px; position: relative;">
+              <div style="width: 16px; height: 16px; border-radius: 50%; background: var(--color-white); border: 2px solid var(--color-gray-300); z-index: 1;"></div>
+              <div>
+                <p style="font-size: 13px; font-weight: 500; color: var(--color-gray-900);">Project Created</p>
+                <p style="font-size: 12px; color: var(--color-gray-500);">Oct 20, 2:00 PM</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- Variant: SOW Processing State (CSS Only adjustment for demo) -->
+  <!-- 
+    To demonstrate the "Loading/Processing" state:
+    1. The SOW Panel would have a different class `.processing`
+    2. Content would be replaced by a progress bar and skeleton text.
+  -->
+  <div class="container" style="margin-top: 64px; padding-bottom: 64px; border-top: 1px dashed var(--color-gray-300);">
+    <h3 style="margin-bottom: 16px; color: var(--color-gray-500);">Variant: SOW Processing State (Preview)</h3>
+    
+    <section class="card sow-panel" style="max-width: 800px;">
+      <div class="card-header" style="border: none;">
+        <div>
+          <div class="badge badge-warning" style="margin-bottom: 8px;">
+            <svg class="icon" style="width:12px;height:12px;margin-right:4px;animation:spin 2s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            Processing Document...
+          </div>
+          <h2 class="card-title">Analyzing SOW</h2>
+        </div>
+      </div>
+      
+      <div style="padding: 24px 0;">
+        <div style="height: 4px; width: 100%; background: var(--color-gray-100); border-radius: 2px; overflow: hidden; margin-bottom: 16px;">
+          <div style="height: 100%; width: 65%; background: var(--color-primary-500);"></div>
+        </div>
+        <p style="font-size: 14px; color: var(--color-gray-500); text-align: center;">Extracting key deliverables and timeline...</p>
+      </div>
+    </section>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Operations | Enterprise Mediator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 
+         * DESIGN SYSTEM TOKENS 
+         * Derived from JSON specification
+         */
+        :root {
+            /* Color Palette - Primary (Teal) */
+            --primary-50: #f0fdfa;
+            --primary-100: #ccfbf1;
+            --primary-500: #14b8a6;
+            --primary-600: #0d9488;
+            --primary-700: #0f766e;
+            --primary-900: #134e4a;
+
+            /* Neutrals */
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+
+            /* Semantic */
+            --success-light: #22c55e;
+            --success-bg: #f0fdf4;
+            --success-text: #15803d;
+            
+            --warning-light: #f59e0b;
+            --warning-bg: #fffbeb;
+            --warning-text: #b45309;
+
+            --error-light: #ef4444;
+            --error-bg: #fef2f2;
+            --error-text: #b91c1c;
+
+            /* Typography */
+            --font-primary: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            /* Layout & Spacing */
+            --header-height: 64px;
+            --sidebar-width: 260px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        /* 
+         * RESET & BASE STYLES 
+         */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            background-color: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            height: 100vh;
+            overflow: hidden; /* App-like structure */
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* 
+         * LAYOUT STRUCTURE 
+         */
+        .app-container {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            grid-template-rows: var(--header-height) 1fr;
+            height: 100vh;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main";
+        }
+
+        /* Mobile Layout */
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 64px 1fr;
+                --sidebar-width: 64px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "header"
+                    "main";
+            }
+        }
+
+        /* 
+         * HEADER COMPONENT 
+         */
+        .header {
+            grid-area: header;
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 10;
+        }
+
+        .header__title {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header__actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-100);
+            color: var(--primary-700);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* 
+         * SIDEBAR COMPONENT 
+         */
+        .sidebar {
+            grid-area: sidebar;
+            background: var(--gray-900);
+            color: var(--gray-300);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--gray-800);
+        }
+
+        .sidebar__logo {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--white);
+            letter-spacing: -0.02em;
+            border-bottom: 1px solid var(--gray-800);
+        }
+
+        .nav {
+            padding: 24px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav__item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius-md);
+            color: var(--gray-400);
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .nav__item:hover {
+            background: var(--gray-800);
+            color: var(--white);
+        }
+
+        .nav__item--active {
+            background: var(--primary-900);
+            color: var(--primary-100);
+            position: relative;
+        }
+
+        .nav__item--active::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 6px;
+            bottom: 6px;
+            width: 4px;
+            border-radius: 0 4px 4px 0;
+            background: var(--primary-500);
+        }
+
+        .nav__icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar__logo span,
+            .nav__text {
+                display: none;
+            }
+            .sidebar {
+                align-items: center;
+            }
+            .sidebar__logo {
+                padding: 0;
+                justify-content: center;
+            }
+            .nav__item {
+                justify-content: center;
+                padding: 12px;
+            }
+            .nav__item--active::before {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none; /* In real app, would be drawer */
+            }
+        }
+
+        /* 
+         * MAIN CONTENT AREA 
+         */
+        .main {
+            grid-area: main;
+            overflow-y: auto;
+            padding: 24px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 8px;
+        }
+
+        .page-title h1 {
+            font-size: 24px;
+            color: var(--gray-900);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .page-title p {
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        /* 
+         * TABS NAVIGATION 
+         */
+        .tabs {
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            gap: 32px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gray-500);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .tab-btn:hover {
+            color: var(--gray-700);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-600);
+            font-weight: 600;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-500);
+        }
+
+        .tab-btn .badge {
+            background: var(--error-light);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* 
+         * FILTERS BAR 
+         */
+        .filters {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: var(--white);
+            padding: 16px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            flex-wrap: wrap;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--gray-400);
+        }
+
+        .input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            color: var(--gray-900);
+            transition: border-color 0.2s;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 2px var(--primary-100);
+        }
+
+        .date-picker {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            background: var(--white);
+            padding: 0 12px;
+            height: 42px;
+        }
+
+        .date-input {
+            border: none;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--gray-700);
+            width: 130px;
+        }
+        
+        .date-input:focus {
+            outline: none;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--primary-600);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-700);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            border-color: var(--gray-300);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        /* 
+         * DATA TABLE 
+         */
+        .table-container {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table th {
+            background: var(--gray-50);
+            text-align: left;
+            padding: 12px 24px;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .data-table td {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover td {
+            background: var(--gray-50);
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .badge-success { background: var(--success-bg); color: var(--success-text); }
+        .badge-warning { background: var(--warning-bg); color: var(--warning-text); }
+        .badge-error { background: var(--error-bg); color: var(--error-text); }
+        .badge-neutral { background: var(--gray-100); color: var(--gray-600); }
+
+        .currency {
+            font-family: var(--font-mono);
+            font-weight: 500;
+        }
+
+        /* 
+         * CARDS & REPORTS 
+         */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stat-label {
+            color: var(--gray-500);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--gray-900);
+            letter-spacing: -0.02em;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trend-up { color: var(--success-text); }
+        .trend-down { color: var(--error-text); }
+
+        .chart-container {
+            background: var(--white);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            height: 300px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        /* Simple CSS Bar Chart */
+        .bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .bar {
+            width: 100%;
+            max-width: 40px;
+            background: var(--primary-200);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.5s ease-out;
+            position: relative;
+        }
+        
+        .bar:hover {
+            background: var(--primary-500);
+        }
+
+        .bar::after {
+            content: attr(data-value);
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-700);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .bar:hover::after {
+            opacity: 1;
+        }
+
+        .bar-label {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        /* 
+         * VIEWS 
+         */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Table */
+        @media (max-width: 768px) {
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main {
+                padding: 16px;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar__logo">
+            <!-- Icon placeholder -->
+            <svg class="nav__icon" viewBox="0 0 24 24" style="margin-right: 8px;">
+                <path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z" fill="currentColor"/>
+            </svg>
+            <span>EMP Admin</span>
+        </div>
+        <nav class="nav">
+            <a href="#" class="nav__item">
+                <svg class="nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span class="nav__text">Dashboard</span>
+            </a>
+            <a href="#" class="nav__item">
+                <svg class="nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                <span class="nav__text">Projects</span>
+            </a>
+            <a href="#" class="nav__item">
+                <svg class="nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span class="nav__text">Vendors</span>
+            </a>
+            <a href="#" class="nav__item nav__item--active" aria-current="page">
+                <svg class="nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <span class="nav__text">Finance</span>
+            </a>
+            <a href="#" class="nav__item">
+                <svg class="nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span class="nav__text">Reports</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header__title">
+            Financial Operations
+        </div>
+        <div class="header__actions">
+            <button class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                New Invoice
+            </button>
+            <div class="user-profile">
+                <div class="avatar">JS</div>
+                <span style="font-size: 14px; font-weight: 500;">John Smith</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Overview</h1>
+                <p>Manage transactions, approvals, and financial reporting.</p>
+            </div>
+            
+            <div class="tabs" role="tablist" aria-label="Finance Sections">
+                <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="view-ledger" id="tab-ledger" onclick="switchTab('ledger')">
+                    Transaction Ledger
+                </button>
+                <button class="tab-btn" role="tab" aria-selected="false" aria-controls="view-approvals" id="tab-approvals" onclick="switchTab('approvals')">
+                    Payout Approvals <span class="badge">3</span>
+                </button>
+                <button class="tab-btn" role="tab" aria-selected="false" aria-controls="view-reports" id="tab-reports" onclick="switchTab('reports')">
+                    Reports & Analytics
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW: TRANSACTION LEDGER -->
+        <section id="view-ledger" class="view-section active" role="tabpanel" aria-labelledby="tab-ledger">
+            <div class="filters">
+                <div class="search-wrapper">
+                    <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" class="input" placeholder="Search transactions by ID, vendor, or project..." aria-label="Search transactions">
+                </div>
+                
+                <div class="date-picker">
+                    <input type="date" class="date-input" value="2023-10-01" aria-label="Start date">
+                    <span style="color: var(--gray-400); margin: 0 8px;">→</span>
+                    <input type="date" class="date-input" value="2023-10-31" aria-label="End date">
+                </div>
+
+                <div style="flex:1"></div>
+
+                <button class="btn btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Export CSV
+                </button>
+            </div>
+
+            <div class="table-container" style="margin-top: 24px;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Transaction ID</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" style="text-align: right;">Amount</th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-mono">TXN-00892</td>
+                            <td>Oct 24, 2023</td>
+                            <td>Project Alpha - Milestone 2<br><span style="font-size:12px; color:var(--gray-500)">Acme Corp</span></td>
+                            <td>Payment</td>
+                            <td><span class="badge badge-success">Completed</span></td>
+                            <td style="text-align: right;" class="currency">+$12,500.00</td>
+                            <td style="text-align: center;"><button class="btn-secondary" style="padding: 4px 8px;">•••</button></td>
+                        </tr>
+                        <tr>
+                            <td class="font-mono">TXN-00891</td>
+                            <td>Oct 23, 2023</td>
+                            <td>Vendor Payout - Design Phase<br><span style="font-size:12px; color:var(--gray-500)">Creative Studio LLC</span></td>
+                            <td>Payout</td>
+                            <td><span class="badge badge-warning">Processing</span></td>
+                            <td style="text-align: right;" class="currency">-$4,200.00</td>
+                            <td style="text-align: center;"><button class="btn-secondary" style="padding: 4px 8px;">•••</button></td>
+                        </tr>
+                        <tr>
+                            <td class="font-mono">TXN-00890</td>
+                            <td>Oct 22, 2023</td>
+                            <td>Project Beta - Initial Deposit<br><span style="font-size:12px; color:var(--gray-500)">Globex Inc</span></td>
+                            <td>Payment</td>
+                            <td><span class="badge badge-success">Completed</span></td>
+                            <td style="text-align: right;" class="currency">+$8,000.00</td>
+                            <td style="text-align: center;"><button class="btn-secondary" style="padding: 4px 8px;">•••</button></td>
+                        </tr>
+                        <tr>
+                            <td class="font-mono">TXN-00889</td>
+                            <td>Oct 21, 2023</td>
+                            <td>Refund - Cancelled Project<br><span style="font-size:12px; color:var(--gray-500)">Stark Industries</span></td>
+                            <td>Refund</td>
+                            <td><span class="badge badge-success">Completed</span></td>
+                            <td style="text-align: right;" class="currency">-$2,500.00</td>
+                            <td style="text-align: center;"><button class="btn-secondary" style="padding: 4px 8px;">•••</button></td>
+                        </tr>
+                        <tr>
+                            <td class="font-mono">TXN-00888</td>
+                            <td>Oct 20, 2023</td>
+                            <td>Vendor Payout - Final<br><span style="font-size:12px; color:var(--gray-500)">TechSolve Partners</span></td>
+                            <td>Payout</td>
+                            <td><span class="badge badge-error">Failed</span></td>
+                            <td style="text-align: right;" class="currency">-$6,750.00</td>
+                            <td style="text-align: center;"><button class="btn-secondary" style="padding: 4px 8px;">•••</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- VIEW: PAYOUT APPROVALS -->
+        <section id="view-approvals" class="view-section" role="tabpanel" aria-labelledby="tab-approvals">
+            <div class="stats-grid" style="grid-template-columns: 1fr;">
+                <div class="stat-card" style="border-left: 4px solid var(--warning-light);">
+                    <div class="stat-label">Pending Action</div>
+                    <div class="stat-value">3 Payouts</div>
+                    <div class="stat-change" style="color: var(--gray-600);">Total Value: <span class="currency" style="margin-left: 4px;">$15,800.00</span></div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Due Date</th>
+                            <th scope="col">Vendor</th>
+                            <th scope="col">Project / Milestone</th>
+                            <th scope="col" style="text-align: right;">Amount</th>
+                            <th scope="col" style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: var(--primary-50);">
+                            <td style="color: var(--warning-text); font-weight: 600;">Today</td>
+                            <td>
+                                <strong>Pixel Perfect Design</strong><br>
+                                <span style="font-size: 12px; color: var(--gray-500);">Verified • Wise Transfer</span>
+                            </td>
+                            <td>
+                                Website Redesign<br>
+                                <span class="badge badge-neutral" style="margin-top:4px;">Milestone 3: Mobile UI</span>
+                            </td>
+                            <td style="text-align: right; font-size: 16px;" class="currency">$3,500.00</td>
+                            <td style="text-align: right;">
+                                <button class="btn btn-secondary" style="margin-right: 8px;">Reject</button>
+                                <button class="btn btn-primary">Approve</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Oct 26, 2023</td>
+                            <td>
+                                <strong>Cloud Systems Inc</strong><br>
+                                <span style="font-size: 12px; color: var(--gray-500);">Verified • ACH</span>
+                            </td>
+                            <td>
+                                Cloud Migration<br>
+                                <span class="badge badge-neutral" style="margin-top:4px;">Final Handover</span>
+                            </td>
+                            <td style="text-align: right; font-size: 16px;" class="currency">$8,200.00</td>
+                            <td style="text-align: right;">
+                                <button class="btn btn-secondary" style="margin-right: 8px;">Reject</button>
+                                <button class="btn btn-primary">Approve</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Oct 27, 2023</td>
+                            <td>
+                                <strong>Angela Moss</strong><br>
+                                <span style="font-size: 12px; color: var(--gray-500);">Verified • PayPal</span>
+                            </td>
+                            <td>
+                                Security Audit<br>
+                                <span class="badge badge-neutral" style="margin-top:4px;">Milestone 1: Penetration Test</span>
+                            </td>
+                            <td style="text-align: right; font-size: 16px;" class="currency">$4,100.00</td>
+                            <td style="text-align: right;">
+                                <button class="btn btn-secondary" style="margin-right: 8px;">Reject</button>
+                                <button class="btn btn-primary">Approve</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- VIEW: REPORTS -->
+        <section id="view-reports" class="view-section" role="tabpanel" aria-labelledby="tab-reports">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Revenue (MTD)</div>
+                    <div class="stat-value currency">$142,500</div>
+                    <div class="stat-change trend-up">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                        12% vs last month
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Payouts (MTD)</div>
+                    <div class="stat-value currency">$98,200</div>
+                    <div class="stat-change trend-up" style="color: var(--gray-500);">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                        8% vs last month
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Net Profit (MTD)</div>
+                    <div class="stat-value currency">$44,300</div>
+                    <div class="stat-change trend-up">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                        18% vs last month
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Monthly Financial Performance</h3>
+            
+            <div class="chart-container">
+                <!-- CSS Bar Chart Visualization -->
+                <div class="bar-group">
+                    <div class="bar" style="height: 45%;" data-value="$45k"></div>
+                    <span class="bar-label">May</span>
+                </div>
+                <div class="bar-group">
+                    <div class="bar" style="height: 52%;" data-value="$52k"></div>
+                    <span class="bar-label">Jun</span>
+                </div>
+                <div class="bar-group">
+                    <div class="bar" style="height: 48%;" data-value="$48k"></div>
+                    <span class="bar-label">Jul</span>
+                </div>
+                <div class="bar-group">
+                    <div class="bar" style="height: 65%;" data-value="$65k"></div>
+                    <span class="bar-label">Aug</span>
+                </div>
+                <div class="bar-group">
+                    <div class="bar" style="height: 58%;" data-value="$58k"></div>
+                    <span class="bar-label">Sep</span>
+                </div>
+                <div class="bar-group">
+                    <div class="bar" style="height: 85%; background: var(--primary-500);" data-value="$85k"></div>
+                    <span class="bar-label" style="font-weight:700; color:var(--primary-700)">Oct</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script>
+    // Simple Vanilla JS to handle tab switching for demonstration
+    function switchTab(tabId) {
+        // 1. Hide all sections
+        const sections = document.querySelectorAll('.view-section');
+        sections.forEach(section => {
+            section.classList.remove('active');
+        });
+
+        // 2. Deactivate all tab buttons
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+        });
+
+        // 3. Show selected section
+        const selectedSection = document.getElementById('view-' + tabId);
+        if (selectedSection) {
+            selectedSection.classList.add('active');
+        }
+
+        // 4. Activate selected button
+        const selectedBtn = document.getElementById('tab-' + tabId);
+        if (selectedBtn) {
+            selectedBtn.classList.add('active');
+            selectedBtn.setAttribute('aria-selected', 'true');
+        }
+    }
+</script>
+
+</body>
+</html>

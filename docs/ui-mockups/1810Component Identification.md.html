@@ -1,0 +1,263 @@
+{
+  "component_inventory": {
+    "atomic_components": [
+      {
+        "component_name": "StatusBadge",
+        "category": "feedback",
+        "variants": ["success", "warning", "error", "info", "neutral"],
+        "states": ["active", "pending", "inactive", "deactivated", "completed", "failed"],
+        "responsive_needs": "scale text size on mobile",
+        "dependencies": ["REPO-LIB-UICOMP/Badge"],
+        "complexity_level": "low",
+        "implementation_priority": 1,
+        "estimated_effort": "2 hours"
+      },
+      {
+        "component_name": "CurrencyDisplay",
+        "category": "data_display",
+        "variants": ["default", "compact", "highlighted"],
+        "states": ["positive", "negative", "neutral"],
+        "responsive_needs": "font scaling",
+        "dependencies": ["Intl.NumberFormat"],
+        "complexity_level": "low",
+        "implementation_priority": 2,
+        "estimated_effort": "2 hours"
+      },
+      {
+        "component_name": "SkillChip",
+        "category": "data_display",
+        "variants": ["default", "removable", "selectable"],
+        "states": ["default", "hover", "active"],
+        "responsive_needs": "wrap layout",
+        "dependencies": ["REPO-LIB-UICOMP/Badge", "REPO-LIB-UICOMP/Icon"],
+        "complexity_level": "low",
+        "implementation_priority": 2,
+        "estimated_effort": "3 hours"
+      }
+    ],
+    "molecular_components": [
+      {
+        "component_name": "FileUploadZone",
+        "category": "form_controls",
+        "variants": ["sow_upload", "generic_upload"],
+        "states": ["idle", "drag_over", "uploading", "error", "success"],
+        "responsive_needs": "compact mode for mobile",
+        "dependencies": ["REPO-LIB-UICOMP/Button", "REPO-LIB-UICOMP/Icon", "REPO-LIB-UICOMP/ProgressBar"],
+        "complexity_level": "medium",
+        "implementation_priority": 2,
+        "estimated_effort": "6-8 hours"
+      },
+      {
+        "component_name": "FilterToolbar",
+        "category": "navigation",
+        "variants": ["client_list", "vendor_list", "project_list"],
+        "states": ["default", "expanded_filters"],
+        "responsive_needs": "collapsible filter sheet on mobile",
+        "dependencies": ["REPO-LIB-UICOMP/Input", "REPO-LIB-UICOMP/Select", "REPO-LIB-UICOMP/DatePicker"],
+        "complexity_level": "medium",
+        "implementation_priority": 2,
+        "estimated_effort": "8 hours"
+      },
+      {
+        "component_name": "MFAVerificationInput",
+        "category": "security",
+        "variants": ["setup", "challenge"],
+        "states": ["empty", "partially_filled", "validating", "error"],
+        "responsive_needs": "numeric keypad trigger on mobile",
+        "dependencies": ["REPO-LIB-UICOMP/Input"],
+        "complexity_level": "medium",
+        "implementation_priority": 1,
+        "estimated_effort": "5 hours"
+      },
+      {
+        "component_name": "UserAvatarMenu",
+        "category": "navigation",
+        "variants": ["desktop", "mobile"],
+        "states": ["closed", "open"],
+        "responsive_needs": "adapt dropdown position",
+        "dependencies": ["REPO-LIB-UICOMP/Avatar", "REPO-LIB-UICOMP/Dropdown"],
+        "complexity_level": "low",
+        "implementation_priority": 2,
+        "estimated_effort": "4 hours"
+      }
+    ],
+    "organism_components": [
+      {
+        "component_name": "DashboardSidebar",
+        "category": "layout",
+        "variants": ["admin", "finance", "vendor", "client"],
+        "states": ["expanded", "collapsed", "mobile_hidden"],
+        "responsive_needs": "transform to off-canvas drawer on mobile",
+        "dependencies": ["REPO-LIB-UICOMP/NavigationMenu", "UserAvatarMenu"],
+        "complexity_level": "high",
+        "implementation_priority": 1,
+        "estimated_effort": "12-16 hours"
+      },
+      {
+        "component_name": "SOWAnalysisPanel",
+        "category": "business_logic",
+        "variants": ["review", "read_only"],
+        "states": ["loading", "display_data", "editing"],
+        "responsive_needs": "stack document viewer and data form vertically on mobile",
+        "dependencies": ["DocumentViewer", "ExtractedDataForm", "REPO-LIB-UICOMP/Button"],
+        "complexity_level": "high",
+        "implementation_priority": 3,
+        "estimated_effort": "24-32 hours"
+      },
+      {
+        "component_name": "ProposalComparisonGrid",
+        "category": "business_logic",
+        "variants": ["default"],
+        "states": ["loading", "populated", "empty"],
+        "responsive_needs": "horizontal scroll with sticky first column on mobile",
+        "dependencies": ["ProposalCard", "REPO-LIB-UICOMP/Table"],
+        "complexity_level": "high",
+        "implementation_priority": 3,
+        "estimated_effort": "20 hours"
+      },
+      {
+        "component_name": "TransactionLedgerTable",
+        "category": "finance",
+        "variants": ["full", "project_embedded"],
+        "states": ["loading", "data", "empty", "error"],
+        "responsive_needs": "card view layout on mobile",
+        "dependencies": ["FilterToolbar", "REPO-LIB-UICOMP/DataTable", "StatusBadge", "CurrencyDisplay"],
+        "complexity_level": "high",
+        "implementation_priority": 4,
+        "estimated_effort": "16 hours"
+      },
+      {
+        "component_name": "AuditLogViewer",
+        "category": "admin",
+        "variants": ["default"],
+        "states": ["list", "detail_expanded"],
+        "responsive_needs": "hide less critical columns on mobile",
+        "dependencies": ["REPO-LIB-UICOMP/DataTable", "JSONDiffViewer"],
+        "complexity_level": "medium",
+        "implementation_priority": 4,
+        "estimated_effort": "12 hours"
+      }
+    ]
+  },
+  "screen_inventory": [
+    {
+      "screen_name": "Authentication & Onboarding",
+      "screen_type": "auth",
+      "variants": ["Login", "Register", "Forgot Password", "MFA Setup", "MFA Challenge"],
+      "states": ["default", "error", "loading", "success"],
+      "required_components": ["AuthLayout", "LoginForm", "RegistrationForm", "MFAVerificationInput", "REPO-LIB-UICOMP/Button"],
+      "platform_optimizations": "Mobile: simplified layout, auto-complete attributes",
+      "implementation_priority": 1,
+      "estimated_effort": "24-32 hours",
+      "user_flow_criticality": "critical"
+    },
+    {
+      "screen_name": "Admin Dashboard",
+      "screen_type": "dashboard",
+      "variants": ["default"],
+      "states": ["loading", "data_loaded", "empty_state"],
+      "required_components": ["DashboardSidebar", "DashboardHeader", "MetricCard", "ActivityFeed", "ActionRequiredWidget"],
+      "platform_optimizations": "Mobile: vertical stack of widgets",
+      "implementation_priority": 2,
+      "estimated_effort": "16-20 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "Project Workspace",
+      "screen_type": "detail",
+      "variants": ["Pending", "Active", "Completed"],
+      "states": ["loading", "view", "edit_sow", "view_proposals"],
+      "required_components": ["ProjectHeader", "SOWAnalysisPanel", "VendorRecommendationList", "ProposalList", "FinancialSummary"],
+      "platform_optimizations": "Desktop: multi-column layout; Mobile: tabbed navigation between sections",
+      "implementation_priority": 3,
+      "estimated_effort": "40-48 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "Vendor Proposal Portal",
+      "screen_type": "public_form",
+      "variants": ["Submission", "Submitted", "Expired"],
+      "states": ["default", "uploading", "success", "error"],
+      "required_components": ["ProjectBriefReadonly", "ProposalSubmissionForm", "QASetion", "FileUploadZone"],
+      "platform_optimizations": "Fully responsive for mobile submission tracking",
+      "implementation_priority": 3,
+      "estimated_effort": "24 hours",
+      "user_flow_criticality": "high"
+    },
+    {
+      "screen_name": "Entity Management (Clients/Vendors)",
+      "screen_type": "list_detail",
+      "variants": ["Client List", "Client Detail", "Vendor List", "Vendor Detail"],
+      "states": ["loading", "list_view", "detail_view", "edit_mode"],
+      "required_components": ["FilterToolbar", "DataTable", "EntityProfileForm", "ContactList"],
+      "platform_optimizations": "Mobile: card lists instead of tables",
+      "implementation_priority": 2,
+      "estimated_effort": "32-40 hours",
+      "user_flow_criticality": "medium"
+    },
+    {
+      "screen_name": "Financial Operations",
+      "screen_type": "admin_tool",
+      "variants": ["Transaction Ledger", "Payout Approvals", "Reports"],
+      "states": ["default", "filtered", "exporting"],
+      "required_components": ["TransactionLedgerTable", "PayoutApprovalList", "DateRangePicker", "ReportChart"],
+      "platform_optimizations": "Desktop focused for data density",
+      "implementation_priority": 4,
+      "estimated_effort": "24-32 hours",
+      "user_flow_criticality": "medium"
+    },
+    {
+      "screen_name": "System Configuration",
+      "screen_type": "settings",
+      "variants": ["Users", "Roles", "Webhooks", "Audit Log"],
+      "states": ["view", "edit"],
+      "required_components": ["SettingsNav", "WebhookConfigForm", "UserRoleMatrix", "AuditLogViewer"],
+      "platform_optimizations": "Standard form layouts",
+      "implementation_priority": 5,
+      "estimated_effort": "20 hours",
+      "user_flow_criticality": "low"
+    }
+  ],
+  "implementation_plan": {
+    "phase_1_foundation": {
+      "components": ["AuthLayout", "DashboardLayout", "StatusBadge", "CurrencyDisplay", "FilterToolbar"],
+      "rationale": "Establish the application shell, navigation structure, and core authentication flows required for all other features.",
+      "estimated_duration": "1 week"
+    },
+    "phase_2_core_entities": {
+      "components": ["ClientForm", "VendorForm", "DataTable Adapters", "EntityProfileForm"],
+      "rationale": "Enable the creation and management of core business entities (Clients, Vendors) which are prerequisites for projects.",
+      "estimated_duration": "1-2 weeks"
+    },
+    "phase_3_project_workflow": {
+      "components": ["SOWUploadZone", "SOWAnalysisPanel", "ProjectHeader", "RecommendationList"],
+      "rationale": "Implement the primary business value loop: SOW ingestion and processing.",
+      "estimated_duration": "2 weeks"
+    },
+    "phase_4_proposal_system": {
+      "components": ["ProposalSubmissionForm", "ProposalComparisonGrid", "QASection"],
+      "rationale": "Enable external vendor interaction and the proposal selection process.",
+      "estimated_duration": "2 weeks"
+    },
+    "phase_5_financials_admin": {
+      "components": ["TransactionLedgerTable", "PayoutApprovalList", "AuditLogViewer", "WebhookConfigForm"],
+      "rationale": "Add financial controls, reporting, and system administration capabilities.",
+      "estimated_duration": "2 weeks"
+    }
+  },
+  "platform_implementation_strategy": {
+    "target_platform": "Responsive Web Application (Desktop-primary for Admin/Finance, Mobile-friendly for Vendor/Client portals)",
+    "implementation_approach": "Desktop-first for Admin Dashboard due to data density; Mobile-first for Vendor Proposal Portal.",
+    "responsive_strategy": "Use Tailwind CSS breakpoints. Complex tables switch to card layouts on mobile. Navigation shifts from sidebar to hamburger menu.",
+    "progressive_enhancement": "Core forms work without JS where possible; complex interactions (SOW Analysis, Drag-and-Drop) enhance the experience when available.",
+    "browser_support": "Latest 2 versions of Chrome, Firefox, Safari, Edge.",
+    "accessibility_integration": "Radix UI primitives for accessible interactive patterns. Automated axe-core testing in CI/CD."
+  },
+  "quality_assurance_plan": {
+    "component_testing": "Storybook isolation testing for molecules and organisms.",
+    "integration_testing": "Next.js integration tests for page routing and data fetching.",
+    "responsive_testing": "Playwright tests across mobile, tablet, and desktop viewports.",
+    "accessibility_testing": "Manual keyboard navigation audits and automated accessibility scanning.",
+    "performance_testing": "Lighthouse CI checks for LCP and CLS on core screens."
+  }
+}

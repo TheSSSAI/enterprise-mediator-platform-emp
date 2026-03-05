@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EMP Atomic Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* =========================================
+       DESIGN TOKENS & RESET
+       ========================================= */
+    :root {
+      /* Colors: Primary (Teal) */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-200: #99f6e4;
+      --color-primary-300: #5eead4;
+      --color-primary-400: #2dd4bf;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      --color-primary-800: #115e59;
+      --color-primary-900: #134e4a;
+      --color-primary-950: #042f2e;
+
+      /* Colors: Neutrals (Slate) */
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-800: #1e293b;
+      --color-gray-900: #0f172a;
+
+      /* Colors: Semantic */
+      --color-success-bg: #f0fdf4;
+      --color-success-text: #15803d;
+      --color-success-border: #bbf7d0;
+      
+      --color-warning-bg: #fffbeb;
+      --color-warning-text: #b45309;
+      --color-warning-border: #fde68a;
+      
+      --color-error-bg: #fef2f2;
+      --color-error-text: #b91c1c;
+      --color-error-border: #fecaca;
+      
+      --color-info-bg: #eff6ff;
+      --color-info-text: #1d4ed8;
+      --color-info-border: #bfdbfe;
+
+      /* Typography */
+      --font-primary: "Plus Jakarta Sans", sans-serif;
+      --font-secondary: "Inter", sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
+
+      /* Spacing */
+      --spacing-1: 4px;
+      --spacing-2: 8px;
+      --spacing-3: 12px;
+      --spacing-4: 16px;
+      --spacing-6: 24px;
+      --spacing-8: 32px;
+
+      /* Border Radius */
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-full: 9999px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-focus: 0 0 0 2px var(--color-white), 0 0 0 4px var(--color-primary-500);
+      --shadow-focus-error: 0 0 0 2px var(--color-white), 0 0 0 4px var(--color-error-border);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      padding: var(--spacing-8);
+    }
+
+    /* Layout Utilities */
+    .showcase {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .showcase__header {
+      margin-bottom: var(--spacing-8);
+      border-bottom: 1px solid var(--color-gray-200);
+      padding-bottom: var(--spacing-6);
+    }
+
+    .showcase__header h1 {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--color-gray-900);
+      margin-bottom: var(--spacing-2);
+    }
+
+    .section {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: 12px;
+      padding: var(--spacing-8);
+      margin-bottom: var(--spacing-8);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .section__title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: var(--spacing-6);
+      padding-bottom: var(--spacing-4);
+      border-bottom: 1px solid var(--color-gray-100);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+
+    .component-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: var(--spacing-8);
+    }
+
+    .component-row {
+      display: flex;
+      gap: var(--spacing-4);
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: var(--spacing-4);
+    }
+
+    .component-group {
+      margin-bottom: var(--spacing-6);
+    }
+
+    .group-label {
+      font-family: var(--font-secondary);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--spacing-4);
+      display: block;
+    }
+
+    .state-label {
+      display: block;
+      font-size: 12px;
+      color: var(--color-gray-500);
+      margin-bottom: var(--spacing-2);
+      font-family: var(--font-mono);
+    }
+
+    /* =========================================
+       ATOM: BUTTONS
+       ========================================= */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-2);
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      font-family: var(--font-primary);
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 1.5;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn:focus-visible {
+      outline: none;
+      box-shadow: var(--shadow-focus);
+    }
+
+    /* Primary Button */
+    .btn--primary {
+      background-color: var(--color-primary-600);
+      color: var(--color-white);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn--primary:hover:not(:disabled) {
+      background-color: var(--color-primary-700);
+      box-shadow: var(--shadow-md);
+    }
+    .btn--primary:active:not(:disabled) {
+      background-color: var(--color-primary-800);
+      transform: scale(0.98);
+    }
+
+    /* Secondary Button */
+    .btn--secondary {
+      background-color: transparent;
+      border-color: var(--color-gray-300);
+      color: var(--color-gray-700);
+    }
+    .btn--secondary:hover:not(:disabled) {
+      background-color: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+      color: var(--color-gray-900);
+    }
+    .btn--secondary:active:not(:disabled) {
+      background-color: var(--color-gray-100);
+    }
+
+    /* Ghost Button */
+    .btn--ghost {
+      background-color: transparent;
+      color: var(--color-gray-600);
+    }
+    .btn--ghost:hover:not(:disabled) {
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-900);
+    }
+
+    /* Button Sizes */
+    .btn--sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    .btn--md {
+      padding: 10px 16px;
+      font-size: 14px;
+    }
+    .btn--lg {
+      padding: 12px 24px;
+      font-size: 16px;
+    }
+
+    /* Button States */
+    .btn:disabled {
+      background-color: var(--color-gray-100);
+      border-color: transparent;
+      color: var(--color-gray-400);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn--loading {
+      color: transparent !important;
+      position: relative;
+      pointer-events: none;
+    }
+    .btn--loading::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: currentColor; /* Matches text color, need override for primary */
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      left: 50%;
+      top: 50%;
+      margin-left: -8px;
+      margin-top: -8px;
+    }
+    .btn--primary.btn--loading::after {
+      border-color: rgba(255,255,255,0.3);
+      border-top-color: #fff;
+    }
+    .btn--secondary.btn--loading::after {
+      border-color: var(--color-gray-300);
+      border-top-color: var(--color-gray-700);
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* =========================================
+       ATOM: FORM INPUTS
+       ========================================= */
+    .form-group {
+      margin-bottom: var(--spacing-4);
+      max-width: 320px;
+    }
+
+    .label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-gray-700);
+      margin-bottom: 6px;
+    }
+    
+    .label--required::after {
+      content: "*";
+      color: var(--color-error-text);
+      margin-left: 2px;
+    }
+
+    .input {
+      display: block;
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: var(--font-secondary);
+      color: var(--color-gray-900);
+      background-color: var(--color-white);
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      transition: all 0.2s ease;
+    }
+
+    .input::placeholder {
+      color: var(--color-gray-400);
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 3px var(--color-primary-100);
+    }
+
+    .input:disabled {
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-500);
+      cursor: not-allowed;
+    }
+
+    /* Error State */
+    .input--error {
+      border-color: var(--color-error-text);
+    }
+    .input--error:focus {
+      border-color: var(--color-error-text);
+      box-shadow: 0 0 0 3px var(--color-error-bg);
+    }
+    .error-msg {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--color-error-text);
+    }
+
+    /* Smart Input (AI Confidence) */
+    .input--smart {
+      border-left-width: 4px;
+    }
+    .input--smart-high {
+      border-left-color: var(--color-success-text);
+    }
+    .input--smart-medium {
+      border-left-color: #eab308; /* Warning text color logic */
+      background-color: #fffbeb;
+    }
+    .input--smart-low {
+      border-left-color: var(--color-error-text);
+      background-color: var(--color-error-bg);
+    }
+
+    /* OTP Input */
+    .otp-container {
+      display: flex;
+      gap: var(--spacing-2);
+    }
+    .input--otp {
+      width: 48px;
+      height: 48px;
+      text-align: center;
+      font-size: 18px;
+      font-family: var(--font-mono);
+      padding: 0;
+    }
+
+    /* Toggle Switch */
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background-color: var(--color-gray-200);
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      padding: 2px;
+    }
+    .toggle[aria-checked="true"] {
+      background-color: var(--color-primary-600);
+    }
+    .toggle:focus-visible {
+      outline: none;
+      box-shadow: var(--shadow-focus);
+    }
+    .toggle:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .toggle__thumb {
+      display: block;
+      width: 20px;
+      height: 20px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .toggle[aria-checked="true"] .toggle__thumb {
+      transform: translateX(20px);
+    }
+    .toggle--sm {
+      width: 32px;
+      height: 18px;
+    }
+    .toggle--sm .toggle__thumb {
+      width: 14px;
+      height: 14px;
+    }
+    .toggle--sm[aria-checked="true"] .toggle__thumb {
+      transform: translateX(14px);
+    }
+
+    /* =========================================
+       ATOM: STATUS BADGES
+       ========================================= */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.5;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .badge::before {
+      content: "";
+      display: block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 6px;
+      background-color: currentColor;
+    }
+
+    .badge--success {
+      background-color: var(--color-success-bg);
+      color: var(--color-success-text);
+      border-color: var(--color-success-border);
+    }
+    .badge--warning {
+      background-color: var(--color-warning-bg);
+      color: var(--color-warning-text);
+      border-color: var(--color-warning-border);
+    }
+    .badge--error {
+      background-color: var(--color-error-bg);
+      color: var(--color-error-text);
+      border-color: var(--color-error-border);
+    }
+    .badge--info {
+      background-color: var(--color-info-bg);
+      color: var(--color-info-text);
+      border-color: var(--color-info-border);
+    }
+    .badge--neutral {
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-600);
+      border-color: var(--color-gray-200);
+    }
+    
+    /* =========================================
+       ATOM: AVATAR
+       ========================================= */
+    .avatar {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background-color: var(--color-gray-200);
+      color: var(--color-gray-600);
+      font-weight: 600;
+      font-size: 12px;
+      user-select: none;
+    }
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .avatar--circle { border-radius: 50%; }
+    .avatar--rounded { border-radius: var(--radius-md); }
+    
+    .avatar--sm { width: 24px; height: 24px; font-size: 10px; }
+    .avatar--md { width: 32px; height: 32px; font-size: 12px; }
+    .avatar--lg { width: 40px; height: 40px; font-size: 14px; }
+    .avatar--xl { width: 64px; height: 64px; font-size: 24px; }
+
+    /* =========================================
+       ATOM: TAGS / CHIPS
+       ========================================= */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background-color: var(--color-white);
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      color: var(--color-gray-700);
+      font-weight: 500;
+    }
+    .chip__remove {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background-color: var(--color-gray-200);
+      color: var(--color-gray-600);
+      cursor: pointer;
+      border: none;
+      padding: 0;
+    }
+    .chip__remove:hover {
+      background-color: var(--color-gray-300);
+      color: var(--color-gray-800);
+    }
+
+    /* =========================================
+       ATOM: PROGRESS
+       ========================================= */
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background-color: var(--color-gray-200);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    .progress-bar__fill {
+      height: 100%;
+      background-color: var(--color-primary-600);
+      border-radius: var(--radius-full);
+      transition: width 0.3s ease;
+    }
+    .progress-bar--indeterminate .progress-bar__fill {
+      width: 50%;
+      animation: progress-indeterminate 1.5s infinite linear;
+    }
+    @keyframes progress-indeterminate {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+
+    /* =========================================
+       ATOM: SEPARATOR
+       ========================================= */
+    .separator {
+      background-color: var(--color-gray-200);
+    }
+    .separator--horizontal {
+      height: 1px;
+      width: 100%;
+      margin: var(--spacing-4) 0;
+    }
+    .separator--vertical {
+      width: 1px;
+      height: 24px;
+      display: inline-block;
+      margin: 0 var(--spacing-4);
+      vertical-align: middle;
+    }
+
+    /* =========================================
+       ATOM: ICON WRAPPER
+       ========================================= */
+    .icon-wrapper {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: currentColor;
+    }
+    .icon-wrapper svg {
+      width: 100%;
+      height: 100%;
+    }
+    .icon--sm { width: 16px; height: 16px; }
+    .icon--md { width: 20px; height: 20px; }
+    .icon--lg { width: 24px; height: 24px; }
+
+  </style>
+</head>
+<body>
+
+  <div class="showcase">
+    <header class="showcase__header">
+      <h1>EMP Atomic Components</h1>
+      <p>A comprehensive inventory of atomic UI elements for the Enterprise Mediator Platform.</p>
+    </header>
+
+    <!-- BUTTONS SECTION -->
+    <section class="section">
+      <div class="section__title">
+        <span class="icon-wrapper icon--lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </span>
+        Actions (Buttons)
+      </div>
+
+      <div class="component-group">
+        <span class="group-label">Primary Buttons</span>
+        <div class="component-row">
+          <div>
+            <span class="state-label">Default</span>
+            <button class="btn btn--primary">Create Project</button>
+          </div>
+          <div>
+            <span class="state-label">Hover</span>
+            <button class="btn btn--primary" style="background-color: var(--color-primary-700)">Create Project</button>
+          </div>
+          <div>
+            <span class="state-label">Disabled</span>
+            <button class="btn btn--primary" disabled>Create Project</button>
+          </div>
+          <div>
+            <span class="state-label">Loading</span>
+            <button class="btn btn--primary btn--loading">Create Project</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-group">
+        <span class="group-label">Secondary Buttons</span>
+        <div class="component-row">
+          <div>
+            <span class="state-label">Default</span>
+            <button class="btn btn--secondary">Cancel</button>
+          </div>
+          <div>
+            <span class="state-label">Hover</span>
+            <button class="btn btn--secondary" style="background-color: var(--color-gray-50)">Cancel</button>
+          </div>
+          <div>
+            <span class="state-label">Disabled</span>
+            <button class="btn btn--secondary" disabled>Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-group">
+        <span class="group-label">Ghost Buttons</span>
+        <div class="component-row">
+          <div>
+            <span class="state-label">Default</span>
+            <button class="btn btn--ghost">View Details</button>
+          </div>
+          <div>
+            <span class="state-label">Hover</span>
+            <button class="btn btn--ghost" style="background-color: var(--color-gray-100)">View Details</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-group">
+        <span class="group-label">Sizes</span>
+        <div class="component-row" style="align-items: center;">
+          <button class="btn btn--primary btn--sm">Small</button>
+          <button class="btn btn--primary btn--md">Medium</button>
+          <button class="btn btn--primary btn--lg">Large</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FORM INPUTS SECTION -->
+    <section class="section">
+      <div class="section__title">
+        <span class="icon-wrapper icon--lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        </span>
+        Form Controls
+      </div>
+
+      <div class="component-grid">
+        <!-- Standard Inputs -->
+        <div class="component-group">
+          <span class="group-label">Standard Input</span>
+          
+          <div class="form-group">
+            <label class="label label--required" for="input-default">Email Address</label>
+            <input type="email" id="input-default" class="input" placeholder="name@company.com">
+          </div>
+
+          <div class="form-group">
+            <label class="label" for="input-focus">Focused State</label>
+            <input type="text" id="input-focus" class="input" value="Active input" style="border-color: var(--color-primary-500); box-shadow: 0 0 0 3px var(--color-primary-100);">
+          </div>
+
+          <div class="form-group">
+            <label class="label" for="input-error">Error State</label>
+            <input type="text" id="input-error" class="input input--error" value="invalid-email" aria-invalid="true" aria-describedby="email-error">
+            <div id="email-error" class="error-msg">
+              <span class="icon-wrapper icon--sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></span>
+              Please enter a valid email address
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="label" for="input-disabled">Disabled State</label>
+            <input type="text" id="input-disabled" class="input" value="Cannot edit this field" disabled>
+          </div>
+        </div>
+
+        <!-- Specialized Inputs -->
+        <div class="component-group">
+          <span class="group-label">AI Smart Inputs</span>
+          <p style="font-size: 12px; color: var(--color-gray-500); margin-bottom: 12px;">Used for AI-extracted data review</p>
+          
+          <div class="form-group">
+            <label class="label">High Confidence</label>
+            <input type="text" class="input input--smart input--smart-high" value="Frontend Development">
+          </div>
+          
+          <div class="form-group">
+            <label class="label">Medium Confidence</label>
+            <input type="text" class="input input--smart input--smart-medium" value="React.js">
+          </div>
+          
+          <div class="form-group">
+            <label class="label">Low Confidence</label>
+            <input type="text" class="input input--smart input--smart-low" value="Cloud Architecture">
+          </div>
+        </div>
+
+        <!-- Toggles & OTP -->
+        <div class="component-group">
+          <span class="group-label">Switches & OTP</span>
+          
+          <div class="form-group">
+            <label class="label">Toggle Switch</label>
+            <div style="display: flex; gap: 16px; align-items: center;">
+              <button class="toggle" role="switch" aria-checked="false" aria-label="Notifications"><span class="toggle__thumb"></span></button>
+              <button class="toggle" role="switch" aria-checked="true" aria-label="Dark Mode"><span class="toggle__thumb"></span></button>
+              <button class="toggle" role="switch" aria-checked="false" disabled><span class="toggle__thumb"></span></button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="label">OTP Input (MFA)</label>
+            <div class="otp-container">
+              <input type="text" class="input input--otp" value="3" maxlength="1">
+              <input type="text" class="input input--otp" value="8" maxlength="1">
+              <input type="text" class="input input--otp" value="1" maxlength="1">
+              <input type="text" class="input input--otp" placeholder="-" maxlength="1">
+              <input type="text" class="input input--otp" placeholder="-" maxlength="1">
+              <input type="text" class="input input--otp" placeholder="-" maxlength="1">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DATA DISPLAY SECTION -->
+    <section class="section">
+      <div class="section__title">
+        <span class="icon-wrapper icon--lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        </span>
+        Data Display
+      </div>
+
+      <div class="component-group">
+        <span class="group-label">Status Badges</span>
+        <div class="component-row">
+          <span class="badge badge--success">Active</span>
+          <span class="badge badge--warning">Pending</span>
+          <span class="badge badge--error">Failed</span>
+          <span class="badge badge--info">Processing</span>
+          <span class="badge badge--neutral">Draft</span>
+        </div>
+      </div>
+
+      <div class="component-group">
+        <span class="group-label">Avatars</span>
+        <div class="component-row">
+          <!-- Image Avatar -->
+          <div class="avatar avatar--circle avatar--md">
+            <img src="https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff" alt="John Doe">
+          </div>
+          <!-- Initials Avatar -->
+          <div class="avatar avatar--circle avatar--md" style="background-color: var(--color-primary-100); color: var(--color-primary-700);">
+            JD
+          </div>
+          <!-- Rounded Avatar -->
+          <div class="avatar avatar--rounded avatar--md">
+            <img src="https://ui-avatars.com/api/?name=Company&background=random" alt="Company Logo">
+          </div>
+          
+          <div class="separator separator--vertical"></div>
+          
+          <!-- Sizes -->
+          <div class="avatar avatar--circle avatar--sm">SM</div>
+          <div class="avatar avatar--circle avatar--md">MD</div>
+          <div class="avatar avatar--circle avatar--lg">LG</div>
+          <div class="avatar avatar--circle avatar--xl">XL</div>
+        </div>
+      </div>
+
+      <div class="component-group">
+        <span class="group-label">Skill Chips / Tags</span>
+        <div class="component-row">
+          <span class="chip">React</span>
+          <span class="chip">
+            TypeScript
+            <button class="chip__remove" aria-label="Remove TypeScript">
+              <span class="icon-wrapper" style="width: 10px; height: 10px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </span>
+            </button>
+          </span>
+          <span class="chip" style="background-color: var(--color-primary-50); border-color: var(--color-primary-200); color: var(--color-primary-800);">Selected</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEEDBACK SECTION -->
+    <section class="section">
+      <div class="section__title">
+        <span class="icon-wrapper icon--lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+        </span>
+        Feedback & Loading
+      </div>
+
+      <div class="component-group">
+        <span class="group-label">Progress Bars</span>
+        
+        <div style="max-width: 400px; margin-bottom: 16px;">
+          <span class="state-label">Determinate (45%)</span>
+          <div class="progress-bar" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar__fill" style="width: 45%;"></div>
+          </div>
+        </div>
+
+        <div style="max-width: 400px; margin-bottom: 16px;">
+          <span class="state-label">Completed (100%)</span>
+          <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar__fill" style="width: 100%; background-color: var(--color-success-text);"></div>
+          </div>
+        </div>
+
+        <div style="max-width: 400px;">
+          <span class="state-label">Indeterminate</span>
+          <div class="progress-bar progress-bar--indeterminate">
+            <div class="progress-bar__fill"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Individual Component - Component Specifications</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        
+        .component-type-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #4f46e5;
+            display: inline-block;
+        }
+        
+        .section h3 {
+            color: #4f46e5;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 20px 0 12px 0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .info-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .info-card h4 {
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+        
+        .info-card p {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .variations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+        
+        .variation-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .variation-name {
+            font-weight: 600;
+            color: #4f46e5;
+            margin-bottom: 8px;
+        }
+        
+        .variation-code {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            color: #1e293b;
+            overflow-x: auto;
+            margin: 8px 0;
+            border-left: 4px solid #4f46e5;
+        }
+        
+        .variation-description {
+            font-size: 13px;
+            color: #64748b;
+            font-style: italic;
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        
+        .feature-category {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .feature-category h4 {
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        
+        .feature-category ul {
+            list-style: none;
+        }
+        
+        .feature-category li {
+            padding: 6px 0;
+            color: #4b5563;
+            font-size: 14px;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .feature-category li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .tokens-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+        }
+        
+        .token {
+            background: #f0f9ff;
+            color: #0369a1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            border: 1px solid #bae6fd;
+            text-align: center;
+        }
+        
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+            line-height: 1.4;
+        }
+        
+        .stats-bar {
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        
+        .stat {
+            flex: 1;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Individual Component</h1>
+            <div class="component-type-badge">Unknown Component</div>
+        </div>
+        <div class="stats-bar">
+            <div class="stat">
+                <span class="stat-number">0</span>
+                <span class="stat-label">Variations</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">0</span>
+                <span class="stat-label">Design Tokens</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">0</span>
+                <span class="stat-label">Breakpoints</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">0</span>
+                <span class="stat-label">A11y Features</span>
+            </div>
+        </div><div class="content">
+        <div class="section">
+            <h2>Implementation Notes</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h4>Css Architecture</h4>
+                    <p>BEM naming convention with CSS Variables for Design Tokens</p>
+                </div>
+                <div class="info-card">
+                    <h4>Component Organization</h4>
+                    <p>Categorized by function (Actions, Forms, Data Display, Feedback)</p>
+                </div>
+                <div class="info-card">
+                    <h4>Responsive Design</h4>
+                    <p>Fluid typography and flexbox/grid layouts</p>
+                </div>
+                <div class="info-card">
+                    <h4>Accessibility Compliance</h4>
+                    <p>WCAG 2.1 AA</p>
+                </div>
+                <div class="info-card">
+                    <h4>Browser Support</h4>
+                    <p>Chrome, Firefox, Safari, Edge (Latest 2 versions)</p>
+                </div>
+            </div>
+        </div>
+        <div class="section">
+            <h2>Usage Guidelines</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h4>File Purpose</h4><p>Atomic design reference and development sandbox</p>
+                </div>
+                <div class="info-card">
+                    <h4>Development Workflow</h4><p>Extract HTML/CSS patterns for React component implementation</p>
+                </div>
+                <div class="info-card">
+                    <h4>Testing Scenarios</h4><p>Visual regression testing for states and themes</p>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</body>
+</html>

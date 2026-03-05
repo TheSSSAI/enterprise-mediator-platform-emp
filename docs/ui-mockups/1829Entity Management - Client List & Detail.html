@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entity Management - Clients | Enterprise Mediator Platform</title>
+  <style>
+    /* -----------------------------------------------------------------------------
+       1. DESIGN TOKENS & RESET
+       Based on the "2040" minimalist aesthetic and Teal primary palette.
+    ----------------------------------------------------------------------------- */
+    :root {
+      /* Color Palette - Primary (Teal) */
+      --color-primary-50: #f0fdfa;
+      --color-primary-100: #ccfbf1;
+      --color-primary-500: #14b8a6;
+      --color-primary-600: #0d9488;
+      --color-primary-700: #0f766e;
+      --color-primary-900: #134e4a;
+
+      /* Neutrals */
+      --color-white: #ffffff;
+      --color-gray-50: #f8fafc;
+      --color-gray-100: #f1f5f9;
+      --color-gray-200: #e2e8f0;
+      --color-gray-300: #cbd5e1;
+      --color-gray-400: #94a3b8;
+      --color-gray-500: #64748b;
+      --color-gray-600: #475569;
+      --color-gray-700: #334155;
+      --color-gray-800: #1e293b;
+      --color-gray-900: #0f172a;
+
+      /* Semantic */
+      --color-success-bg: #f0fdf4;
+      --color-success-text: #166534;
+      --color-warning-bg: #fffbeb;
+      --color-warning-text: #92400e;
+      --color-error-bg: #fef2f2;
+      --color-error-text: #991b1b;
+
+      /* Typography */
+      --font-primary: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Spacing & Sizing */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 12px;
+      --header-height: 64px;
+      --sidebar-width: 240px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    }
+
+    /* Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      overflow: hidden; /* App shell handles scrolling */
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    a {
+      color: var(--color-primary-600);
+      text-decoration: none;
+    }
+
+    /* -----------------------------------------------------------------------------
+       2. LAYOUT & APP SHELL
+    ----------------------------------------------------------------------------- */
+    .app-shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-rows: 100vh;
+      height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background-color: var(--color-white);
+      border-right: 1px solid var(--color-gray-200);
+      display: flex;
+      flex-direction: column;
+      padding: var(--spacing-lg) var(--spacing-md);
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-gray-900);
+      margin-bottom: var(--spacing-xl);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--color-primary-500);
+      border-radius: 6px;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+    }
+
+    .nav-item a {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-md);
+      color: var(--color-gray-500);
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-item a:hover {
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
+    }
+
+    .nav-item a.active {
+      background-color: var(--color-primary-50);
+      color: var(--color-primary-700);
+    }
+
+    /* Main Content Area */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      height: 100vh;
+      position: relative;
+    }
+
+    .top-bar {
+      height: var(--header-height);
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--spacing-lg);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .breadcrumbs {
+      font-size: 14px;
+      color: var(--color-gray-500);
+    }
+    .breadcrumbs span {
+      color: var(--color-gray-900);
+      font-weight: 500;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--color-primary-100);
+      color: var(--color-primary-700);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Content Container */
+    .content-container {
+      padding: var(--spacing-lg);
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* -----------------------------------------------------------------------------
+       3. COMPONENTS
+    ----------------------------------------------------------------------------- */
+    
+    /* Page Header */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .page-title h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--color-gray-900);
+    }
+    .page-title p {
+      color: var(--color-gray-500);
+      font-size: 14px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      gap: var(--spacing-sm);
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary-600);
+      color: var(--color-white);
+    }
+    .btn-primary:hover {
+      background-color: var(--color-primary-700);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background-color: var(--color-white);
+      border-color: var(--color-gray-300);
+      color: var(--color-gray-700);
+    }
+    .btn-secondary:hover {
+      background-color: var(--color-gray-50);
+      border-color: var(--color-gray-400);
+    }
+
+    .btn-icon {
+      padding: 8px;
+      color: var(--color-gray-500);
+      background: transparent;
+    }
+    .btn-icon:hover {
+      background: var(--color-gray-100);
+      color: var(--color-gray-900);
+    }
+
+    /* Filter Toolbar */
+    .filter-toolbar {
+      background: var(--color-white);
+      padding: var(--spacing-md);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-md);
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+      align-items: center;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 280px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-gray-400);
+      width: 16px;
+      height: 16px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--color-gray-900);
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 2px var(--color-primary-100);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .select-input {
+      padding: 10px 32px 10px 12px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      background-color: var(--color-white);
+      color: var(--color-gray-700);
+      font-size: 14px;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.5rem center;
+      background-repeat: no-repeat;
+      background-size: 1.5em 1.5em;
+      cursor: pointer;
+    }
+
+    /* Data Table (Desktop) */
+    .table-container {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .data-table th {
+      background: var(--color-gray-50);
+      padding: 12px 24px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .data-table td {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--color-gray-100);
+      font-size: 14px;
+      color: var(--color-gray-700);
+      vertical-align: middle;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .data-table tr:hover td {
+      background-color: var(--color-gray-50);
+      cursor: pointer;
+    }
+
+    /* Mobile Card List (Hidden on Desktop) */
+    .card-list {
+      display: none;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .entity-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+
+    /* Status Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-active {
+      background-color: var(--color-success-bg);
+      color: var(--color-success-text);
+    }
+    .status-inactive {
+      background-color: var(--color-gray-100);
+      color: var(--color-gray-600);
+    }
+    .status-pending {
+      background-color: var(--color-warning-bg);
+      color: var(--color-warning-text);
+    }
+
+    /* Detail Panel (Slide-over) */
+    .detail-panel-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 40;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease;
+    }
+
+    .detail-panel {
+      position: fixed;
+      top: 0;
+      right: -600px; /* Hidden */
+      width: 600px;
+      height: 100%;
+      background: var(--color-white);
+      z-index: 50;
+      box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-open .detail-panel-backdrop {
+      opacity: 1;
+      visibility: visible;
+    }
+    .panel-open .detail-panel {
+      right: 0;
+    }
+
+    .panel-header {
+      padding: var(--spacing-lg);
+      border-bottom: 1px solid var(--color-gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-lg);
+    }
+
+    .panel-footer {
+      padding: var(--spacing-lg);
+      border-top: 1px solid var(--color-gray-200);
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-sm);
+      background: var(--color-gray-50);
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-gray-700);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--color-gray-300);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-md);
+    }
+
+    /* Contact List in Detail */
+    .contact-list {
+      margin-top: var(--spacing-md);
+      border: 1px solid var(--color-gray-200);
+      border-radius: var(--radius-md);
+    }
+    .contact-item {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--color-gray-200);
+    }
+    .contact-item:last-child {
+      border-bottom: none;
+    }
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .contact-name { font-weight: 500; font-size: 14px; }
+    .contact-email { font-size: 13px; color: var(--color-gray-500); }
+
+    /* -----------------------------------------------------------------------------
+       4. RESPONSIVE QUERIES
+    ----------------------------------------------------------------------------- */
+    @media (max-width: 1024px) {
+      .sidebar { width: 72px; padding: 16px 8px; }
+      .app-shell { grid-template-columns: 72px 1fr; }
+      .nav-text { display: none; }
+      .logo-text { display: none; }
+      .logo { justify-content: center; }
+      .nav-item a { justify-content: center; }
+      .table-container { overflow-x: auto; }
+    }
+
+    @media (max-width: 768px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; } /* Simplified: Mobile nav would be a bottom bar or hamburger */
+      
+      .table-container { display: none; }
+      .card-list { display: flex; }
+      
+      .detail-panel { width: 100%; }
+      .form-row { grid-template-columns: 1fr; }
+      
+      .filter-toolbar { flex-direction: column; align-items: stretch; }
+      .search-input-wrapper { min-width: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- App Shell -->
+  <div class="app-shell">
+    
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" aria-label="Main Navigation">
+      <div class="logo">
+        <div class="logo-icon"></div>
+        <span class="logo-text">Mediator</span>
+      </div>
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="#">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span class="nav-text">Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="active" aria-current="page">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            <span class="nav-text">Clients</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            <span class="nav-text">Vendors</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            <span class="nav-text">Projects</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+      
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          Dashboard / <span>Clients</span>
+        </nav>
+        <div class="user-profile">
+          <span style="font-size: 14px; font-weight: 500;">Admin User</span>
+          <div class="avatar" aria-label="User Menu">AU</div>
+        </div>
+      </header>
+
+      <!-- Content Container -->
+      <div class="content-container">
+        
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-title">
+            <h1>Clients</h1>
+            <p>Manage your client relationships and contact details.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openDetailPanel()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+            Add Client
+          </button>
+        </div>
+
+        <!-- Filter Toolbar -->
+        <div class="filter-toolbar" role="search">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" class="search-input" placeholder="Search clients by name, email..." aria-label="Search clients">
+          </div>
+          <div class="filter-group">
+            <select class="select-input" aria-label="Filter by Status">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <select class="select-input" aria-label="Filter by Industry">
+              <option value="">All Industries</option>
+              <option value="tech">Technology</option>
+              <option value="finance">Finance</option>
+              <option value="health">Healthcare</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Desktop Data Table -->
+        <div class="table-container">
+          <table class="data-table" aria-label="Client List">
+            <thead>
+              <tr>
+                <th scope="col">Company</th>
+                <th scope="col">Primary Contact</th>
+                <th scope="col">Status</th>
+                <th scope="col">Active Projects</th>
+                <th scope="col">Total Revenue</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Row 1 -->
+              <tr tabindex="0" onclick="openDetailPanel('TechFlow Systems')">
+                <td>
+                  <div style="font-weight: 600; color: var(--color-gray-900);">TechFlow Systems</div>
+                  <div style="color: var(--color-gray-500); font-size: 12px;">San Francisco, CA</div>
+                </td>
+                <td>
+                  <div style="font-weight: 500;">Sarah Chen</div>
+                  <div style="color: var(--color-gray-500); font-size: 12px;">sarah@techflow.com</div>
+                </td>
+                <td><span class="status-badge status-active">Active</span></td>
+                <td>3</td>
+                <td>$125,000</td>
+                <td>
+                  <button class="btn-icon" aria-label="Edit TechFlow Systems">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  </button>
+                </td>
+              </tr>
+              <!-- Row 2 -->
+              <tr tabindex="0" onclick="openDetailPanel('Acme Corp')">
+                <td>
+                  <div style="font-weight: 600; color: var(--color-gray-900);">Acme Corp</div>
+                  <div style="color: var(--color-gray-500); font-size: 12px;">Austin, TX</div>
+                </td>
+                <td>
+                  <div style="font-weight: 500;">Mike Ross</div>
+                  <div style="color: var(--color-gray-500); font-size: 12px;">mike@acme.com</div>
+                </td>
+                <td><span class="status-badge status-inactive">Inactive</span></td>
+                <td>0</td>
+                <td>$45,000</td>
+                <td>
+                  <button class="btn-icon" aria-label="Edit Acme Corp">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  </button>
+                </td>
+              </tr>
+              <!-- Row 3 -->
+              <tr tabindex="0" onclick="openDetailPanel('Global Health')">
+                <td>
+                  <div style="font-weight: 600; color: var(--color-gray-900);">Global Health</div>
+                  <div style="color: var(--color-gray-500); font-size: 12px;">New York, NY</div>
+                </td>
+                <td>
+                  <div style="font-weight: 500;">Dr. Emily Wu</div>
+                  <div style="color: var(--color-gray-500); font-size: 12px;">emily@ghealth.org</div>
+                </td>
+                <td><span class="status-badge status-pending">Onboarding</span></td>
+                <td>1</td>
+                <td>$0</td>
+                <td>
+                  <button class="btn-icon" aria-label="Edit Global Health">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Card List -->
+        <div class="card-list">
+          <div class="entity-card" onclick="openDetailPanel('TechFlow Systems')">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+              <div>
+                <div style="font-weight: 600; font-size: 16px;">TechFlow Systems</div>
+                <div style="font-size: 13px; color: var(--color-gray-500);">San Francisco, CA</div>
+              </div>
+              <span class="status-badge status-active">Active</span>
+            </div>
+            <div style="margin-top: 8px; font-size: 14px;">
+              <span style="color: var(--color-gray-500);">Contact:</span> Sarah Chen
+            </div>
+            <div style="font-size: 14px;">
+              <span style="color: var(--color-gray-500);">Revenue:</span> $125,000
+            </div>
+          </div>
+          
+          <div class="entity-card" onclick="openDetailPanel('Acme Corp')">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+              <div>
+                <div style="font-weight: 600; font-size: 16px;">Acme Corp</div>
+                <div style="font-size: 13px; color: var(--color-gray-500);">Austin, TX</div>
+              </div>
+              <span class="status-badge status-inactive">Inactive</span>
+            </div>
+            <div style="margin-top: 8px; font-size: 14px;">
+              <span style="color: var(--color-gray-500);">Contact:</span> Mike Ross
+            </div>
+            <div style="font-size: 14px;">
+              <span style="color: var(--color-gray-500);">Revenue:</span> $45,000
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination (Static Mock) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--spacing-lg); color: var(--color-gray-600); font-size: 14px;">
+          <span>Showing 1-10 of 42 results</span>
+          <div style="display: flex; gap: var(--spacing-xs);">
+            <button class="btn btn-secondary" disabled>Previous</button>
+            <button class="btn btn-secondary">Next</button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Detail Panel (Slide Over) -->
+    <div id="detail-wrapper" class="">
+      <div class="detail-panel-backdrop" onclick="closeDetailPanel()"></div>
+      <aside class="detail-panel" role="dialog" aria-labelledby="panel-title" aria-modal="true">
+        
+        <div class="panel-header">
+          <div>
+            <h2 id="panel-title" style="font-size: 20px; font-weight: 600;">Edit Client</h2>
+            <p style="font-size: 13px; color: var(--color-gray-500);">ID: CL-2024-001</p>
+          </div>
+          <button class="btn-icon" onclick="closeDetailPanel()" aria-label="Close panel">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="panel-content">
+          <!-- Entity Profile Form -->
+          <form id="client-form" onsubmit="event.preventDefault();">
+            
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: var(--spacing-md); color: var(--color-gray-900);">Company Information</h3>
+            
+            <div class="form-group">
+              <label for="companyName" class="form-label">Company Name *</label>
+              <input type="text" id="companyName" class="form-input" value="TechFlow Systems" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="industry" class="form-label">Industry</label>
+                <select id="industry" class="form-input">
+                  <option value="tech" selected>Technology</option>
+                  <option value="finance">Finance</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="status" class="form-label">Status</label>
+                <select id="status" class="form-input">
+                  <option value="active" selected>Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="address" class="form-label">Billing Address</label>
+              <input type="text" id="address" class="form-input" value="123 Innovation Dr, San Francisco, CA 94103">
+            </div>
+
+            <div style="border-top: 1px solid var(--color-gray-200); margin: var(--spacing-lg) 0;"></div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+              <h3 style="font-size: 16px; font-weight: 600; color: var(--color-gray-900);">Contacts</h3>
+              <button class="btn btn-secondary" style="font-size: 12px; padding: 4px 12px;">+ Add Contact</button>
+            </div>
+
+            <!-- Contact List -->
+            <div class="contact-list">
+              <div class="contact-item">
+                <div class="contact-info">
+                  <span class="contact-name">Sarah Chen (Primary)</span>
+                  <span class="contact-email">sarah@techflow.com</span>
+                </div>
+                <button class="btn-icon" aria-label="Edit contact">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </button>
+              </div>
+              <div class="contact-item">
+                <div class="contact-info">
+                  <span class="contact-name">Billing Dept</span>
+                  <span class="contact-email">billing@techflow.com</span>
+                </div>
+                <button class="btn-icon" aria-label="Edit contact">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+
+        <div class="panel-footer">
+          <button class="btn btn-secondary" onclick="closeDetailPanel()">Cancel</button>
+          <button class="btn btn-primary" onclick="closeDetailPanel()">Save Changes</button>
+        </div>
+
+      </aside>
+    </div>
+
+  </div>
+
+  <script>
+    // Simple state management for the demo
+    const detailWrapper = document.getElementById('detail-wrapper');
+    const companyNameInput = document.getElementById('companyName');
+    const panelTitle = document.getElementById('panel-title');
+
+    function openDetailPanel(clientName) {
+      // Simulate fetching data or setting up a new form
+      if (clientName) {
+        panelTitle.textContent = 'Edit Client';
+        companyNameInput.value = clientName;
+      } else {
+        panelTitle.textContent = 'New Client';
+        companyNameInput.value = '';
+      }
+      
+      detailWrapper.classList.add('panel-open');
+      
+      // Accessibility: Trap focus or move focus to first input
+      setTimeout(() => companyNameInput.focus(), 100);
+    }
+
+    function closeDetailPanel() {
+      detailWrapper.classList.remove('panel-open');
+    }
+
+    // Close panel on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && detailWrapper.classList.contains('panel-open')) {
+        closeDetailPanel();
+      }
+    });
+  </script>
+</body>
+</html>
