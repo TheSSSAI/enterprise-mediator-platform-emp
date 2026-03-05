@@ -1,0 +1,110 @@
+flowchart TB
+    %% --- User Layer ---
+    subgraph Users ["User Layer"]
+        Admin[System Administrator]
+        FinMgr[Finance Manager]
+        Client[Client Contact]
+        Vendor[Vendor Contact]
+    end
+
+    %% --- Frontend Layer ---
+    subgraph Frontend ["Presentation Layer"]
+        SPA["Frontend SPA<br/>(Next.js + Radix UI)"]
+    end
+
+    %% --- Cloud Infrastructure ---
+    subgraph CloudInfra ["AWS Cloud Infrastructure (EKS Cluster)"]
+        
+        %% Ingress
+        Gateway["API Gateway / Load Balancer<br/>(TLS Termination)"]
+
+        %% Services
+        subgraph Services ["Application Services"]
+            CoreAPI["EMP Backend API<br/>(Core Business Logic)"]
+            AuthSvc["Auth Middleware<br/>(RBAC Enforcement)"]
+            NotifySvc["Notification Service"]
+            PaymentSvc["Payment Service"]
+        end
+
+        %% Async Processing
+        subgraph Async ["Asynchronous Processing"]
+            MsgBroker["Message Broker<br/>(RabbitMQ / AWS SQS)"]
+            AIWorker["AI Processing Worker<br/>(SOW Sanitization & Extraction)"]
+        end
+
+        %% Data Layer
+        subgraph Data ["Data Persistence Layer"]
+            PrimaryDB[("PostgreSQL<br/>(Transactional Data)")]
+            VectorDB[("OpenSearch / pgvector<br/>(Search & Audit Logs)")]
+            ObjStore[("AWS S3<br/>(Documents/SOWs)")]
+            Cache[("Redis<br/>(Session/Data Cache)")]
+        end
+    end
+
+    %% --- External Services ---
+    subgraph External ["External Integrations"]
+        Cognito["AWS Cognito<br/>(Identity Provider)"]
+        Stripe["Stripe Connect / Wise<br/>(Payment Gateway)"]
+        SES["AWS SES<br/>(Email Delivery)"]
+        OpenAI["OpenAI API<br/>(LLM & Embeddings)"]
+        Comprehend["AWS Comprehend<br/>(PII Detection)"]
+    end
+
+    %% --- Relationships ---
+
+    %% User to Frontend
+    Admin & FinMgr & Client & Vendor -->|HTTPS| SPA
+
+    %% Frontend to Gateway
+    SPA -->|REST/GraphQL| Gateway
+
+    %% Gateway to Services
+    Gateway --> AuthSvc
+    AuthSvc --> CoreAPI
+
+    %% Service to Service / Infra
+    CoreAPI -->|Read/Write| PrimaryDB
+    CoreAPI -->|Read/Write| Cache
+    CoreAPI -->|Search/Audit| VectorDB
+    CoreAPI -->|Upload/Download| ObjStore
+    CoreAPI -->|Publish Events| MsgBroker
+
+    %% Payment Service Interactions
+    CoreAPI <--> PaymentSvc
+    PaymentSvc -->|API Calls| Stripe
+    Stripe -.->|Webhooks| Gateway
+
+    %% Auth Interactions
+    AuthSvc <-->|Verify Tokens| Cognito
+
+    %% Async Worker Flow
+    MsgBroker -->|Consume Tasks| AIWorker
+    MsgBroker -->|Consume Events| NotifySvc
+    
+    %% AI Worker Flow
+    AIWorker -->|Fetch SOW| ObjStore
+    AIWorker -->|PII Check| Comprehend
+    AIWorker -->|Extraction/Embeddings| OpenAI
+    AIWorker -->|Store Results| PrimaryDB
+    AIWorker -->|Store Embeddings| VectorDB
+
+    %% Notification Flow
+    NotifySvc -->|Send Email| SES
+
+    %% Styling
+    classDef user fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+    classDef frontend fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef service fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef data fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
+    classDef external fill:#eeeeee,stroke:#616161,stroke-width:2px,stroke-dasharray: 5 5,color:#000
+    classDef async fill:#e0f7fa,stroke:#006064,stroke-width:2px,color:#000
+
+    class Admin,FinMgr,Client,Vendor user
+    class SPA frontend
+    class Gateway,CoreAPI,AuthSvc,PaymentSvc service
+    class MsgBroker,AIWorker,NotifySvc async
+    class PrimaryDB,VectorDB,ObjStore,Cache data
+    class Cognito,Stripe,SES,OpenAI,Comprehend external
+
+    %% Link Styling
+    linkStyle default stroke:#333,stroke-width:1px

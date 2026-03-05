@@ -1,0 +1,90 @@
+flowchart TD
+    %% Define styles
+    classDef internal fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    classDef external fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c
+    classDef module fill:#ffffff,stroke:#424242,stroke-width:1px,color:#000,stroke-dasharray: 5 5
+    classDef action fill:#fff9c4,stroke:#fbc02d,stroke-width:1px,color:#000
+
+    %% Actors
+    subgraph Internal_Users [Internal Users]
+        Admin(System Administrator):::internal
+        Finance(Finance Manager):::internal
+    end
+
+    subgraph External_Users [External Users]
+        Vendor(Vendor Contact):::external
+        Client(Client Contact):::external
+    end
+
+    %% Core System Modules
+    subgraph EMP_Platform [Enterprise Mediator Platform]
+        direction TB
+        
+        subgraph Admin_Module [Administration & Config]
+            M_UserMgmt[User & Entity Mgmt]:::action
+            M_Settings[System Config & Tax/Margins]:::action
+            M_Audit[Audit & Compliance Logs]:::action
+        end
+
+        subgraph Project_Module [Project Lifecycle]
+            M_SOW[SOW Upload & AI Processing]:::action
+            M_Match[Vendor Matching & Brief Dist.]:::action
+            M_PropRev[Proposal Review & Award]:::action
+            M_Status[Status Mgmt & Cancellations]:::action
+        end
+
+        subgraph Vendor_Module [Vendor Portal]
+            M_Profile[Profile & Skills Mgmt]:::action
+            M_Proposal[Proposal Submission & Q&A]:::action
+            M_V_Ack[Payout Acknowledgment]:::action
+        end
+
+        subgraph Finance_Module [Financial Engine]
+            M_Invoice[Client Invoicing]:::action
+            M_Payout[Vendor Payout Approval]:::action
+            M_Reports[Financial & Profitability Reports]:::action
+            M_Escrow[Escrow & Dispute Resolution]:::action
+        end
+        
+        subgraph Client_Module [Client Portal]
+            M_Milestone[Milestone Approval]:::action
+            M_Payment[Secure Invoice Payment]:::action
+        end
+    end
+
+    %% Relationships - Admin
+    Admin -->|Creates & Vetts| M_UserMgmt
+    Admin -->|Configures| M_Settings
+    Admin -->|Uploads SOW / Awards Project| M_SOW
+    Admin -->|Distributes Briefs| M_Match
+    Admin -->|Reviews Proposals| M_PropRev
+    Admin -->|Oversees| M_Audit
+    Admin -->|Resolves Disputes| M_Escrow
+
+    %% Relationships - Finance
+    Finance -->|Approves/Rejects| M_Payout
+    Finance -->|Generates| M_Reports
+    Finance -->|Views| M_Invoice
+    Finance -->|Views| M_Audit
+
+    %% Relationships - Vendor
+    Vendor -->|Updates| M_Profile
+    Vendor -->|Submits| M_Proposal
+    Vendor -->|Confirms Receipt| M_V_Ack
+    M_Match -.->|Invite| Vendor
+
+    %% Relationships - Client
+    Client -->|Pays| M_Payment
+    Client -->|Approves| M_Milestone
+    M_Invoice -.->|Email Bill| Client
+
+    %% Inter-module dependencies (High level)
+    M_SOW --> M_Match
+    M_Match --> M_PropRev
+    M_PropRev --> M_Invoice
+    M_Payment --> M_Status
+    M_Milestone --> M_Payout
+    M_Payout --> M_V_Ack
+
+    %% Link Styles for readability
+    linkStyle default stroke:#666,stroke-width:1px

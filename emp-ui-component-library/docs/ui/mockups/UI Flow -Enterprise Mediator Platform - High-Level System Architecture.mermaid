@@ -1,0 +1,109 @@
+flowchart TB
+    %% Definitions and Styling
+    classDef actor fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef frontend fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    classDef gateway fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
+    classDef service fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
+    classDef db fill:#e0e0e0,stroke:#424242,stroke-width:2px,stroke-dasharray: 5 5,color:#000
+    classDef external fill:#ffebee,stroke:#b71c1c,stroke-width:2px,color:#000
+
+    %% User Layer
+    subgraph Users ["User Layer"]
+        direction LR
+        Admin([System Admin]):::actor
+        Finance([Finance Manager]):::actor
+        Client([Client Contact]):::actor
+        Vendor([Vendor Contact]):::actor
+    end
+
+    %% Frontend Layer
+    subgraph Presentation ["Presentation Layer"]
+        WebApp["Next.js SPA\n(Radix UI + Tailwind)"]:::frontend
+        CDN["CDN / Edge"]:::frontend
+    end
+
+    %% API Gateway Layer
+    subgraph EntryPoint ["Entry Point"]
+        APIGW["API Gateway / Load Balancer\n(Auth Middleware & Rate Limiting)"]:::gateway
+    end
+
+    %% Backend Services Layer
+    subgraph Backend ["Application Services Layer (EKS/Containerized)"]
+        direction TB
+        
+        subgraph Core_Services ["Core Domain Services"]
+            SvcUser["User Service\n(Profiles, Org Mgmt)"]:::service
+            SvcProject["Project Service\n(Lifecycle, Proposals)"]:::service
+            SvcVendor["Vendor Service\n(Skills, Vetting)"]:::service
+            SvcFinance["Payment Service\n(Invoices, Payouts, Ledger)"]:::service
+        end
+
+        subgraph Async_Services ["Async & Utility Services"]
+            SvcAI["AI Ingestion Service\n(SOW Parsing, Embeddings)"]:::service
+            SvcNotify["Notification Service\n(Email, In-App, Webhook)"]:::service
+            SvcAudit["Audit Log Service\n(Compliance, Security)"]:::service
+        end
+        
+        MsgQueue["Message Bus\n(RabbitMQ / AWS SNS+SQS)"]:::service
+    end
+
+    %% Data Layer
+    subgraph Data ["Data Persistence Layer"]
+        DB_Main[("PostgreSQL\n(Transactional Data)")]:::db
+        DB_Vector[("PostgreSQL + pgvector\n(Vector Embeddings)")]:::db
+        DB_Cache[("Redis\n(Caching & Sessions)")]:::db
+        S3_Bucket[("AWS S3\n(Documents & SOWs)")]:::db
+        DB_Audit[("OpenSearch / Elastic\n(Audit Logs)")]:::db
+    end
+
+    %% External Systems
+    subgraph External ["External Integrations"]
+        Ext_Auth["AWS Cognito\n(Identity Provider)"]:::external
+        Ext_AI["OpenAI API\n(LLM & Embeddings)"]:::external
+        Ext_Pay["Stripe Connect / Wise\n(Payment Gateway)"]:::external
+        Ext_Email["AWS SES\n(Email Delivery)"]:::external
+    end
+
+    %% Relationships - Users to Frontend
+    Users --> CDN
+    CDN --> WebApp
+
+    %% Relationships - Frontend to Gateway
+    WebApp -- "HTTPS/REST/GraphQL" --> APIGW
+
+    %% Relationships - Gateway to Services
+    APIGW --> SvcUser
+    APIGW --> SvcProject
+    APIGW --> SvcVendor
+    APIGW --> SvcFinance
+    APIGW -- "Async Trigger" --> MsgQueue
+
+    %% Service Inter-communication
+    Core_Services <--> MsgQueue
+    MsgQueue --> SvcAI
+    MsgQueue --> SvcNotify
+    MsgQueue --> SvcAudit
+
+    %% Service to Data
+    SvcUser & SvcProject & SvcVendor & SvcFinance --> DB_Main
+    SvcAI --> DB_Vector
+    SvcAI --> S3_Bucket
+    SvcAudit --> DB_Audit
+    Core_Services -.-> DB_Cache
+
+    %% Service to External
+    SvcUser --> Ext_Auth
+    SvcAI --> Ext_AI
+    SvcFinance --> Ext_Pay
+    SvcNotify --> Ext_Email
+
+    %% Specific High-Value Flows
+    note_sow["SOW Processing Flow"] -.-> SvcProject
+    SvcProject -- "Upload Event" --> MsgQueue
+    MsgQueue -- "Consume Event" --> SvcAI
+    SvcAI -- "Extract & Sanitize" --> Ext_AI
+    SvcAI -- "Store Result" --> DB_Vector
+
+    note_pay["Financial Flow"] -.-> SvcFinance
+    SvcFinance -- "Charge/Payout" --> Ext_Pay
+    Ext_Pay -- "Webhook" --> APIGW

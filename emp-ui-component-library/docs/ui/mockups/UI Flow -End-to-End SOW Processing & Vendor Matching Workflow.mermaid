@@ -1,0 +1,96 @@
+flowchart TD
+    %% Global Styling
+    classDef actor fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1
+    classDef ui fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#e65100
+    classDef service fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#4a148c
+    classDef db fill:#e0f2f1,stroke:#00695c,stroke-width:2px,stroke-dasharray: 5 5,color:#004d40
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,shape:rhombus,color:#f57f17
+    classDef event fill:#ffebee,stroke:#c62828,stroke-width:2px,stroke-dasharray: 3 3,color:#b71c1c
+
+    %% Actors
+    Admin((System Admin)):::actor
+
+    subgraph "Project Initiation Phase"
+        direction TB
+        Start[Start: Create Project]:::ui --> ValidProj{Valid Data?}:::decision
+        ValidProj -- No --> ProjError[Show Validation Error]:::ui
+        ValidProj -- Yes --> DB_CreateProj[(Persist Project <br/> Status: Pending)]:::db
+    end
+
+    subgraph "SOW Ingestion Workflow"
+        direction TB
+        DB_CreateProj --> UploadUI[SOW Upload UI]:::ui
+        Admin -- Uploads .docx/.pdf --> UploadUI
+        UploadUI --> UploadAPI{Validate File}:::decision
+        UploadAPI -- Invalid --> UploadFail[Reject & Notify]:::ui
+        UploadAPI -- Valid --> S3_Store[(S3: Original SOW)]:::db
+        S3_Store --> DB_UpdateStatus[(Update Status: <br/> PROCESSING)]:::db
+        DB_UpdateStatus --> PubEvent1{{Event: SOW_UPLOADED}}:::event
+    end
+
+    subgraph "AI Processing (Async)"
+        direction TB
+        PubEvent1 --> AI_Worker[[AI Ingestion Worker]]:::service
+        AI_Worker --> AI_Sanitize[PII Sanitization]:::service
+        AI_Worker --> AI_Extract[Data Extraction]:::service
+        
+        AI_Extract --> ProcessCheck{Processing <br/> Successful?}:::decision
+        
+        ProcessCheck -- No --> DB_Fail[(Update Status: <br/> FAILED)]:::db
+        DB_Fail --> PubEventFail{{Event: PROCESSING_FAILED}}:::event
+        PubEventFail --> NotifyFail[Notification Service <br/> Email/In-App Alert]:::service
+        NotifyFail --> Admin
+        
+        ProcessCheck -- Yes --> S3_Sanitized[(S3: Sanitized SOW)]:::db
+        S3_Sanitized --> DB_Success[(Persist Extracted Data <br/> Update Status: PROCESSED)]:::db
+        DB_Success --> PubEventSuccess{{Event: PROCESSING_SUCCESS}}:::event
+        PubEventSuccess --> NotifySuccess[Notification Service <br/> Ready for Review]:::service
+        NotifySuccess --> Admin
+    end
+
+    subgraph "Human-in-the-Loop Review"
+        direction TB
+        Admin -- Clicks Notification --> ReviewUI[SOW Review Interface]:::ui
+        ReviewUI -- Fetch Data --> GET_Brief[GET /projects/brief]:::service
+        GET_Brief --> DB_Read[(Read Extracted Data)]:::db
+        
+        ReviewUI --> EditLoop{Admin Edits?}:::decision
+        EditLoop -- Yes --> SaveDraft[Save Changes]:::service
+        SaveDraft --> DB_UpdateBrief[(Update Project Brief)]:::db
+        DB_UpdateBrief --> ReviewUI
+        
+        EditLoop -- No --> ApproveBtn[Click 'Approve Brief']:::ui
+        ApproveBtn --> ApproveAPI[POST /projects/brief/approve]:::service
+        ApproveAPI --> DB_Lock[(Update Status: <br/> BRIEF_APPROVED)]:::db
+        DB_Lock --> PubEventApproved{{Event: BRIEF_APPROVED}}:::event
+    end
+
+    subgraph "Vendor Matching & Distribution"
+        direction TB
+        PubEventApproved --> MatchService[[Vendor Matching Service]]:::service
+        MatchService --> VectorGen[Generate Embeddings]:::service
+        VectorGen --> VectorDB[(Vector Search <br/> pgvector)]:::db
+        VectorDB -- Return Ranked List --> RecUI[Vendor Recommendations UI]:::ui
+        
+        Admin -- Reviews List --> RecUI
+        RecUI -- Selects Vendors --> DistributeBtn[Click 'Distribute Brief']:::ui
+        DistributeBtn --> DistAPI[POST /projects/distribute]:::service
+        DistAPI --> DB_StatusProp[(Update Status: <br/> PROPOSED)]:::db
+        DistAPI --> PubEventDist{{Event: BRIEF_DISTRIBUTED}}:::event
+        
+        PubEventDist --> NotifyVendor[Notification Service <br/> Send Invitations]:::service
+        NotifyVendor -- Email w/ Secure Link --> Vendor((Vendor Contact)):::actor
+    end
+
+    %% Connections across subgraphs
+    ProjError --> Start
+    UploadFail --> UploadUI
+    ReviewUI -.-> |View Sanitized SOW| S3_Sanitized
+    
+    %% Legend
+    subgraph Legend
+        L1[User Action]:::ui
+        L2[Backend Service]:::service
+        L3[Database/Storage]:::db
+        L4[Async Event]:::event
+    end
