@@ -1,0 +1,74 @@
+flowchart TD
+    subgraph Client_Side ["Frontend: MFAVerificationInput (Radix UI)"]
+        Start([Component Mount]) --> Init[Initialize State: Empty Array[6]]
+        Init --> RenderUI[Render 6 Visual Slots + \n1 Hidden Input (Radix VisuallyHidden)]
+        
+        RenderUI --> WaitUser{User Interaction}
+        
+        %% Direct Input Flow
+        WaitUser -- "Type / Input" --> ValidateNumeric{Is Input Numeric?}
+        ValidateNumeric -- No --> Ignore[Ignore Input] --> WaitUser
+        ValidateNumeric -- Yes --> UpdateState[Update State & Fill Visual Slot]
+        UpdateState --> CheckComplete{Length == 6?}
+        
+        %% Paste Flow
+        WaitUser -- "Paste Event" --> CleanPaste[Sanitize Clipboard Data]
+        CleanPaste --> Slice[Slice first 6 chars]
+        Slice --> IsNumPaste{Are all Numeric?}
+        IsNumPaste -- No --> ErrorToast[Show 'Numeric only' Toast] --> WaitUser
+        IsNumPaste -- Yes --> FillAll[Fill All Slots] --> TriggerSubmit
+        
+        %% Navigation Flow
+        WaitUser -- "Backspace/Delete" --> IsEmpty{Slot Empty?}
+        IsEmpty -- Yes --> FocusPrev[Focus Previous Slot] --> WaitUser
+        IsEmpty -- No --> ClearSlot[Clear Current Slot] --> WaitUser
+        
+        %% Auto-Submit Logic
+        CheckComplete -- No --> AdvanceFocus[Focus Next Slot] --> WaitUser
+        CheckComplete -- Yes --> TriggerSubmit[Trigger Auto-Submit]
+        
+        %% Submission State
+        TriggerSubmit --> SetLoading[State: Loading\n(Disable Inputs, Show Spinner)]
+        SetLoading --> APICall
+    end
+
+    subgraph Server_Side ["Backend: Auth Service"]
+        APICall(POST /auth/mfa/verify) --> ValidateTOTP{Validate TOTP}
+        ValidateTOTP -- "Valid" --> GenSession[Generate Session Token]
+        ValidateTOTP -- "Invalid" --> CheckRate{Rate Limit > 5?}
+        CheckRate -- Yes --> LockAccount[Trigger Temp Lockout]
+        CheckRate -- No --> ReturnError[Return 400 Invalid]
+    end
+
+    %% Response Handling
+    GenSession --> HandleSuccess
+    ReturnError --> HandleError
+    LockAccount --> HandleLockout
+
+    subgraph UI_Updates ["UI State Updates"]
+        HandleSuccess[Success Response] --> ShowCheck[Show Success Icon]
+        ShowCheck --> Redirect[Redirect to Dashboard]
+        
+        HandleError[Error Response] --> Shake[Trigger Shake Animation]
+        Shake --> ClearInput[Clear Input Fields]
+        ClearInput --> FocusFirst[Focus First Slot]
+        FocusFirst --> AriaError[Update ARIA Live Region:\n'Invalid Code']
+        AriaError --> WaitUser
+        
+        HandleLockout[429 Lockout Response] --> LockUI[State: Locked Out]
+        LockUI --> ShowTimer[Show Countdown Timer]
+        ShowTimer --> DisableInteract[Disable All Interaction]
+    end
+
+    %% Styling
+    classDef state fill:#f8fafc,stroke:#64748b,stroke-width:1px,color:#0f172a
+    classDef action fill:#e0f2fe,stroke:#0ea5e9,stroke-width:2px,color:#0c4a6e
+    classDef decision fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f
+    classDef server fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#14532d
+    classDef error fill:#fef2f2,stroke:#ef4444,stroke-width:2px,color:#7f1d1d
+
+    class Init,RenderUI,UpdateState,CleanPaste,Slice,FillAll,FocusPrev,ClearSlot,AdvanceFocus,SetLoading,ShowCheck,Redirect,Shake,ClearInput,FocusFirst,AriaError,LockUI,ShowTimer,DisableInteract state
+    class Start,WaitUser,TriggerSubmit,APICall action
+    class ValidateNumeric,CheckComplete,IsNumPaste,IsEmpty,ValidateTOTP,CheckRate decision
+    class GenSession,LockAccount,ReturnError server
+    class ErrorToast,HandleError,HandleLockout error

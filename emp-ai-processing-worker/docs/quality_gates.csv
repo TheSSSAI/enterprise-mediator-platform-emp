@@ -1,0 +1,3 @@
+"gate_id","gate_name","sprint","gate_type","criteria","responsible_team","gate_date","approval_required","approver","bypass_criteria","automation_level","tools_used","success_metrics"
+"QG-001","Infrastructure Readiness","Sprint 1","Infrastructure","Terraform apply clean; Security groups verified; Connectivity tested","DevOps","2025-05-09","true","security.arch@company.com","None","Partially Automated","Terraform,AWS Console","Zero critical security warnings"
+"QG-002","Financial Integration Check","Sprint 2","Integration","Stripe Webhooks received/verified; Invoice calculations accurate to the cent","QA","2025-05-29","true","product.owner@company.com","None","Fully Automated","Jest,Stripe CLI","100% pass on financial math tests"

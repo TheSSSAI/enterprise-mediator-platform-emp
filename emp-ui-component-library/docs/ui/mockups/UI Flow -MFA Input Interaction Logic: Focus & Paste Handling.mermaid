@@ -1,0 +1,99 @@
+flowchart TD
+    %% Nodes
+    Start((User Interaction))
+    
+    subgraph Events [Event Triggers]
+        E_Focus[User Focuses Input[i]]
+        E_Paste[User Pastes Content]
+        E_Input[User Types Character]
+        E_Key[User Presses Key Down]
+    end
+
+    subgraph Logic [Component Logic]
+        %% Paste Logic
+        L_GetClip[Get Clipboard Data]
+        L_Clean[Clean Data: Trim & Remove Non-Numeric]
+        L_CheckLen{Length > 0?}
+        L_Split[Split String into Array]
+        L_Map[Map Characters to Inputs[i]...Inputs[i+n]]
+        L_UpdateState[Update Component State]
+        L_FocusLast[Set Focus to Last Filled Index]
+        L_CheckComplete{All 6 Filled?}
+        
+        %% Input Logic
+        L_ValNum{Is Numeric?}
+        L_SetVal[Set Input[i] Value]
+        L_CheckLast{Is Input[5]?}
+        L_Next[Focus Next Input: i+1]
+        L_TriggerSubmit[Trigger Auto-Submit / Verify]
+        
+        %% Navigation Logic
+        L_CheckKey{Key Type?}
+        L_Back{Backspace?}
+        L_Arrow{Arrow Left/Right?}
+        L_IsEmpty{Is Input[i] Empty?}
+        L_Prev[Focus Previous Input: i-1]
+        L_MoveFocus[Move Focus Target]
+    end
+
+    subgraph Feedback [UI Feedback]
+        UI_Error[Show 'Invalid Input' Tooltip]
+        UI_Ring[Update Focus Ring]
+        UI_Filled[Visual State: Filled]
+    end
+
+    %% Connections
+    Start --> E_Focus
+    E_Focus --> UI_Ring
+    
+    %% Paste Flow
+    Start --> E_Paste
+    E_Paste --> L_GetClip
+    L_GetClip --> L_Clean
+    L_Clean --> L_CheckLen
+    L_CheckLen -- No --> UI_Error
+    L_CheckLen -- Yes --> L_Split
+    L_Split --> L_Map
+    L_Map --> L_UpdateState
+    L_UpdateState --> UI_Filled
+    L_UpdateState --> L_FocusLast
+    L_FocusLast --> L_CheckComplete
+    L_CheckComplete -- Yes --> L_TriggerSubmit
+    
+    %% Input Flow
+    Start --> E_Input
+    E_Input --> L_ValNum
+    L_ValNum -- No --> UI_Error
+    L_ValNum -- Yes --> L_SetVal
+    L_SetVal --> UI_Filled
+    L_SetVal --> L_CheckLast
+    L_CheckLast -- No --> L_Next
+    L_CheckLast -- Yes --> L_TriggerSubmit
+    L_Next --> UI_Ring
+    
+    %% Navigation Flow
+    Start --> E_Key
+    E_Key --> L_CheckKey
+    L_CheckKey -- Other --> L_ValNum
+    L_CheckKey -- Nav Keys --> L_Arrow
+    L_Arrow --> L_MoveFocus
+    L_MoveFocus --> UI_Ring
+    
+    L_CheckKey -- Backspace --> L_Back
+    L_Back --> L_IsEmpty
+    L_IsEmpty -- Yes (Move back) --> L_Prev
+    L_IsEmpty -- No (Clear current) --> L_SetVal
+    L_Prev --> UI_Ring
+
+    %% Styling
+    classDef event fill:#e0f2f1,stroke:#009688,stroke-width:2px,color:#004d40
+    classDef logic fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px,color:#4a148c
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#3e2723
+    classDef ui fill:#e3f2fd,stroke:#2196f3,stroke-width:2px,color:#0d47a1
+    classDef error fill:#ffebee,stroke:#f44336,stroke-width:2px,color:#b71c1c
+
+    class E_Focus,E_Paste,E_Input,E_Key event
+    class L_GetClip,L_Clean,L_Split,L_Map,L_UpdateState,L_FocusLast,L_SetVal,L_Next,L_TriggerSubmit,L_Prev,L_MoveFocus logic
+    class L_CheckLen,L_CheckComplete,L_ValNum,L_CheckLast,L_CheckKey,L_Back,L_Arrow,L_IsEmpty decision
+    class UI_Ring,UI_Filled ui
+    class UI_Error error

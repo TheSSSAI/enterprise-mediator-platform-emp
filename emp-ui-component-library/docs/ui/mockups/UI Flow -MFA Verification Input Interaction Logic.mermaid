@@ -1,0 +1,99 @@
+flowchart TD
+    %% Nodes
+    Start([User Focuses Input Field i])
+    EventListener{Event Detected}
+    
+    %% Subgraph: Input Entry Logic
+    subgraph Entry ["0. Input Entry (Key Press)"]
+        direction TB
+        IsNumeric{Is Key Numeric?}
+        UpdateState[Update State index i]
+        IsLastField{Is index == Length-1?}
+        FocusNext[Focus Input i+1]
+        RejectInput[Prevent Default / Ignore]
+    end
+
+    %% Subgraph: Navigation Logic
+    subgraph Nav ["1. Backspace Navigation"]
+        direction TB
+        IsEmpty{Is Input i Empty?}
+        ClearCurrent[Clear Input i]
+        FocusPrev[Focus Input i-1]
+        DeletePrev[Delete Value at i-1]
+        IsFirst{Is index == 0?}
+        Stay[Stay Focused at 0]
+    end
+
+    %% Subgraph: Paste Logic
+    subgraph Paste ["2. Paste Event"]
+        direction TB
+        GetClipboard[Get Clipboard Text]
+        CleanData[Strip Non-Numeric Chars]
+        Distribute[Map chars to Inputs starting at i]
+        UpdateAll[Update Full State Array]
+        FocusEnd[Focus Last Filled Input]
+    end
+
+    %% Subgraph: Validation Logic
+    subgraph Validation ["3. Validation Trigger"]
+        direction TB
+        CheckComplete{Is Code Complete? \n length == 6}
+        TriggerSubmit((Trigger onComplete))
+        AwaitState[State: Validating...]
+        APIResponse{API Response}
+        SuccessState[State: Success]
+        ErrorState[State: Error / Shake UI]
+        ClearInput[Optional: Clear Input]
+    end
+
+    %% Relationships - Main Flow
+    Start --> EventListener
+    
+    %% Path 0: Input Entry
+    EventListener -- "KeyDown (0-9)" --> IsNumeric
+    IsNumeric -- Yes --> UpdateState
+    IsNumeric -- No --> RejectInput
+    UpdateState --> IsLastField
+    IsLastField -- No --> FocusNext
+    IsLastField -- Yes --> CheckComplete
+
+    %% Path 1: Backspace
+    EventListener -- "KeyDown (Backspace)" --> IsFirst
+    IsFirst -- Yes --> ClearCurrent
+    IsFirst -- No --> IsEmpty
+    IsEmpty -- No (Value exists) --> ClearCurrent
+    IsEmpty -- Yes (Already empty) --> FocusPrev
+    FocusPrev --> DeletePrev
+    
+    %% Path 2: Paste
+    EventListener -- "OnPaste" --> GetClipboard
+    GetClipboard --> CleanData
+    CleanData --> Distribute
+    Distribute --> UpdateAll
+    UpdateAll --> FocusEnd
+    FocusEnd --> CheckComplete
+
+    %% Path 3: Validation
+    CheckComplete -- Yes --> TriggerSubmit
+    CheckComplete -- No --> Stop([Wait for Input])
+    TriggerSubmit --> AwaitState
+    AwaitState --> APIResponse
+    APIResponse -- 200 OK --> SuccessState
+    APIResponse -- 4xx/5xx --> ErrorState
+    ErrorState --> ClearInput
+    ClearInput --> Start
+
+    %% Styling
+    classDef event fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000
+    classDef action fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef logic fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
+    classDef error fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+    classDef success fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef state fill:#e0f2f1,stroke:#00695c,stroke-width:2px,stroke-dasharray: 5 5,color:#000
+
+    class EventListener,IsNumeric,IsLastField,IsEmpty,IsFirst,CheckComplete,APIResponse logic
+    class UpdateState,FocusNext,RejectInput,ClearCurrent,FocusPrev,DeletePrev,Stay,GetClipboard,CleanData,Distribute,UpdateAll,FocusEnd,TriggerSubmit,ClearInput action
+    class ErrorState error
+    class SuccessState success
+    class AwaitState state
+    class Start event

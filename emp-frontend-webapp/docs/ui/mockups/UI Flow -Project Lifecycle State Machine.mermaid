@@ -1,0 +1,89 @@
+stateDiagram-v2
+    direction TB
+
+    %% Initial State
+    [*] --> Pending: Project Created
+
+    %% SOW Processing Sub-cycle within Pending
+    state Pending {
+        [*] --> SOW_Upload_Needed
+        SOW_Upload_Needed --> SOW_Processing: Admin Uploads SOW
+        SOW_Processing --> SOW_Review: AI Extraction Complete
+        SOW_Processing --> SOW_Failed: AI Error
+        SOW_Failed --> SOW_Processing: Retry / Re-upload
+        SOW_Review --> Brief_Finalized: Admin Approves Brief
+    }
+
+    %% Proposal Phase
+    Pending --> Proposed: Admin Distributes Brief\n[Trigger: US-042]
+    
+    state Proposed {
+        [*] --> Awaiting_Proposals
+        Awaiting_Proposals --> Reviewing_Proposals: Vendors Submit
+        Reviewing_Proposals --> Shortlisting: Admin Reviews
+    }
+
+    %% Award Phase
+    Proposed --> Awarded: Admin Accepts Proposal\n[Trigger: US-054]
+    
+    state Awarded {
+        [*] --> Invoicing
+        Invoicing --> Payment_Pending: Invoice Sent to Client
+    }
+
+    %% Active Phase
+    Awarded --> Active: Client Payment Successful\n[Trigger: Webhook/US-059]
+    
+    state Active {
+        [*] --> Work_In_Progress
+        Work_In_Progress --> Milestone_Review: Vendor Submits Work
+        Milestone_Review --> Work_In_Progress: Client Rejects / Revisions
+        Milestone_Review --> Milestone_Complete: Client Approves
+    }
+
+    %% Review & Completion Phase
+    Active --> In_Review: All Milestones Met / Final Delivery
+    In_Review --> Active: Final Deliverables Rejected
+    In_Review --> Completed: Client Signs Off / Final Approval
+
+    %% Exception States (Global Transitions)
+    state Exception_Handling {
+        On_Hold
+        Cancelled
+        Disputed
+    }
+
+    %% Transitions to Exceptions
+    Pending --> Cancelled: Admin Cancels
+    Proposed --> Cancelled: Admin Cancels
+    Awarded --> Cancelled: Admin Cancels
+    Active --> Cancelled: Admin Cancels
+    
+    Active --> On_Hold: Admin Pauses Project\n[Trigger: US-041]
+    On_Hold --> Active: Admin Resumes Project
+
+    Active --> Disputed: Issue Reported
+    In_Review --> Disputed: Client Contests Deliverables
+    Completed --> Disputed: Post-Completion Issue
+    
+    Disputed --> Cancelled: Resolution (Refund)
+    Disputed --> Completed: Resolution (Release Funds)
+    Disputed --> Active: Resolution (Resume Work)
+
+    %% Final State
+    Completed --> [*]: Final Archive / Payouts Complete
+
+    note right of Pending
+        SOW ingestion and 
+        data extraction happen here.
+    end note
+
+    note right of Awarded
+        Funds are secured in Escrow
+        before work begins.
+    end note
+
+    note right of Disputed
+        Requires Admin Intervention
+        to release or return funds (US-065).
+    end note

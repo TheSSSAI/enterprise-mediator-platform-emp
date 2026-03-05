@@ -1,0 +1,96 @@
+flowchart TD
+    %% Nodes
+    Start([User lands on MFA Challenge Page])
+    FocusInput[Component Mounts: Auto-focus first digit input]
+    
+    subgraph UserInteraction ["User Interaction Layer"]
+        InputEvent{Input Event Type}
+        TypeChar[User types character]
+        PasteCode[User pastes content]
+        Backspace[User presses Backspace]
+    end
+
+    subgraph ClientValidation ["Client-Side Logic"]
+        CheckNumeric{Is Numeric?}
+        Ignore[Ignore Input]
+        FillDigit[Fill Digit & Advance Focus]
+        CheckLength{Length == 6?}
+        ParsePaste{Clipboard contains \n6 digits?}
+        FillAll[Fill all slots]
+        ClearSlot[Clear slot & Move Focus Back]
+        EnableButton[Enable 'Verify' Button]
+        AutoSubmit{Auto-Submit Configured?}
+    end
+
+    subgraph ServerValidation ["Server-Side Logic (AWS Cognito)"]
+        SubmitAction[User clicks 'Verify' OR Auto-submit]
+        LoadingState[State: Loading / Spinner]
+        API_Call[POST /verify-totp]
+        CheckResponse{Response Code?}
+        Success[200 OK: Valid Token]
+        Invalid[400: Invalid Code]
+        RateLimit[429: Too Many Requests]
+    end
+
+    subgraph UI_Feedback ["UI Feedback & State"]
+        Redirect[Redirect to Dashboard]
+        ShowError[State: Error \nShow 'Invalid Code' msg\nClear Inputs]
+        ShowLockout[State: Locked \nShow 'Too many failed attempts'\nDisable Input 15m]
+        IncrementFail[Increment Local Fail Counter]
+    end
+
+    %% Logic Flow
+    Start --> FocusInput
+    FocusInput --> InputEvent
+    
+    InputEvent -- Typing --> TypeChar
+    TypeChar --> CheckNumeric
+    CheckNumeric -- No --> Ignore
+    CheckNumeric -- Yes --> FillDigit
+    FillDigit --> CheckLength
+    
+    InputEvent -- Paste --> PasteCode
+    PasteCode --> ParsePaste
+    ParsePaste -- No --> Ignore
+    ParsePaste -- Yes --> FillAll
+    FillAll --> CheckLength
+
+    InputEvent -- Delete --> Backspace
+    Backspace --> ClearSlot
+    
+    CheckLength -- No --> InputEvent
+    CheckLength -- Yes --> EnableButton
+    EnableButton --> AutoSubmit
+    
+    AutoSubmit -- No --> InputEvent
+    AutoSubmit -- Yes --> SubmitAction
+    EnableButton -- Manual Click --> SubmitAction
+    
+    SubmitAction --> LoadingState
+    LoadingState --> API_Call
+    API_Call --> CheckResponse
+    
+    CheckResponse -- Success --> Success
+    Success --> Redirect
+    
+    CheckResponse -- Fail --> Invalid
+    Invalid --> IncrementFail
+    IncrementFail --> ShowError
+    ShowError --> FocusInput
+    
+    CheckResponse -- Lockout --> RateLimit
+    RateLimit --> ShowLockout
+
+    %% Styling
+    classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef interaction fill:#e3f2fd,stroke:#2196f3,stroke-width:2px;
+    classDef validation fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
+    classDef server fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px;
+    classDef success fill:#e8f5e9,stroke:#4caf50,stroke-width:2px;
+    classDef error fill:#ffebee,stroke:#f44336,stroke-width:2px;
+
+    class InputEvent,TypeChar,PasteCode,Backspace interaction;
+    class CheckNumeric,CheckLength,ParsePaste,AutoSubmit validation;
+    class API_Call,CheckResponse,SubmitAction server;
+    class Success,Redirect success;
+    class Invalid,RateLimit,ShowError,ShowLockout error;
