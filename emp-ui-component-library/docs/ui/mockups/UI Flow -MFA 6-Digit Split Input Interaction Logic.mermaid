@@ -1,0 +1,71 @@
+flowchart TD
+    subgraph UserAction ["User Interaction"]
+        Start(("Start: Focus Input[i]"))
+        InputEvent[/"User triggers Event (KeyDown/Paste)"/]
+        Start --> InputEvent
+    end
+
+    subgraph InputLogic ["Component State Logic"]
+        TypeCheck{"Event Type?"}
+        InputEvent --> TypeCheck
+
+        %% Path 1: Single Character Entry
+        TypeCheck -- "Numeric Key (0-9)" --> IsValidNum{"Is Numeric?"}
+        IsValidNum -- No --> Ignore["Prevent Default / Ignore"]
+        IsValidNum -- Yes --> UpdateState["Update value at Index[i]"]
+        UpdateState --> NextCheck{"Is Index < 5?"}
+        NextCheck -- Yes --> FocusNext["Focus Input[i+1]"]
+        NextCheck -- No --> CheckComplete{"Is Full Code (Len=6)?"}
+        
+        %% Path 2: Navigation (Backspace)
+        TypeCheck -- "Backspace / Delete" --> IsEmpty{"Is Input[i] Empty?"}
+        IsEmpty -- Yes --> PrevCheck{"Is Index > 0?"}
+        PrevCheck -- Yes --> FocusPrev["Focus Input[i-1]"]
+        PrevCheck -- No --> ClearCurrent["Clear Input[i]"]
+        IsEmpty -- No --> ClearCurrent
+        FocusPrev --> ClearPrev["Clear Input[i-1]"]
+
+        %% Path 3: Navigation (Arrows)
+        TypeCheck -- "Arrow Left" --> NavLeft{"Is Index > 0?"}
+        NavLeft -- Yes --> MoveLeft["Focus Input[i-1]"]
+        TypeCheck -- "Arrow Right" --> NavRight{"Is Index < 5?"}
+        NavRight -- Yes --> MoveRight["Focus Input[i+1]"]
+
+        %% Path 4: Paste Event
+        TypeCheck -- "Paste (Ctrl+V)" --> GetClip["Get Clipboard Data"]
+        GetClip --> CleanClip["Strip Non-Numeric Chars"]
+        CleanClip --> SplitClip["Split String into Array"]
+        SplitClip --> FillState["Map values to Inputs starting at [0]"]
+        FillState --> FocusLast["Focus Last Filled Input"]
+        FocusLast --> CheckComplete
+    end
+
+    subgraph OutputState ["Visual & System Feedback"]
+        CheckComplete -- Yes --> TriggerSubmit(("Trigger onComplete(code)"))
+        CheckComplete -- No --> Wait["Wait for more input"]
+        TriggerSubmit --> Validate{"API Validation"}
+        Validate -- Success --> SuccessState["Show Success UI / Redirect"]
+        Validate -- Error --> ErrorState["Show Error Border / Shake Animation"]
+        ErrorState --> ClearState["(Optional) Clear Inputs"]
+    end
+
+    %% Connections
+    FocusNext --> Wait
+    ClearCurrent --> Wait
+    ClearPrev --> Wait
+    MoveLeft --> Wait
+    MoveRight --> Wait
+    Ignore --> Wait
+
+    %% Styling
+    classDef action fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef logic fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    classDef decision fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
+    classDef outcome fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
+    classDef error fill:#ffebee,stroke:#b71c1c,stroke-width:2px,color:#000
+
+    class Start,InputEvent action
+    class UpdateState,FocusNext,FocusPrev,ClearCurrent,ClearPrev,MoveLeft,MoveRight,GetClip,CleanClip,SplitClip,FillState,FocusLast logic
+    class TypeCheck,IsValidNum,NextCheck,CheckComplete,IsEmpty,PrevCheck,NavLeft,NavRight,Validate decision
+    class TriggerSubmit,SuccessState,Wait outcome
+    class Ignore,ErrorState,ClearState error

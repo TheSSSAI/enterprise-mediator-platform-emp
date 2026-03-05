@@ -1,0 +1,66 @@
+sequenceDiagram
+    autonumber
+    actor User as External User
+    participant FE as Frontend SPA
+    participant API as Backend API
+    participant DB as PostgreSQL DB
+    participant Auth as AWS Cognito
+
+    Note over User, Auth: Phase 1: Invitation Link Validation
+    User->>FE: Clicks Invitation Link<br/>(/register?token=XYZ)
+    activate FE
+    FE->>API: GET /api/v1/user-invitations/{token}
+    activate API
+    API->>DB: SELECT * FROM UserInvitations WHERE Token = @token
+    activate DB
+    DB-->>API: Return Invitation Record
+    deactivate DB
+    
+    alt Token Invalid / Expired / Used
+        API-->>FE: 404/410/409 Error
+        FE->>User: Display "Link Expired or Invalid" Page
+    else Token Valid
+        API-->>FE: 200 OK { email, name, role }
+        FE->>User: Render Registration Form<br/>(Pre-filled Email, Password Fields)
+    end
+    deactivate API
+
+    Note over User, Auth: Phase 2: Account Activation & Security Setup
+    User->>FE: Enters Name & Strong Password
+    FE->>FE: Client-side Validation<br/>(Complexity Match)
+    FE->>API: POST /api/v1/user-invitations/{token}/activate
+    activate API
+    
+    API->>API: Re-validate Token & Password Complexity
+    
+    opt Validation Failure
+        API-->>FE: 400 Bad Request
+        FE->>User: Show Inline Error
+    end
+
+    API->>API: Hash Password (Argon2id)
+    
+    Note right of API: Start Atomic Transaction
+    API->>DB: UPDATE Users SET Status='Active', Pwd=@hash<br/>WHERE Id=@userId
+    API->>DB: UPDATE UserInvitations SET UsedAt=NOW()<br/>WHERE Token=@token
+    
+    API->>Auth: AdminConfirmSignUp (Link User to Cognito)
+    activate Auth
+    
+    alt Cognito Failure
+        Auth-->>API: Error (5xx/4xx)
+        API->>DB: ROLLBACK Transaction
+        API-->>FE: 500 Internal Server Error
+        FE->>User: Display "System Error"
+    else Cognito Success
+        Auth-->>API: 200 OK (Confirmed)
+        deactivate Auth
+        
+        API->>DB: INSERT INTO AuditLog (Action="User Activated")
+        API->>DB: COMMIT Transaction
+        
+        API-->>FE: 200 OK { success: true }
+        FE->>User: Redirect to Login Page<br/>with "Registration Successful" Toast
+    end
+    deactivate API
+    deactivate FE
