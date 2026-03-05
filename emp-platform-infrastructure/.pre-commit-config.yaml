@@ -1,0 +1,34 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.88.0
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_validate
+      - id: terraform_tflint
+        args:
+          - --args=--config=__GIT_ROOT__/.tflint.hcl
+      - id: terraform_docs
+        args:
+          - --args=--config=.terraform-docs.yml
+      - id: terraform_checkov
+        args:
+          - --args=--config-file __GIT_ROOT__/.checkov.yaml
+          - --args=--skip-check CKV_AWS_144,CKV_AWS_18
+
+  - repo: https://github.com/bridgecrewio/checkov.git
+    rev: 3.2.56
+    hooks:
+      - id: checkov
+        verbose: true
+        args:
+          - --config-file=.checkov.yaml
+          - --directory=.

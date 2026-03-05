@@ -1,0 +1,15 @@
+directory:
+  - .
+skip-check:
+  - CKV_AWS_144: "Ensure that S3 bucket has cross-region replication enabled" # Not required for all environments in this architecture
+  - CKV_AWS_18: "Ensure the S3 bucket has access logging enabled" # Managed via central logging bucket, creating circular dependencies if applied everywhere
+quiet: true
+compact: true
+framework:
+  - terraform
+  - cloudformation
+  - kubernetes
+output: cli
+soft-fail: false
+download-external-modules: true
+evaluate-variables: true
