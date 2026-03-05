@@ -1,0 +1,4 @@
+"team_member","role","skills","sprint_1_hours","sprint_1_utilization","sprint_1_tasks","sprint_2_hours","sprint_2_utilization","sprint_2_tasks","risk_factors"
+"devops.lead@emp.com","DevOps Engineer","Terraform,Kubernetes,AWS","24.6","61%","TASK-INF-001,TASK-INF-002,TASK-INF-003","","0% (Support Mode)","Monitoring & Support","Single point of failure for Infra"
+"backend.dev1@emp.com","Backend Engineer (AI)","NestJS,Python,OpenAI","6.3","16%","TASK-AI-001","22.6","56%","TASK-AI-002,TASK-AI-003","AI integration complexity higher than estimated"
+"backend.dev2@emp.com","Backend Engineer (Fin)","NestJS,Stripe,Security","6.3","16%","TASK-FIN-001","15.5","39%","TASK-FIN-002,TASK-FIN-003","Webhook testing complexity"

@@ -1,0 +1,4 @@
+"team_member","role","skills","sprint_1_hours","sprint_1_utilization","sprint_1_tasks","sprint_2_hours","sprint_2_utilization","sprint_2_tasks","total_allocated_hours","capacity_buffer","risk_factors","sprint_3_hours","sprint_3_utilization","sprint_3_tasks"
+"devops.lead@emp.com","DevOps Engineer","Terraform,AWS,Kubernetes","21.8","55%","TASK-INF-001-01,TASK-INF-001-02,TASK-INF-003-01","5","12%","Support AI Worker Infrastructure","26.8","30%","Single point of failure for Infrastructure","","",""
+"backend.lead@emp.com","Lead Backend Engineer","NestJS,Architecture,Security","8","20%","TASK-API-001-01","4","10%","TASK-AI-001-02","34","40%","High coordination overhead","22","55%","TASK-AI-003-02,TASK-FIN-001-03"
+"ai.engineer@emp.com","AI/Data Engineer","Python,LLMs,Vector DB","","0%","","41.3","100%","TASK-AI-002-01,TASK-AI-002-02,TASK-AI-002-03,TASK-AI-002-04","51.3","10%","Overloaded in Sprint 2","10","25%","TASK-AI-003-01"
